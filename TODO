@@ -1,0 +1,4 @@
+1. remove `urlencode` method in favor of curl's --data-urlencode
+2. add JWT stuff
+3. add SAML stuff
+4. add REAME and sequence diagrams (esp CO)
