@@ -2,3 +2,7 @@
 2. add JWT stuff
 3. add SAML stuff
 4. add REAME and sequence diagrams (esp CO)
+5. test against other distros: Linux, BSD Family, SunOS family
+6. more on PKCE
+7. offline_access with token and PKCE
+8. move silent and user/pass to login

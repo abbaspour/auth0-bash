@@ -13,8 +13,10 @@ declare user_id=$(randomId)
 declare BODY=$(cat <<EOL
 {
   "user_id": "${user_id}",
-  "connection": "google-oauth2",
+  "connection": "Username-Password-Authentication",
+  "password": "XXXXXX"
   "email": "somebody@gmail.com",
+  "username": "somebody",
   "app_metadata": {}
 }
 EOL

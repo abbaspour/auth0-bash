@@ -32,6 +32,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r conn
         -C             # copy to clipboard
         -m             # Management API audience
         -o             # Open URL
+        -P             # Preview mode 
         -h|?           # usage
         -v             # verbose
 
@@ -63,11 +64,12 @@ declare opt_open=''
 declare opt_clipboard=''
 declare opt_flow=''
 declare opt_mgmnt=''
+declare opt_preview=''
 declare opt_verbose=0
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:d:c:a:r:R:f:u:p:s:mCohv?" opt
+while getopts "e:t:d:c:a:r:R:f:u:p:s:mCPohv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -83,6 +85,7 @@ do
         s) AUTH0_SCOPE=`echo ${OPTARG} | tr ',' ' '`;;
         C) opt_clipboard=1;;
         o) opt_open=1;; 
+        P) opt_preview=1;; 
         m) opt_mgmnt=1;;
         v) opt_verbose=1;; #set -x;;
         h|?) usage 0;;
@@ -93,18 +96,22 @@ done
 [[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
 [[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
 
-[[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"
+if [[ -z "${opt_preview}" ]]; then
+    [[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"
 
-case ${opt_flow} in
-    implicit) AUTH0_RESPONSE_TYPE='token id_token';;
-    *code) AUTH0_RESPONSE_TYPE='code'
-esac
+    case ${opt_flow} in
+        implicit) AUTH0_RESPONSE_TYPE='token id_token';;
+        *code) AUTH0_RESPONSE_TYPE='code'
+    esac
 
-declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&response_type=`urlencode "${AUTH0_RESPONSE_TYPE}"`&nonce=mynonce&redirect_uri=`urlencode ${AUTH0_REDIRECT_URI}`&scope=`urlencode "${AUTH0_SCOPE}"`"
+    declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&response_type=`urlencode "${AUTH0_RESPONSE_TYPE}"`&nonce=mynonce&redirect_uri=`urlencode ${AUTH0_REDIRECT_URI}`&scope=`urlencode "${AUTH0_SCOPE}"`"
 
-[[ -n "${AUTH0_AUDIENCE}" ]] && authorize_url+="&audience=`urlencode ${AUTH0_AUDIENCE}`"
-[[ -n "${AUTH0_CONNECTION}" ]] &&  authorize_url+="&realm=${AUTH0_CONNECTION}"
-[[ -n "${AUTH0_PROMPT}" ]] &&  authorize_url+="&prompt=${AUTH0_PROMPT}"
+    [[ -n "${AUTH0_AUDIENCE}" ]] && authorize_url+="&audience=`urlencode ${AUTH0_AUDIENCE}`"
+    [[ -n "${AUTH0_CONNECTION}" ]] &&  authorize_url+="&realm=${AUTH0_CONNECTION}"
+    [[ -n "${AUTH0_PROMPT}" ]] &&  authorize_url+="&prompt=${AUTH0_PROMPT}"
+else 
+   declare authorize_url="https://${AUTH0_DOMAIN}/preview/login?client=${AUTH0_CLIENT_ID}"
+fi
 
 echo "${authorize_url}"
 
