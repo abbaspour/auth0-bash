@@ -107,7 +107,7 @@ if [[ -z "${opt_preview}" ]]; then
     declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&response_type=`urlencode "${AUTH0_RESPONSE_TYPE}"`&nonce=mynonce&redirect_uri=`urlencode ${AUTH0_REDIRECT_URI}`&scope=`urlencode "${AUTH0_SCOPE}"`"
 
     [[ -n "${AUTH0_AUDIENCE}" ]] && authorize_url+="&audience=`urlencode ${AUTH0_AUDIENCE}`"
-    [[ -n "${AUTH0_CONNECTION}" ]] &&  authorize_url+="&realm=${AUTH0_CONNECTION}"
+    [[ -n "${AUTH0_CONNECTION}" ]] &&  authorize_url+="&connection=${AUTH0_CONNECTION}"
     [[ -n "${AUTH0_PROMPT}" ]] &&  authorize_url+="&prompt=${AUTH0_PROMPT}"
 else 
    declare authorize_url="https://${AUTH0_DOMAIN}/preview/login?client=${AUTH0_CLIENT_ID}"

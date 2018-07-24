@@ -1,0 +1,13 @@
+{%- assign firstLang = requestInfo.lang | split: ";" | first  | split: ',' | first | upcase -%}
+{%- case firstLang -%}
+    {%- when "ZH-CN" -%}
+您的验证码是 {{code}}
+    {%- when "ZH-TW" -%}
+您的驗證碼是 {{code}}
+    {%- else -%}
+        {%- if firstLang contains 'ZH' -%}
+您的验证码是 {{code}}
+        {%- else -%}
+your verification code is {{code}}
+        {%- endif -%}
+{%- endcase -%}
