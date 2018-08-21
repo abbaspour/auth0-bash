@@ -10,7 +10,7 @@ declare AUTH0_CONNECTION='Username-Password-Authentication'
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-t tenant] [-u username] [-p passsword] [-d domain] [-c client_id] [-x secret] [-a audience] [-r connection][-s scope] [-m|-h|-v]
+USAGE: $0 [-e env] [-t tenant] [-u username] [-p passsword] [-d domain] [-c client_id] [-x secret] [-a audience] [-r connection] [-s scope] [-m|-h|-v]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
         -u username    # Username or email
@@ -85,5 +85,5 @@ declare BODY=$(cat <<EOL
 EOL
 )
 
-curl -v --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/oauth/token
+curl --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/oauth/token
 
