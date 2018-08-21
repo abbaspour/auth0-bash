@@ -2,3 +2,4 @@
 *.swp
 .env
 node_modules
+cookie.txt
