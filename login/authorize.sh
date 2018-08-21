@@ -32,6 +32,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r conn
         -C             # copy to clipboard
         -m             # Management API audience
         -o             # Open URL
+        -b browser     # Choose browser to open (firefox, chrome, safari)
         -P             # Preview mode 
         -h|?           # usage
         -v             # verbose
@@ -66,10 +67,11 @@ declare opt_flow=''
 declare opt_mgmnt=''
 declare opt_preview=''
 declare opt_verbose=0
+declare opt_browser=''
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:d:c:a:r:R:f:u:p:s:mCPohv?" opt
+while getopts "e:t:d:c:a:r:R:f:u:p:s:b:mCPohv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -87,14 +89,15 @@ do
         o) opt_open=1;; 
         P) opt_preview=1;; 
         m) opt_mgmnt=1;;
+        b) opt_browser="-a ${OPTARG} ";;
         v) opt_verbose=1;; #set -x;;
         h|?) usage 0;;
         *) usage 1;;
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
-[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
+[[ -z ${AUTH0_DOMAIN+x} ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
+[[ -z ${AUTH0_CLIENT_ID+x} ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
 
 if [[ -z "${opt_preview}" ]]; then
     [[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"
@@ -116,5 +119,5 @@ fi
 echo "${authorize_url}"
 
 [[ -n "${opt_clipboard}" ]] && echo "${authorize_url}" | pbcopy
-[[ -n "${opt_open}" ]] && open "${authorize_url}"
+[[ -n "${opt_open}" ]] && open ${opt_browser} "${authorize_url}"
 

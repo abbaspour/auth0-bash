@@ -3,7 +3,6 @@
 set -euo pipefail
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
-. ${DIR}/.env
 
 urlencode() {
     local length="${#1}"
@@ -18,16 +17,17 @@ urlencode() {
 }
 
 
-
-declare ORIGIN='http://app1.com:3000'
+declare AUTH0_REDIRECT_URI='https://jwt.io'                     # add this to "Allowed Callback URLs" of your application
+declare AUTH0_ORIGIN='https://jwt.io'                           # add this to "Allowed Web Origins" of your application
 declare AUTH0_CONNECTION='Username-Password-Authentication'
+declare AUTH0_SCOPE='openid profile email'
 
 declare -r AUTH0_CLIENT='{"name":"auth0.js","version":"9.0.2"}'
 declare -r AUTH0_CLIENT_B64=$(echo -n $AUTH0_CLIENT | base64)
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u username] [-p pass] [-r connection] [-o origin] [-v|-h]
+USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u username] [-p pass] [-r connection] [-o origin] [-u callback] [-v|-h]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
@@ -35,12 +35,13 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u username] [-p pass
         -u username    # Username
         -p password    # Password
         -r realm       # Connection (default ${AUTH0_CONNECTION})
-        -o origin      # Allowed Origin (default ${ORIGIN})
+        -o origin      # Allowed Origin (default ${AUTH0_ORIGIN})
+        -u callback    # callback URL (default ${AUTH0_REDIRECT_URI})
         -h|?           # usage
         -v             # verbose
 
 eg,
-     $0 -t amin01@au -u somebody@gmail.com  -p XXXXX -m
+     $0 -t amin01@au -u somebody@gmail.com  -p XXXXX -c 1iSgx01LN27oEgpFfGvG2UASbpSndtXg -m
 END
     exit $1
 }
@@ -53,7 +54,9 @@ declare PASSWORD=''
 declare opt_mgmnt=''
 declare opt_verbose=0
 
-while getopts "e:t:d:c:a:u:p:s:r:mhv?" opt
+[[ -f ${DIR}/.env ]] && . ${DIR}/.env
+
+while getopts "e:t:d:c:a:u:p:r:o:u:s:mhv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -64,7 +67,8 @@ do
         u) USERNAME=${OPTARG};;
         p) PASSWORD=${OPTARG};;
         r) AUTH0_CONNECTION=${OPTARG};;
-        o) ORIGIN=${OPTARG};;
+        o) AUTH0_ORIGIN=${OPTARG};;
+        u) AUTH0_REDIRECT_URI=${OPTARG};;
         s) AUTH0_SCOPE=`echo ${OPTARG} | tr ',' ' '`;;
         m) opt_mgmnt=1;;
         v) opt_verbose=1;; #set -x;;
@@ -92,7 +96,7 @@ EOL
 )
 
 declare co_response=$(curl -s -c cookie.txt -H "Content-Type: application/json" \
-    -H "origin: ${ORIGIN}" \
+    -H "origin: ${AUTH0_ORIGIN}" \
     -H "auth0-client: ${AUTH0_CLIENT_B64}" \
     -d "${BODY}" https://${AUTH0_DOMAIN}/co/authenticate)
 
@@ -102,24 +106,27 @@ echo "CO Response: ${co_response}"
 declare login_ticket=$(echo $co_response | jq -cr .login_ticket)
 echo login_ticket=${login_ticket}
 
-declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&response_type=`urlencode "id_token token"`&redirect_uri=`urlencode ${ORIGIN}`&scope=`urlencode "openid profile email"`&login_ticket=${login_ticket}&state=mystate&nonce=mynonce&auth0Client=${AUTH0_CLIENT_B64}"
+declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&response_type=`urlencode "id_token token"`&redirect_uri=`urlencode ${AUTH0_REDIRECT_URI}`&scope=`urlencode ${AUTH0_SCOPE}`&login_ticket=${login_ticket}&state=mystate&nonce=mynonce&auth0Client=${AUTH0_CLIENT_B64}"
 
 [[ -n "${AUTH0_AUDIENCE}" ]] && authorize_url+="&audience=`urlencode ${AUTH0_AUDIENCE}`"
 [[ -n "${AUTH0_CONNECTION}" ]] &&  authorize_url+="&realm=${AUTH0_CONNECTION}"
 
 echo "authorize_url: ${authorize_url}"
 
-declare location=$(curl -s -I -b cookie.txt $authorize_url | awk '/^location: /{print $2}')
+declare location=$(curl -s -I -b cookie.txt $authorize_url | tee /dev/tty | awk '/^location: /{print $2}')
 
 echo "Redirect location: ${location}"
+
+[[ ${location} =~ ^/mf ]] && { echo >&2 "WARNING: MFA enabled. CO not possible without user interaction"; exit 3; }
+[[ ${location} =~ ^/decision ]] && { echo >&2 "WARNING: Consent required. CO not possible without user interaction. Try normal ./authorize.sh first."; exit 3; }
 
 declare access_token=$(echo ${location} | grep -oE "access_token=([^&]+)" | awk -F= '{print $2}')
 declare id_token=$(echo ${location} | grep -oE "id_token=([^&]+)" | awk -F= '{print $2}')
 
 ## TODO: check if `base64` installed
 
-declare access_token_json=$(echo ${access_token} | awk -F. '{print $2}' | base64 -d 2>/dev/null)
-declare id_token_json=$(echo ${id_token} | awk -F. '{print $2}' | base64 -di)
+declare access_token_json=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null)
+declare id_token_json=$(echo ${id_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null)
 
 echo "Access Token: ${access_token_json}" 
 echo "ID     Token: ${id_token_json}" 
