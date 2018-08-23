@@ -3,7 +3,7 @@
 set -ueo pipefail 
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
-. ${DIR}/.env
+[[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
 
 function usage() {
@@ -32,7 +32,7 @@ declare AUTH0_REDIRECT_URI=''
 declare opt_verbose=0
 declare authorization_code=''
 
-while getopts "e:t:d:c:a:x:hv?" opt
+while getopts "e:t:d:c:u:a:x:hv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
