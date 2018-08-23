@@ -7,9 +7,11 @@ set -eo pipefail
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 
+declare AUTH0_SCOPE='openid email'
+
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-r connection] [-R response_type] [-f flow] [-u username] [-s scope] [-p prompt] [-m|-C|-o|-h]
+USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-r connection] [-R code|link] [-u email] [-p phone_number] [-s scope] [-m|-h]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
@@ -17,31 +19,30 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-r connection] [-R re
         -a audiance    # Audience
         -r realm       # Connection (email or sms)
         -R types       # code or link
-        -f flow        # OAuth2 flow type (implicit,code)
-        -u callback    # callback URL (default ${AUTH0_REDIRECT_URI})
         -s scopes      # comma separated list of scopes (default is "${AUTH0_SCOPE}")
-        -p prompt      # prompt type: none, silent, login
-        -C             # copy to clipboard
+        -p number      # SMS phone number
         -m             # Management API audience
-        -o             # Open URL
         -b browser     # Choose browser to open (firefox, chrome, safari)
         -P             # Preview mode 
         -h|?           # usage
         -v             # verbose
 
 eg,
-     $0 -t amin01@au -s offline_access -o
+     $0 -t amin01@au -u user@email.com
 END
     exit $1
 }
 
 declare AUTH0_DOMAIN=''
 declare AUTH0_CLIENT_ID=''
+declare AUTH0_CONNECTION=''
+
 declare email=''
+declare phone_number=''
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:d:c:a:r:R:f:u:p:s:b:mCPohv?" opt
+while getopts "e:t:d:c:a:r:R:u:p:s:mCPohv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -51,15 +52,13 @@ do
         a) AUTH0_AUDIENCE=${OPTARG};;
         r) AUTH0_CONNECTION=${OPTARG};;
         R) AUTH0_RESPONSE_TYPE=`echo ${OPTARG} | tr ',' ' '`;;
-        f) opt_flow=${OPTARG};;
         u) email=${OPTARG};;
-        p) AUTH0_PROMPT=${OPTARG};;
+        p) phone_number=${OPTARG};;
         s) AUTH0_SCOPE=`echo ${OPTARG} | tr ',' ' '`;;
         C) opt_clipboard=1;;
         o) opt_open=1;; 
         P) opt_preview=1;; 
         m) opt_mgmnt=1;;
-        b) opt_browser="-a ${OPTARG} ";;
         v) opt_verbose=1;; #set -x;;
         h|?) usage 0;;
         *) usage 1;;
@@ -68,18 +67,26 @@ done
 
 [[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
 [[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
-[[ -z "${email}" ]] && { echo >&2 "ERROR: email undefined"; usage 1; }
+[[ -z "${AUTH0_CONNECTION}" ]] && { echo >&2 "ERROR: AUTH0_CONNECTION undefined. select 'sms' or 'email'"; usage 1; }
 
-#declare -r client_id='aIioQEeY7nJdX78vcQWDBcAqTABgKnZl'
-#declare -r email='somebody@gmail.com'
+declare recipient=''
 
+case "${AUTH0_CONNECTION}" in
+    sms) [[ -z "${phone_number}" ]] && { echo >&2 "ERROR: phone_number undefined"; usage 1; }; recipient="\"phone_number\":\"${phone_number}\",";;
+    email) [[ -z "${email}" ]] && { echo >&2 "ERROR: email undefined"; usage 1; }; recipient="\"email\":\"${email}\",";;
+    *)  echo >&2 "ERROR: unknown connection: ${AUTH0_CONNECTION}"; usage 1;;
+esac
+
+[[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"         # audience is unsupported in OTP (23/08/18)
+
+#    "send":"link", 
 declare data=$(cat <<EOL
 {
     "client_id":"${AUTH0_CLIENT_ID}", 
-    "connection":"email", 
-    "email":"${email}", 
-    "send":"link", 
-    "authParams":{"scope": "openid email","state": "SOME_STATE", "response_type" : "code"}
+    "connection":"${AUTH0_CONNECTION}", 
+    ${recipient}
+    "send":"code", 
+    "authParams":{"scope": "${AUTH0_SCOPE}","state": "SOME_STATE", "response_type" : "code", "audience":"${AUTH0_AUDIENCE}"}
 }
 EOL
 )
