@@ -2,6 +2,5 @@
 - add SAML stuff
 - add REAME and sequence diagrams (esp CO)
 - test against other distros: Linux, BSD Family, SunOS family
-- more on PKCE
 - offline_access with token and PKCE
 - export users

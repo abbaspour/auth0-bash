@@ -54,18 +54,6 @@ urlencode() {
     done
 }
 
-random32() {
-    for i in {0..32}; do echo -n $(( RANDOM % 10 )); done
-}
-
-gen_code_verifier() {
-    random32 | base64 -w0
-}
-
-gen_code_challenge() {
-    echo -n "$1" | openssl dgst -binary -sha256 | base64 -w0 
-}
-
 declare AUTH0_DOMAIN=''
 declare AUTH0_CLIENT_ID=''
 declare AUTH0_CONNECTION=''
@@ -108,22 +96,7 @@ done
 [[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
 [[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
 
-[[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"
-
-declare response_param=''
-
-case ${opt_flow} in
-    implicit) response_param='response_type=token%20id_token';;
-    *code) response_param='response_type=code';;
-    pkce) code_verifier=$(gen_code_verifier); code_challenge=$(gen_code_challenge ${code_verifier}); echo "code_verifier=${code_verifier}"; response_param="response_type=code&code_challenge_method=S256&code_challenge=${code_challenge}";;
-    *) echo >&2 "ERROR: unknown flow: ${opt_flow}"; usage 1;;
-esac
-
-declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&${response_param}&nonce=mynonce&redirect_uri=`urlencode ${AUTH0_REDIRECT_URI}`&scope=`urlencode "${AUTH0_SCOPE}"`"
-
-[[ -n "${AUTH0_AUDIENCE}" ]] && authorize_url+="&audience=`urlencode ${AUTH0_AUDIENCE}`"
-[[ -n "${AUTH0_CONNECTION}" ]] &&  authorize_url+="&connection=${AUTH0_CONNECTION}"
-[[ -n "${AUTH0_PROMPT}" ]] &&  authorize_url+="&prompt=${AUTH0_PROMPT}"
+declare authorize_url="https://${AUTH0_DOMAIN}/preview/login?client=${AUTH0_CLIENT_ID}"
 
 echo "${authorize_url}"
 
