@@ -58,12 +58,18 @@ random32() {
     for i in {0..32}; do echo -n $(( RANDOM % 10 )); done
 }
 
+base64URLEncode() {
+    echo -n "$1" | base64 -w0 |  tr '+' '-' | tr '/' '_' | tr -d '='
+}
+
 gen_code_verifier() {
-    random32 | base64 -w0
+    local rand=$(random32)
+    echo $(base64URLEncode ${rand})
 }
 
 gen_code_challenge() {
-    echo -n "$1" | openssl dgst -binary -sha256 | base64 -w0 
+    local cc=$(echo -n "$1" | openssl dgst -binary -sha256)
+    echo $(base64URLEncode "$cc") 
 }
 
 declare AUTH0_DOMAIN=''
@@ -74,7 +80,7 @@ declare AUTH0_PROMPT=''
 
 declare opt_open=''
 declare opt_clipboard=''
-declare opt_flow=''
+declare opt_flow='implicit'
 declare opt_mgmnt=''
 declare opt_verbose=0
 declare opt_browser=''
