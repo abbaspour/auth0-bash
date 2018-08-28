@@ -1,0 +1,33 @@
+title Device Flow with Passwordless OTP
+
+participant User as u
+participant Auth0 as a0
+participant SmartTV as d
+participant Customer API as api
+
+opt Web Login
+u -> a0: signin
+u -> a0: link passwordless
+end 
+
+u -> d: Open App 
+d --> u: choose SMS or Email for OTP Activation
+u -> d: selects OTP target
+d -> a0: /passwordless/start {send:code, connection:email|sms}
+a0 -> u: sends OTP code
+
+u -> d: enters OTP code
+d -> +a0: /co/authenticate {credential_type:otp, realm:email|sms, otp:code}
+a0 --> -d: {login_ticket+cookie}
+
+d -> +a0: /authorize {login_ticket:ticket, cookie, scope:offline_access, response_type:code, audience:http://custom}
+a0 --> -d: 302 /callback?code=authz-code (no follow)
+
+d -> +a0: /oauth/token exchange (code:authz-code, client_id, client_secret|pkce_verification_code)
+a0 --> -d: JWT (access+id) + Opaque refresh token
+
+d -> api:  /api { Authorization: Bearer access_token }
+
+opt Refresh
+d -> d: refresh access_token
+end

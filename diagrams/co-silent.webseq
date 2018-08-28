@@ -1,0 +1,23 @@
+title Cross Origin Authentication -> Auth0
+
+participant User as user
+participant Browser
+participant MyAccount WebApp \n(app.mydomain.com.au) as app
+participant Auth0 (IdP) \n(login.mydomain.com.au) as A0
+
+
+User->Browser: Navigate to \nMyAccount WebApp
+Browser-> +app: GET MyAccount WebApp
+app -> -Browser:200 Page Displayed
+note right of Browser: User enters email,password in the login form and submit
+Browser -> +A0: POST https://${AUTH0_DOMAIN}/co/authenticate {AUTH0_CLIENT_ID,email, password, realm,grant_type}
+A0 -> -Browser: Success ${login_ticket}
+Browser -> A0: GET https://${AUTH0_DOMAIN}/authorize {AUTH0_CLIENT_ID, response_type, redirect_uri, scope, audience, realm, login_ticket, state, nonce}
+A0 -> -Browser: Success {id_token, access_token}
+note right of Browser: Auth0 cookie is dropped on mydomain.com.au
+
+alt A0SESSION present and Silent Authentication for token renewal
+Browser-->+A0: https://${AUTH0_DOMAIN}/authorize {client_id,response_type,redirect_uri,scope,audience,connection,state,nonce,response_mode=web_message&prompt=none}
+A0 -> -Browser: Success {id_token, access_token}
+note right of Browser: checkSession 
+end
