@@ -17,7 +17,7 @@ USAGE: $0 [-e env] [-a access_token] [-c connection_id] [-f users.file] [-v|-h]
         -v          # verbose
 
 eg,
-     $0 -f users.json
+     $0 -f users.json -c con_Z1QogOOq4sGa1iR9
 END
     exit $1
 }
