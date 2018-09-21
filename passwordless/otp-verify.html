@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+<head>
+    <title>OTP Verify</title>
+    <meta charset="utf-8">
+</head>
+<body>
+<label for="email">Email</label><input id="email" type="email"/>
+<br/>
+<label for="code">OTP Code</label><input id="code" type="text"/>
+<br/>
+<input type="submit" name="Login" onclick="submit()"/>
+
+<script>
+    const auth0_clientID = 'y4KJ1oOdLyx5lwILRInTbCCx221VCduh';
+    const auth0_tenant = 'amin01.au';
+    const auth0_domain = `https://${auth0_tenant}.auth0.com`;
+    const redirect_uri = 'https://jwt.io';
+
+    //const USERNAME = 'a.abbaspour+01@gmail.com';
+    //const PASSWORD = '006317';
+
+    function otp_verify(email, code) {
+        let url = auth0_domain + '/co/authenticate';
+
+        let data = {
+            client_id: auth0_clientID,
+            username: email,
+            otp: code,
+            realm: "email",
+            credential_type: "http://auth0.com/oauth/grant-type/passwordless/otp"
+        };
+
+        const params = {
+            headers: {
+                'content-type': 'application/json'
+            },
+            method: 'POST',
+            credentials: "include",
+            body: JSON.stringify(data)
+        };
+
+        fetch(url, params)
+            .then(data => data.json())
+            .then(value => {
+                let login_ticket = value['login_ticket'];
+                window.location.href = `${auth0_domain}/authorize?client_id=${auth0_clientID}&response_type=token%20id_token&redirect_uri=${encodeURI(redirect_uri)}&login_ticket=${login_ticket}&nonce=mynonce&state=mystate`;
+            })
+            .catch(err => console.log('error in oauth_token call: ' + err));
+    }
+
+    function submit() {
+        let email = document.getElementById('email').value;
+        let code = document.getElementById('code').value;
+        otp_verify(email, code);
+    }
+
+</script>
+</body>
+</html>

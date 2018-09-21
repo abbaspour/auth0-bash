@@ -5,13 +5,13 @@ set -euo pipefail
 declare -r DIR=$(dirname ${BASH_SOURCE[0]}) 
   
 declare AUTH0_CLIENT='{"name":"auth0.js","version":"9.0.2"}'
-declare AUTH0_CLIENT_B64=$(echo -n $AUTH0_CLIENT | base64)
+declare AUTH0_CLIENT_B64=$(echo -n ${AUTH0_CLIENT} | base64)
  
 urlencode() {
     local length="${#1}"
     for (( i = 0; i < length; i++ )); do
         local c="${1:i:1}"
-        case $c in
+        case ${c} in
             [a-zA-Z0-9.~_-]) printf "$c" ;;
             *) printf '%s' "$c" | xxd -p -c1 |
                    while read c; do printf '%%%s' "$c"; done ;;
@@ -100,14 +100,14 @@ declare co_response=$(curl -s -c cookie.txt -H "Content-Type: application/json" 
   
 echo "CO Response: ${co_response}"
   
-declare login_ticket=$(echo $co_response | jq -cr .login_ticket)
+declare login_ticket=$(echo ${co_response} | jq -cr .login_ticket)
 echo "login_ticket=${login_ticket}"
  
 declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&response_type=`urlencode "token id_token"`&redirect_uri=`urlencode ${ORIGIN}`&scope=`urlencode "${AUTH0_SCOPE}"`&login_ticket=${login_ticket}&state=mystate&nonce=mynonce&auth0Client=${AUTH0_CLIENT_B64}&audience=`urlencode ${AUTH0_AUDIENCE}`" 
   
 echo "authorize_url: ${authorize_url}"
 
-declare location=$(curl -s -I -b cookie.txt $authorize_url | awk '/^location: /{print $2}')
+declare location=$(curl -s -I -b cookie.txt ${authorize_url} | awk '/^location: /{print $2}')
   
 echo "Redirect location: ${location}"
   
