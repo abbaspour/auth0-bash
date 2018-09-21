@@ -29,7 +29,7 @@ END
 declare AUTH0_DOMAIN=''
 declare AUTH0_CLIENT_ID=''
 declare AUTH0_CLIENT_SECRET=''
-declare AUTH0_REDIRECT_URI=''
+declare AUTH0_REDIRECT_URI='https://jwt.io'
 declare opt_verbose=0
 declare authorization_code=''
 declare code_verifier=''
