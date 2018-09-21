@@ -18,11 +18,10 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-r connection] [-R co
         -c client_id   # Auth0 client ID
         -a audiance    # Audience
         -r realm       # Connection (email or sms)
-        -R types       # code or link
+        -R types       # code or link (default is code)
         -s scopes      # comma separated list of scopes (default is "${AUTH0_SCOPE}")
         -p number      # SMS phone number
         -m             # Management API audience
-        -b browser     # Choose browser to open (firefox, chrome, safari)
         -P             # Preview mode 
         -h|?           # usage
         -v             # verbose
@@ -39,6 +38,7 @@ declare AUTH0_CONNECTION=''
 
 declare email=''
 declare phone_number=''
+declare send='code'
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
@@ -51,7 +51,7 @@ do
         c) AUTH0_CLIENT_ID=${OPTARG};;
         a) AUTH0_AUDIENCE=${OPTARG};;
         r) AUTH0_CONNECTION=${OPTARG};;
-        R) AUTH0_RESPONSE_TYPE=`echo ${OPTARG} | tr ',' ' '`;;
+        R) send=${OPTARG};;
         u) email=${OPTARG};;
         p) phone_number=${OPTARG};;
         s) AUTH0_SCOPE=`echo ${OPTARG} | tr ',' ' '`;;
@@ -79,13 +79,12 @@ esac
 
 [[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"         # audience is unsupported in OTP (23/08/18)
 
-#    "send":"link", 
 declare data=$(cat <<EOL
 {
     "client_id":"${AUTH0_CLIENT_ID}", 
     "connection":"${AUTH0_CONNECTION}", 
     ${recipient}
-    "send":"code", 
+    "send":"${send}",
     "authParams":{"scope": "${AUTH0_SCOPE}","state": "SOME_STATE", "response_type" : "code", "audience":"${AUTH0_AUDIENCE}"}
 }
 EOL

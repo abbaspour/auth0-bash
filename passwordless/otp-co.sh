@@ -103,7 +103,7 @@ echo "CO Response: ${co_response}"
 declare login_ticket=$(echo $co_response | jq -cr .login_ticket)
 echo "login_ticket=${login_ticket}"
  
-declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&response_type=`urlencode "code"`&redirect_uri=`urlencode ${ORIGIN}`&scope=`urlencode "${AUTH0_SCOPE}"`&login_ticket=${login_ticket}&state=mystate&nonce=mynonce&auth0Client=${AUTH0_CLIENT_B64}&audience=`urlencode ${AUTH0_AUDIENCE}`" 
+declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&response_type=`urlencode "token id_token"`&redirect_uri=`urlencode ${ORIGIN}`&scope=`urlencode "${AUTH0_SCOPE}"`&login_ticket=${login_ticket}&state=mystate&nonce=mynonce&auth0Client=${AUTH0_CLIENT_B64}&audience=`urlencode ${AUTH0_AUDIENCE}`" 
   
 echo "authorize_url: ${authorize_url}"
 
