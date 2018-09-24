@@ -5,7 +5,11 @@
     <meta charset="utf-8">
 </head>
 <body>
-<label for="email">Email</label><input id="email" type="email"/>
+<label>Channel</label>
+<input type="radio" name="channel" id="email" checked>Email
+<input type="radio" name="channel" id="sms">SMS
+<br>
+<label for="username">Email/Phone</label><input id="username" type="text"/>
 <br/>
 <label for="code">OTP Code</label><input id="code" type="text"/>
 <br/>
@@ -17,14 +21,14 @@
     const auth0_domain = `https://${auth0_tenant}.auth0.com`;
     const redirect_uri = 'https://jwt.io';
 
-    function otp_verify(email, code) {
+    function otp_verify(realm, username, code) {
         let url = auth0_domain + '/co/authenticate';
 
         let data = {
             client_id: auth0_clientID,
-            username: email,
+            username: username,
             otp: code,
-            realm: "email",
+            realm: realm,
             credential_type: "http://auth0.com/oauth/grant-type/passwordless/otp"
         };
 
@@ -47,9 +51,10 @@
     }
 
     function submit() {
-        let email = document.getElementById('email').value;
+        let realm = document.getElementById("email").checked === true ? 'email' : 'sms';
+        let username = document.getElementById('username').value;
         let code = document.getElementById('code').value;
-        otp_verify(email, code);
+        otp_verify(realm, username, code);
     }
 
 </script>
