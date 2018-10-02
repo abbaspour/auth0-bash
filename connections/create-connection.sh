@@ -5,9 +5,10 @@ declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-v|-h]
+USAGE: $0 [-e env] [-a access_token] [-f file] [-v|-h]
         -e file     # .env file location (default cwd)
         -a token    # access_token. default from environment variable
+        -f file     # connection definition JSON file
         -h|?        # usage
         -v          # verbose
 
@@ -17,11 +18,14 @@ END
     exit $1
 }
 
-while getopts "e:a:hv?" opt
+declare json_file=''
+
+while getopts "e:a:f:hv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
         a) access_token=${OPTARG};;
+        f) json_file=${OPTARG};;
         v) opt_verbose=1;; #set -x;;
         h|?) usage 0;;
         *) usage 1;;
@@ -29,9 +33,14 @@ do
 done
 
 [[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
+[[ -z "${json_file}" ]] && { echo >&2 "ERROR: json_file undefined."; usage 1; }
+[[ -f "${json_file}" ]] || { echo >&2 "ERROR: json_file missing: ${json_file}"; usage 1; }
 
 declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
 
-curl -s -H "Authorization: Bearer ${access_token}" \
-    --url ${AUTH0_DOMAIN_URL}api/v2/guardian/factors  | jq '.'
+curl --request POST \
+    -H "Authorization: Bearer ${access_token}" \
+    --url ${AUTH0_DOMAIN_URL}api/v2/connections \
+    --header 'content-type: application/json' \
+    --data @${json_file}
 

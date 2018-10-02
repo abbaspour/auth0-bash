@@ -33,5 +33,4 @@ done
 declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
 
 curl -s -H "Authorization: Bearer ${access_token}" \
-    --url ${AUTH0_DOMAIN_URL}api/v2/guardian/factors  | jq '.'
-
+    --url ${AUTH0_DOMAIN_URL}api/v2/connections  | jq '.'
