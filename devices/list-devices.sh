@@ -35,10 +35,10 @@ done
 
 declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
 
-declare jq_query='.[]'
-[[ -n "${userId}" ]] && jq_query+=" | select(.user_id | contains(\"${userId}\"))"
-jq_query+=" | \"\(.id) \(.user_id) \(.device_name)\" "
+declare qs=''
+[[ -n "${userId}" ]] && qs="?user_id=${userId}" #jq_query+=" | select(.user_id | contains(\"${userId}\"))"
+declare -r jq_query+=".[] | \"\(.id) \(.user_id) \(.device_name)\" "
 
 curl -s --request GET \
     -H "Authorization: Bearer ${access_token}" \
-    --url ${AUTH0_DOMAIN_URL}api/v2/device-credentials | jq -rc "${jq_query}"
+    --url ${AUTH0_DOMAIN_URL}api/v2/device-credentials${qs} | jq -rc "${jq_query}"
