@@ -3,3 +3,6 @@
 .env
 node_modules
 cookie.txt
+.idea
+yarn.lock
+package-lock.json
