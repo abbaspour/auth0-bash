@@ -71,13 +71,16 @@ done
 [[ -z "${AUTH0_AUDIENCE}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/userinfo"
 [[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"
 
+declare secret=''
+[[ -n "${AUTH0_CLIENT_SECRET}" ]] && secret="\"client_secret\": \"${AUTH0_CLIENT_SECRET}\","
+
 declare BODY=$(cat <<EOL
 {
             "grant_type": "http://auth0.com/oauth/grant-type/password-realm",
             "realm" : "${AUTH0_CONNECTION}",
             "scope": "${AUTH0_SCOPE}",
             "client_id": "${AUTH0_CLIENT_ID}",
-            "client_secret": "${AUTH0_CLIENT_SECRET}",
+            ${secret}
             "username": "${username}",
             "password": "${password}",
             "audience": "${AUTH0_AUDIENCE}"
