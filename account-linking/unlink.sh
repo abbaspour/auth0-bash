@@ -22,8 +22,6 @@ declare secondary_userId=''
 declare primary_userId=''
 declare opt_verbose=0
 
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
-
 while getopts "e:a:p:s:hv?" opt
 do
     case ${opt} in
