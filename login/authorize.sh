@@ -8,7 +8,7 @@ declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 # prerequisite:
 # 1. create a client with type SPA
 # 2. add allowed callback to client: https://jwt.io 
-# 3. ./01-authenticate -t tenant -c client_id
+# 3. ./authorize.sh -t tenant -c client_id
 ##
 
 declare AUTH0_REDIRECT_URI='https://jwt.io'
