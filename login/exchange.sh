@@ -57,16 +57,13 @@ done
 [[ -z "${authorization_code}" ]] && { echo >&2 "ERROR: authorization_code undefined"; usage 1; }
 
 declare secret=''
-
-[[ -n "${AUTH0_CLIENT_SECRET}" ]] && secret="\"client_secret\":\"${AUTH0_CLIENT_SECRET}\""
-[[ -n "${code_verifier}" ]] && secret="\"code_verifier\":\"${code_verifier}\""
-
-[[ -z "${secret}" ]] && { echo >&2 "ERROR: client_secret or code_verifier undefined"; usage 1; }
+[[ -n "${AUTH0_CLIENT_SECRET}" ]] && secret="\"client_secret\":\"${AUTH0_CLIENT_SECRET}\","
+[[ -n "${code_verifier}" ]] && secret="\"code_verifier\":\"${code_verifier}\","
 
 declare BODY=$(cat <<EOL
 {
     "client_id":"${AUTH0_CLIENT_ID}",
-    ${secret},
+    ${secret}
     "code": "${authorization_code}",
     "grant_type":"authorization_code",
     "redirect_uri": "${AUTH0_REDIRECT_URI}"

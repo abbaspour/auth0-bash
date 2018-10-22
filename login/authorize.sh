@@ -119,7 +119,7 @@ done
 declare response_param=''
 
 case ${opt_flow} in
-    implicit) response_param='response_type=token%20id_token';;
+    implicit) response_param="response_type=`urlencode ${AUTH0_RESPONSE_TYPE}`";;
     *code) response_param='response_type=code';;
     pkce|hybrid) code_verifier=$(gen_code_verifier); code_challenge=$(gen_code_challenge ${code_verifier}); echo "code_verifier=${code_verifier}"; response_param="code_challenge_method=S256&code_challenge=${code_challenge}"
         if  [[ ${opt_flow} == 'pkce' ]]; then response_param+='&response_type=code'; else response_param+='&response_type=code%20token%20id_token'; fi;;

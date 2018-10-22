@@ -1,8 +1,6 @@
-#!/bin/bash
+
 
 set -eo pipefail
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
-
 
 function usage() {
     cat <<END >&2
@@ -14,7 +12,7 @@ USAGE: $0 [-e env] [-a access_token] [-j job_id] [-v|-h]
         -v          # verbose
 
 eg,
-     $0 -f users.json
+     $0 -j j_123
 END
     exit $1
 }

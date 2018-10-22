@@ -3,11 +3,11 @@
 set -ueo pipefail 
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
-. ${DIR}/.env
+[[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-a audience] [-a authorization_code] [-m|-v|-h]
+USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-a audience] [-m|-v|-h]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
@@ -65,5 +65,5 @@ declare BODY=$(cat <<EOL
 EOL
 )
 
-curl   --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/oauth/token
+curl --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/oauth/token
 
