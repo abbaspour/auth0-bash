@@ -20,6 +20,18 @@ END
     exit $1
 }
 
+urlencode() {
+    local length="${#1}"
+    for (( i = 0; i < length; i++ )); do
+        local c="${1:i:1}"
+        case $c in
+            [a-zA-Z0-9.~_-]) printf "$c" ;;
+            *) printf '%s' "$c" | xxd -p -c1 |
+                   while read c; do printf '%%%s' "$c"; done ;;
+        esac
+    done
+}
+
 declare user_id=''
 
 while getopts "e:a:u:hv?" opt
@@ -27,14 +39,17 @@ do
     case ${opt} in
         e) source ${OPTARG};;
         a) access_token=${OPTARG};;
-        u) user_id=${OPTARG};;
+        u) user_id=`urlencode ${OPTARG}`;;
         v) opt_verbose=1;; #set -x;;
         h|?) usage 0;;
         *) usage 1;;
     esac
 done
 
-[[ -z "${user_id}" ]] && { echo >&2 "ERROR: user_id undefined"; usage 1; }
+declare -r SUB_FROM_TOKEN=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.sub')
+if [[ -z "${user_id}" ]]; then
+    [[ -n ${SUB_FROM_TOKEN} ]] && user_id=${SUB_FROM_TOKEN} || { echo >&2 "ERROR: user_id undefined"; usage 1; }
+fi
 
 [[ -z ${access_token+x} ]] && { echo >&2 -e "ERROR: no 'access_token' defined. \nopen -a safari https://manage.auth0.com/#/apis/ \nexport access_token=\`pbpaste\`"; exit 1; }
 declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
@@ -42,15 +57,15 @@ declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base
 
 declare DATA=$(cat <<EOF
 {
-    "user_metadata":{ "plan": "gold" }
+    "user_metadata":{ "plan": "gold3" }
 }
 EOF
 )
 
-curl --request PATCH \
-  --header "Authorization: Bearer ${access_token}" \
-  --url ${AUTH0_DOMAIN_URL}api/v2/users/${user_id} \ # urlencode
-  --header 'content-type: application/json' \
-  --data "${DATA}"
+curl -X PATCH \
+  -H "Authorization: Bearer ${access_token}" \
+  -H 'content-type: application/json' \
+  -d "${DATA}" \
+  ${AUTH0_DOMAIN_URL}api/v2/users/${user_id}
 
 

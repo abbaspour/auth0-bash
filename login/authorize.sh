@@ -14,10 +14,11 @@ declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 declare AUTH0_REDIRECT_URI='https://jwt.io'
 declare AUTH0_SCOPE='openid profile email'
 declare AUTH0_RESPONSE_TYPE='token id_token'
+declare AUTH0_RESPONSE_MODE=''
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r connection] [-R response_type] [-f flow] [-u callback] [-s scope] [-p prompt] [-m|-C|-o|-h]
+USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r connection] [-R response_type] [-f flow] [-u callback] [-s scope] [-p prompt] [-M mode] [-m|-C|-o|-h]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
@@ -29,6 +30,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r conn
         -u callback    # callback URL (default ${AUTH0_REDIRECT_URI})
         -s scopes      # comma separated list of scopes (default is "${AUTH0_SCOPE}")
         -p prompt      # prompt type: none, silent, login
+        -M model       # response_mode of: web_message, form_post, fragment 
         -C             # copy to clipboard
         -m             # Management API audience
         -o             # Open URL
@@ -87,7 +89,7 @@ declare opt_browser=''
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:d:c:a:r:R:f:u:p:s:b:mCohv?" opt
+while getopts "e:t:d:c:a:r:R:f:u:p:s:b:M:mCohv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -100,6 +102,7 @@ do
         f) opt_flow=${OPTARG};;
         u) AUTH0_REDIRECT_URI=${OPTARG};;
         p) AUTH0_PROMPT=${OPTARG};;
+        M) AUTH0_RESPONSE_MODE=${OPTARG};;
         s) AUTH0_SCOPE=`echo ${OPTARG} | tr ',' ' '`;;
         C) opt_clipboard=1;;
         o) opt_open=1;; 
@@ -131,6 +134,7 @@ declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIEN
 [[ -n "${AUTH0_AUDIENCE}" ]] && authorize_url+="&audience=`urlencode ${AUTH0_AUDIENCE}`"
 [[ -n "${AUTH0_CONNECTION}" ]] &&  authorize_url+="&connection=${AUTH0_CONNECTION}"
 [[ -n "${AUTH0_PROMPT}" ]] &&  authorize_url+="&prompt=${AUTH0_PROMPT}"
+[[ -n "${AUTH0_RESPONSE_MODE}" ]] &&  authorize_url+="&response_mode=${AUTH0_RESPONSE_MODE}"
 
 echo "${authorize_url}"
 
