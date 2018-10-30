@@ -17,7 +17,7 @@ USAGE: $0 [-e env] [-a access_token] [-f flag:true|false] [-s true|false] [-v|-h
         -v          # verbose
 
 eg,
-     $0 -f enable_client_connections -s true
+     $0 -f otp -s true
 END
     exit $1
 }
