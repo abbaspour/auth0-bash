@@ -8,7 +8,7 @@ declare value=''
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-f flag:true|false] [-s true|false] [-v|-h]
+USAGE: $0 [-e env] [-a access_token] [-f factor] [-s true|false] [-v|-h]
         -e file     # .env file location (default cwd)
         -a token    # access_token. default from environment variable
         -f factor   # factor e.g. push-notification
