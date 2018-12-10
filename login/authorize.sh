@@ -29,8 +29,10 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r conn
         -f flow        # OAuth2 flow type (implicit,code,pkce,hybrid)
         -u callback    # callback URL (default ${AUTH0_REDIRECT_URI})
         -s scopes      # comma separated list of scopes (default is "${AUTH0_SCOPE}")
-        -p prompt      # prompt type: none, silent, login
+        -p prompt      # prompt type: none, silent, login, consent
         -M model       # response_mode of: web_message, form_post, fragment 
+        -S state       # state
+        -n nonce       # nonce
         -C             # copy to clipboard
         -m             # Management API audience
         -o             # Open URL
@@ -50,7 +52,7 @@ urlencode() {
         local c="${1:i:1}"
         case $c in
             [a-zA-Z0-9.~_-]) printf "$c" ;;
-            *) printf '%s' "$c" | xxd -p -c1 |
+            *) printf '%s' "$c" | xxd -p -u -c1 |
                    while read c; do printf '%%%s' "$c"; done ;;
         esac
     done
@@ -84,12 +86,14 @@ declare opt_open=''
 declare opt_clipboard=''
 declare opt_flow='implicit'
 declare opt_mgmnt=''
+declare opt_state=''
+declare opt_nonce='mynonce'
 declare opt_verbose=0
 declare opt_browser=''
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:d:c:a:r:R:f:u:p:s:b:M:mCohv?" opt
+while getopts "e:t:d:c:a:r:R:f:u:p:s:b:M:S:n:mCohv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -104,6 +108,8 @@ do
         p) AUTH0_PROMPT=${OPTARG};;
         M) AUTH0_RESPONSE_MODE=${OPTARG};;
         s) AUTH0_SCOPE=`echo ${OPTARG} | tr ',' ' '`;;
+        S) opt_state=${OPTARG};;
+        n) opt_nonce=${OPTARG};;
         C) opt_clipboard=1;;
         o) opt_open=1;; 
         m) opt_mgmnt=1;;
@@ -122,19 +128,20 @@ done
 declare response_param=''
 
 case ${opt_flow} in
-    implicit) response_param="response_type=`urlencode ${AUTH0_RESPONSE_TYPE}`";;
+    implicit) response_param="response_type=`urlencode "${AUTH0_RESPONSE_TYPE}"`";;
     *code) response_param='response_type=code';;
     pkce|hybrid) code_verifier=$(gen_code_verifier); code_challenge=$(gen_code_challenge ${code_verifier}); echo "code_verifier=${code_verifier}"; response_param="code_challenge_method=S256&code_challenge=${code_challenge}"
         if  [[ ${opt_flow} == 'pkce' ]]; then response_param+='&response_type=code'; else response_param+='&response_type=code%20token%20id_token'; fi;;
     *) echo >&2 "ERROR: unknown flow: ${opt_flow}"; usage 1;;
 esac
 
-declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&${response_param}&nonce=mynonce&redirect_uri=`urlencode ${AUTH0_REDIRECT_URI}`&scope=`urlencode "${AUTH0_SCOPE}"`"
+declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&${response_param}&nonce=`urlencode ${opt_nonce}`&redirect_uri=`urlencode ${AUTH0_REDIRECT_URI}`&scope=`urlencode "${AUTH0_SCOPE}"`"
 
 [[ -n "${AUTH0_AUDIENCE}" ]] && authorize_url+="&audience=`urlencode ${AUTH0_AUDIENCE}`"
 [[ -n "${AUTH0_CONNECTION}" ]] &&  authorize_url+="&connection=${AUTH0_CONNECTION}"
 [[ -n "${AUTH0_PROMPT}" ]] &&  authorize_url+="&prompt=${AUTH0_PROMPT}"
 [[ -n "${AUTH0_RESPONSE_MODE}" ]] &&  authorize_url+="&response_mode=${AUTH0_RESPONSE_MODE}"
+[[ -n "${opt_state}" ]] &&  authorize_url+="&state=`urlencode ${opt_state}`"
 
 echo "${authorize_url}"
 
