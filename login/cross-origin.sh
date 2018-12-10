@@ -36,7 +36,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u username] [-p pass
         -p password    # Password
         -r realm       # Connection (default ${AUTH0_CONNECTION})
         -o origin      # Allowed Origin (default ${AUTH0_ORIGIN})
-        -u callback    # callback URL (default ${AUTH0_REDIRECT_URI})
+        -U callback    # callback URL (default ${AUTH0_REDIRECT_URI})
         -h|?           # usage
         -v             # verbose
 
@@ -56,7 +56,7 @@ declare opt_verbose=0
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:d:c:a:u:p:r:o:u:s:mhv?" opt
+while getopts "e:t:d:c:a:u:p:r:o:U:s:mhv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -68,7 +68,7 @@ do
         p) PASSWORD=${OPTARG};;
         r) AUTH0_CONNECTION=${OPTARG};;
         o) AUTH0_ORIGIN=${OPTARG};;
-        u) AUTH0_REDIRECT_URI=${OPTARG};;
+        U) AUTH0_REDIRECT_URI=${OPTARG};;
         s) AUTH0_SCOPE=`echo ${OPTARG} | tr ',' ' '`;;
         m) opt_mgmnt=1;;
         v) opt_verbose=1;; #set -x;;
@@ -113,7 +113,7 @@ declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIEN
 
 echo "authorize_url: ${authorize_url}"
 
-declare location=$(curl -s -I -b cookie.txt $authorize_url | tee /dev/tty | awk '/^location: /{print $2}')
+declare location=$(curl -s -I -b cookie.txt $authorize_url | tee /dev/tty | awk 'IGNORECASE = 1;/^location: /{print $2}')
 
 echo "Redirect location: ${location}"
 
