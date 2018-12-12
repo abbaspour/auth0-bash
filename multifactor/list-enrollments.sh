@@ -1,5 +1,7 @@
 #!/bin/bash
 
+## Note: use `./list-authenticators.sh` 
+
 set -eo pipefail
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
