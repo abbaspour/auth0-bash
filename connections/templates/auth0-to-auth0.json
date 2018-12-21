@@ -1,0 +1,16 @@
+{
+        "options": {
+            "scripts": {
+                "fetchUserProfile": "// Processes the OpenId Connect id_token response from the other Auth0 tenant, then extracts the appropriate parts\n\n(() => {\n    function rule(accessToken, context, callback) {\n        'use strict';\n\n        const ruleName = 'auth0-to-auth0';\n        const jsonwebtoken = require('jsonwebtoken@7.1.9'); // todo: 8.4.0\n\n        function escapeWithError(errorKey) {\n            throw new Error(ruleName + ':' + errorKey);\n        }\n\n        function log( /* ...args */ ) {\n            if (configuration.CONSOLE_LOGGING) {\n                const args = Array.from(arguments);\n                console.log.apply(null, args);\n            }\n        }\n\n        Promise.resolve().then(() => {\n\n            if (!context.id_token) {\n                escapeWithError('missing-id_token');\n            }\n\n            const jwt = jsonwebtoken.decode(context.id_token);\n\n            if (!jwt) {\n                escapeWithError('malformed-id_token');\n            }\n\n            if (!jwt.sub) {\n                escapeWithError('missing-sub');\n            }\n\n            if (!jwt.email) {\n                escapeWithError('missing-email');\n            }\n\n            const profile = {\n                user_id: jwt.sub,\n                email: jwt.email,\n                given_name: jwt.given_name,\n                family_name: jwt.family_name\n            };\n\n            if (jwt.picture) {\n                profile.picture = jwt.picture;\n            }\n\n\n            return profile;\n\n        }).then((profile) => {\n\n            return callback(null, profile);\n\n        }).catch((err) => {\n            log('failing with error', { err });\n            callback((err instanceof Error) ? err : ruleName + ':unknown_error');\n        });\n    }\n\n    if (module) {\n        module.exports = rule;\n    }\n\n    return rule;\n})()\n"
+            },
+            "authorizationURL": "https://amin02.auth0.com/authorize",
+            "tokenURL": "https://amin02.auth0.com/oauth/token",
+            "scope": "openid email",
+            "customHeaders": { }
+        },
+        "strategy": "oauth2",
+        "name": "auth0-to-auth0-template",
+        "is_domain_connection": true,
+        "enabled_clients": [
+        ]
+}

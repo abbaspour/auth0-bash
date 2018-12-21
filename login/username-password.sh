@@ -78,15 +78,14 @@ declare BODY=$(cat <<EOL
 {
             "grant_type": "http://auth0.com/oauth/grant-type/password-realm",
             "realm" : "${AUTH0_CONNECTION}",
-            "scope": "${AUTH0_SCOPE}",
             "client_id": "${AUTH0_CLIENT_ID}",
             ${secret}
             "username": "${username}",
-            "password": "${password}",
-            "audience": "${AUTH0_AUDIENCE}"
+            "password": "${password}"
 }
 EOL
 )
-
+            #"scope": "${AUTH0_SCOPE}",
+            #"audience": "${AUTH0_AUDIENCE}"
 curl --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/oauth/token
 

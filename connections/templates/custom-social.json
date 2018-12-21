@@ -1,0 +1,22 @@
+{
+        "options": {
+            "client_id": "XXXXXX",
+            "client_secret": "YYYYYY",
+            "scripts": {
+                "fetchUserProfile": "PUT `../../tools/single-line.sh fetchUserProfile.js` HERE"
+            },
+            "authorizationURL": "https://some.where/oidc/oauth/authorize",
+            "tokenURL": "https://some.where/oidc/oauth/token",
+            "scope": "",
+            "customHeaders": {
+                "Authorization": "Basic XXXX"
+            }
+        },
+        "strategy": "oauth2",
+        "name": "custom-social-connection",
+        "is_domain_connection": true,
+        "realms": [
+            "custom-social-connection"
+        ],
+        "enabled_clients": []
+}
