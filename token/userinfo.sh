@@ -2,7 +2,7 @@
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-t tenant] [-d domain] [-a access_token] [-m|-C|-o|-h]
+USAGE: $0 [-e env] [-t tenant] [-d domain] [-a access_token] [-o|-h]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain

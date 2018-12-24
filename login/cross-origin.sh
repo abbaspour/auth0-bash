@@ -97,7 +97,7 @@ EOL
 
 declare co_response=$(curl -s -c cookie.txt -H "Content-Type: application/json" \
     -H "origin: ${AUTH0_ORIGIN}" \
-    -H "auth0-client: ${AUTH0_CLIENT_B64}" \
+    -H "auth0-clients: ${AUTH0_CLIENT_B64}" \
     -d "${BODY}" https://${AUTH0_DOMAIN}/co/authenticate)
 
 echo "CO Response: ${co_response}"
@@ -128,6 +128,6 @@ declare id_token=$(echo ${location} | grep -oE "id_token=([^&]+)" | awk -F= '{pr
 declare access_token_json=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null)
 declare id_token_json=$(echo ${id_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null)
 
-echo "Access Token: ${access_token_json}" 
-echo "ID     Token: ${id_token_json}" 
+echo "Access Token: ${access_token_json}"
+echo "ID     Token: ${id_token_json}"
 

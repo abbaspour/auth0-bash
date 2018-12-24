@@ -6,8 +6,8 @@ declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 ##
 # prerequisite:
-# 1. create a client with type SPA
-# 2. add allowed callback to client: https://jwt.io 
+# 1. create a clients with type SPA
+# 2. add allowed callback to clients: https://jwt.io
 # 3. ./01-authenticate -t tenant -c client_id
 ##
 
@@ -84,7 +84,7 @@ do
         p) AUTH0_PROMPT=${OPTARG};;
         s) AUTH0_SCOPE=`echo ${OPTARG} | tr ',' ' '`;;
         C) opt_clipboard=1;;
-        o) opt_open=1;; 
+        o) opt_open=1;;
         m) opt_mgmnt=1;;
         b) opt_browser="-a ${OPTARG} ";;
         v) opt_verbose=1;; #set -x;;
@@ -96,7 +96,7 @@ done
 [[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
 [[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
 
-declare authorize_url="https://${AUTH0_DOMAIN}/preview/login?client=${AUTH0_CLIENT_ID}"
+declare authorize_url="https://${AUTH0_DOMAIN}/preview/login?clients=${AUTH0_CLIENT_ID}"
 
 echo "${authorize_url}"
 

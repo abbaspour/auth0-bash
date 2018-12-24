@@ -1,12 +1,12 @@
 #!/bin/bash
-  
+
 set -euo pipefail
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]}) 
-  
+declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+
 declare AUTH0_CLIENT='{"name":"auth0.js","version":"9.0.2"}'
 declare AUTH0_CLIENT_B64=$(echo -n ${AUTH0_CLIENT} | base64)
- 
+
 urlencode() {
     local length="${#1}"
     for (( i = 0; i < length; i++ )); do
@@ -79,7 +79,7 @@ done
 
 [[ -z "${USERNAME}" ]] && { echo >&2 "ERROR: USERNAME undefined." ; usage 1; }
 [[ -z "${PASSWORD}" ]] && { echo >&2 "ERROR: PASSWORD undefined." ; usage 1; }
- 
+
 declare BODY=$(cat <<EOL
 {
     "client_id":"${AUTH0_CLIENT_ID}",
@@ -90,32 +90,32 @@ declare BODY=$(cat <<EOL
 }
 EOL
 )
-  
+
 echo "CO Body: ${BODY}"
-  
+
 declare co_response=$(curl -s -c cookie.txt -H "Content-Type: application/json" \
     -H "origin: ${ORIGIN}" \
-    -H "auth0-client: ${AUTH0_CLIENT_B64}" \
+    -H "auth0-clients: ${AUTH0_CLIENT_B64}" \
     -d "${BODY}" https://${AUTH0_DOMAIN}/co/authenticate)
-  
+
 echo "CO Response: ${co_response}"
-  
+
 declare login_ticket=$(echo ${co_response} | jq -cr .login_ticket)
 echo "login_ticket=${login_ticket}"
- 
-declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&response_type=`urlencode "token id_token"`&redirect_uri=`urlencode ${ORIGIN}`&scope=`urlencode "${AUTH0_SCOPE}"`&login_ticket=${login_ticket}&state=mystate&nonce=mynonce&auth0Client=${AUTH0_CLIENT_B64}&audience=`urlencode ${AUTH0_AUDIENCE}`" 
-  
+
+declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&response_type=`urlencode "token id_token"`&redirect_uri=`urlencode ${ORIGIN}`&scope=`urlencode "${AUTH0_SCOPE}"`&login_ticket=${login_ticket}&state=mystate&nonce=mynonce&auth0Client=${AUTH0_CLIENT_B64}&audience=`urlencode ${AUTH0_AUDIENCE}`"
+
 echo "authorize_url: ${authorize_url}"
 
 declare location=$(curl -s -I -b cookie.txt ${authorize_url} | awk '/^location: /{print $2}')
-  
+
 echo "Redirect location: ${location}"
-  
+
 declare access_token=$(echo ${location} | grep -oE "access_token=([^&]+)" | awk -F= '{print $2}')
 declare id_token=$(echo ${location} | grep -oE "id_token=([^&]+)" | awk -F= '{print $2}')
-  
+
 declare access_token_json=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null)
 declare id_token_json=$(echo ${id_token} | awk -F. '{print $2}' | base64 -di)
-  
+
 echo "Access Token: ${access_token_json}"
 echo "ID     Token: ${id_token_json}"

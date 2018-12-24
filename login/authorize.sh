@@ -6,8 +6,8 @@ declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 ##
 # prerequisite:
-# 1. create a client with type SPA
-# 2. add allowed callback to client: https://jwt.io 
+# 1. create a clients with type SPA
+# 2. add allowed callback to clients: https://jwt.io
 # 3. ./authorize.sh -t tenant -c client_id
 ##
 
@@ -30,7 +30,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r conn
         -u callback    # callback URL (default ${AUTH0_REDIRECT_URI})
         -s scopes      # comma separated list of scopes (default is "${AUTH0_SCOPE}")
         -p prompt      # prompt type: none, silent, login, consent
-        -M model       # response_mode of: web_message, form_post, fragment 
+        -M model       # response_mode of: web_message, form_post, fragment
         -S state       # state
         -n nonce       # nonce
         -C             # copy to clipboard
@@ -73,7 +73,7 @@ gen_code_verifier() {
 
 gen_code_challenge() {
     local cc=$(echo -n "$1" | openssl dgst -binary -sha256)
-    echo $(base64URLEncode "$cc") 
+    echo $(base64URLEncode "$cc")
 }
 
 declare AUTH0_DOMAIN=''
@@ -111,7 +111,7 @@ do
         S) opt_state=${OPTARG};;
         n) opt_nonce=${OPTARG};;
         C) opt_clipboard=1;;
-        o) opt_open=1;; 
+        o) opt_open=1;;
         m) opt_mgmnt=1;;
         b) opt_browser="-a ${OPTARG} ";;
         v) opt_verbose=1;; #set -x;;

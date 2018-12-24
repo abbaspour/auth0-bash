@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ueo pipefail 
+set -ueo pipefail
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
@@ -13,7 +13,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-a
         -d domain      # Auth0 domain
         -c client_id   # Auth0 client ID
         -x secret      # Auth0 client secret
-        -a audience    # Code to exchange
+        -a audience    # API audience
         -h|?           # usage
         -v             # verbose
 
@@ -65,5 +65,5 @@ declare BODY=$(cat <<EOL
 EOL
 )
 
-curl --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/oauth/token
+curl -s --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/oauth/token
 
