@@ -65,7 +65,8 @@ D. Validate
 
 ```bash
 cd ../asp
-./client-assertion.sh -t tenant@region -a https://backend.api -k backend-api -f ../ca/backend-api-private.pem
+./client-assertion.sh -t tenant@region -a https://backend.api \
+  -k backend-api -f ../ca/backend-api-private.pem
 ```
 
 2. Introspect ASP 
