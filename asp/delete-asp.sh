@@ -41,6 +41,6 @@ done
 
 declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
 
-curl -v -H "Authorization: Bearer ${access_token}" \
+curl -H "Authorization: Bearer ${access_token}" \
     --request DELETE \
     --url "${AUTH0_DOMAIN_URL}api/v2/users/${user_id}/application-passwords/${asp_id}"
