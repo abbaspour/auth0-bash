@@ -10,14 +10,14 @@ declare AUTH0_CONNECTION='Username-Password-Authentication'
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u username] [-p passsword] [-x client_secret] [-a audience] [-r connection] [-s scope] [-m|-h|-v]
+USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-u username] [-p passsword] [-a audience] [-r connection] [-s scope] [-m|-h|-v]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
+        -u username    # Username or email
+        -p password    # Password
         -d domain      # Auth0 domain
         -c client_id   # Auth0 client ID
         -x secret      # Auth0 client secret
-        -u username    # Username or email
-        -p password    # Password
         -a audiance    # Audience
         -r realm       # Connection (default is "${AUTH0_CONNECTION}")
         -s scopes      # comma separated list of scopes (default is "${AUTH0_SCOPE}")
@@ -26,7 +26,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u username] [-p pass
         -v             # verbose
 
 eg,
-     $0 -t amin01@au -s offline_access -c XXXX -u user -p pass
+     $0 -t amin01@au -c XXXX -u user -p pass
 END
     exit $1
 }
@@ -87,5 +87,10 @@ declare BODY=$(cat <<EOL
 }
 EOL
 )
-curl --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/oauth/token
+
+export mfa_token=`curl -s --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/oauth/token | jq -r '.mfa_token'`
+
+
+echo "export mfa_token=\"${mfa_token}\""
+
 

@@ -18,7 +18,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-a access_token] [-o|-h]
         -v             # verbose
 
 eg,
-     $0 -t amin01@au -a J7REwk4c6tJo29jmMV0AZZ79vBd8_qTz -c 'eyJ0eXAiOiJKV1QiLCJhbGciOiJ...ZD92vVGd-ZNGA'
+     $0 -t amin01@au -a AYnUtXXXXXX -c 'eyJ0eXAiOiJKV1QiLCJhbGciOiJ...ZD92vVGd-ZNGA'
 END
     exit $1
 }
@@ -57,7 +57,7 @@ declare BODY=$(cat <<EOL
 EOL
 )
 
-curl --request POST \
+curl -s --request POST \
     --data "${BODY}" \
     --header 'content-type: application/json' \
     --url https://${AUTH0_DOMAIN}/oauth/introspect
