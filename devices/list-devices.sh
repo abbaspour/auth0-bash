@@ -37,8 +37,8 @@ declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base
 
 declare qs=''
 [[ -n "${userId}" ]] && qs="?user_id=${userId}" #jq_query+=" | select(.user_id | contains(\"${userId}\"))"
-declare -r jq_query+=".[] | \"\(.id) \(.user_id) \(.device_name)\" "
+declare -r jq_query+=".[] | \"\(.id) \(.user_id) \(.type) \(.device_name)\" "
 
 curl -s --request GET \
     -H "Authorization: Bearer ${access_token}" \
-    --url ${AUTH0_DOMAIN_URL}api/v2/device-credentials${qs} | jq -rc "${jq_query}"
+    --url ${AUTH0_DOMAIN_URL}api/v2/device-credentials${qs} | jq -rc "${jq_query}" | sort

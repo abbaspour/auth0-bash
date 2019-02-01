@@ -41,4 +41,4 @@ declare -r jq_query+=".[] | \"\(.id) \(.user_id) \(.audience) \(.clientID)\" "
 
 curl -s --request GET \
     -H "Authorization: Bearer ${access_token}" \
-    --url ${AUTH0_DOMAIN_URL}api/v2/grants${qs} | jq -rc "${jq_query}"
+    --url ${AUTH0_DOMAIN_URL}api/v2/grants${qs} | jq -rc "${jq_query}" | sort
