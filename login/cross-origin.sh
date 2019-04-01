@@ -27,7 +27,7 @@ declare -r AUTH0_CLIENT_B64=$(echo -n $AUTH0_CLIENT | base64)
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u username] [-p pass] [-r connection] [-o origin] [-u callback] [-v|-h]
+USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u username] [-p pass] [-r connection] [-o origin] [-U callback] [-v|-h]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
@@ -37,6 +37,8 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u username] [-p pass
         -r realm       # Connection (default ${AUTH0_CONNECTION})
         -o origin      # Allowed Origin (default ${AUTH0_ORIGIN})
         -U callback    # callback URL (default ${AUTH0_REDIRECT_URI})
+        -a audience    # audience 
+        -s scopes      # scopes (comma-separated, default "${AUTH0_SCOPE}")
         -h|?           # usage
         -v             # verbose
 

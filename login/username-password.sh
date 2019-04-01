@@ -10,7 +10,7 @@ declare AUTH0_CONNECTION='Username-Password-Authentication'
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u username] [-p passsword] [-x client_secret] [-a audience] [-r connection] [-s scope] [-m|-h|-v]
+USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u username] [-p passsword] [-x client_secret] [-a audience] [-r connection] [-s scope] [-i IP] [-m|-h|-v]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
@@ -21,6 +21,8 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u username] [-p pass
         -a audiance    # Audience
         -r realm       # Connection (default is "${AUTH0_CONNECTION}")
         -s scopes      # comma separated list of scopes (default is "${AUTH0_SCOPE}")
+        -i IP          # set origin IP header. Default is 'x-forwarded-for'
+        -A             # switch to 'auth0-forwarded-for' for trust IP header
         -m             # Management API audience
         -h|?           # usage
         -v             # verbose
@@ -38,13 +40,15 @@ declare AUTH0_AUDIENCE=''
 
 declare username=''
 declare password=''
+declare origin_ip='127.0.0.1'
 
+declare ff_prefix='x'
 declare opt_mgmnt=''
 declare opt_verbose=0
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:u:p:d:c:x:a:r:s:mhv?" opt
+while getopts "e:t:u:p:d:c:x:a:r:s:i:Amhv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -57,6 +61,8 @@ do
         a) AUTH0_AUDIENCE=${OPTARG};;
         r) AUTH0_CONNECTION=${OPTARG};;
         s) AUTH0_SCOPE=`echo ${OPTARG} | tr ',' ' '`;;
+        i) origin_ip=${OPTARG};;
+        A) ff_prefix='auth0';;
         m) opt_mgmnt=1;;
         v) opt_verbose=1;; #set -x;;
         h|?) usage 0;;
@@ -87,5 +93,9 @@ declare BODY=$(cat <<EOL
 }
 EOL
 )
-curl --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/oauth/token
+
+curl --header "$ff_prefix-forwarded-for: ${origin_ip}" \
+     --header 'content-type: application/json' \
+     -d "${BODY}" \
+     https://${AUTH0_DOMAIN}/oauth/token
 

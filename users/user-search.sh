@@ -24,6 +24,7 @@ END
 
 declare query=''
 declare search_engine='v3'
+declare opt_verbose=0
 
 while getopts "e:a:q:2hv?" opt
 do
@@ -50,14 +51,14 @@ curl -s --get -H "Authorization: Bearer ${access_token}" \
  -H 'content-type: application/json' \
  --data-urlencode "${param_query}" \
  --data-urlencode "${param_version}" \
-  ${AUTH0_DOMAIN_URL}api/v2/users 
+  ${AUTH0_DOMAIN_URL}api/v2/users #| awk -F: '/^x-ratelimit-reset/{print $2}' | xargs -L 1 -I% date -d @%
 
 
 #tenant=amin01.au
 #
 ## https://auth0.com/docs/users/search/v3#migrate-from-search-engine-v2-to-v3
 #
-##param_query='q=email_verified:false OR NOT _exists_:email_verified'    
+##param_query='q=email_verified:false OR NOT _exists_:email_verified'
 ##param_query='q=(NOT _exists_:logins_count OR logins_count:0)'
 ##param_query='q=(NOT app_metadata.role:"b")'
 #param_query='q=(NOT _exists_:app_metadata.memberships)'

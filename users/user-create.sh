@@ -17,6 +17,8 @@ USAGE: $0 [-e env] [-a access_token] [-u username] [-p password] [-c connection]
         -i user_id  # (optional) user ID
         -V          # Mark as email/phone verififed
         -s          # send verify email 
+        -U k:v      # user_metadata key/value
+        -A k:v      # app_metadata key/value
         -h|?        # usage
         -v          # verbose
 
@@ -34,7 +36,10 @@ declare verified_flag=''
 declare send_verify_email=''
 declare user_id=''
 
-while getopts "e:a:u:m:M:p:c:i:Vshv?" opt
+declare -a user_metadata=()
+declare -a app_metadata=()
+
+while getopts "e:a:u:m:M:p:c:i:U:A:Vshv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -45,6 +50,8 @@ do
         p) password=${OPTARG};;
         c) AUTH0_CONNECTION=${OPTARG};;
         i) user_id=${OPTARG};;
+        U) user_metadata+=(${OPTARG});;
+        A) app_metadata+=(${OPTARG});;
         V) verified_flag='1';;
         s) send_verify_email='1';;
         v) opt_verbose=1;; #set -x;;
@@ -69,10 +76,17 @@ declare phone_number_field=''; [[ -n "${phone_number}" ]] && { phone_number_fiel
 declare verified_field=''; 
 if [[ -n "${verified_flag}" ]]; then
   if [[ ${AUTH0_CONNECTION} == 'sms' ]]; then verified_field="phone_verified:true,"
-  else verified_field="email_verified:true,"
+  else verified_field="\"email_verified\":true,"
   fi
 fi
 
+declare app_metadata_str=$(printf ",%s" "${app_metadata[@]}")
+app_metadata_str=${app_metadata_str:1}
+
+declare user_metadata_str=$(printf ",%s" "${user_metadata[@]}")
+user_metadata_str=${user_metadata_str:1}
+
+  #${verify_email_field}
 
 declare BODY=$(cat <<EOL
 {
@@ -84,14 +98,13 @@ declare BODY=$(cat <<EOL
   ${phone_number_field}
   ${user_id_field}
   ${verified_field}
-  ${verify_email_field}
-  "app_metadata": {},
-  "user_metadata": {}
+  "app_metadata": {${app_metadata_str}},
+  "user_metadata": {${user_metadata_str}}
 }
 EOL
 )
 
-#declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
+echo $BODY
 
 curl --request POST \
     -H "Authorization: Bearer ${access_token}" \
