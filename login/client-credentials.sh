@@ -14,6 +14,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-a
         -c client_id   # Auth0 client ID
         -x secret      # Auth0 client secret
         -a audience    # API audience
+        -m             # Management API audience
         -h|?           # usage
         -v             # verbose
 
@@ -65,5 +66,5 @@ declare BODY=$(cat <<EOL
 EOL
 )
 
-curl -s --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/oauth/token
+curl -s -k --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/oauth/token
 
