@@ -15,7 +15,8 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-p
         -c client_id   # Auth0 client ID
         -x secret      # Auth0 client secret
         -p verifier    # PKCE code_verifier (no secret required)
-        -a code        # Code to exchange
+        -a code        # Authorization Code to exchange
+        -D code        # Device Code to exchange
         -u callback    # callback URL
         -h|?           # usage
         -v             # verbose
@@ -33,8 +34,10 @@ declare AUTH0_REDIRECT_URI='https://jwt.io'
 declare opt_verbose=0
 declare authorization_code=''
 declare code_verifier=''
+declare grant_type='authorization_code'
+declare code_type='code'
 
-while getopts "e:t:d:c:u:a:x:p:hv?" opt
+while getopts "e:t:d:c:u:a:x:p:D:hv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -45,6 +48,7 @@ do
         u) AUTH0_REDIRECT_URI=${OPTARG};;
         a) authorization_code=${OPTARG};;
         p) code_verifier=${OPTARG};;
+        D) code_type='device_code'; grant_type='urn:ietf:params:oauth:grant-type:device_code'; authorization_code=${OPTARG};;
         v) opt_verbose=1;; #set -x;;
         h|?) usage 0;;
         *) usage 1;;
@@ -64,8 +68,8 @@ declare BODY=$(cat <<EOL
 {
     "client_id":"${AUTH0_CLIENT_ID}",
     ${secret}
-    "code": "${authorization_code}",
-    "grant_type":"authorization_code",
+    "${code_type}": "${authorization_code}",
+    "grant_type":"${grant_type}",
     "redirect_uri": "${AUTH0_REDIRECT_URI}"
 }
 EOL
