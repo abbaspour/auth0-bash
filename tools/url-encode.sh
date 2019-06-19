@@ -14,5 +14,5 @@ urlencode() {
     done
 }
 
-urlencode $1 
+urlencode $* 
 echo

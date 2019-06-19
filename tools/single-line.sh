@@ -1,3 +1,3 @@
 #!/bin/bash
-sed 's/$/\\n/' $1 | tr -d '\n'
+sed 's|\\|\\\\|g;s/$/\\n/g' $1 | tr -d '\n'
 echo
