@@ -42,8 +42,8 @@ do
         t) AUTH0_DOMAIN=`echo ${OPTARG}.auth0.com | tr '@' '.'`;;
         d) AUTH0_DOMAIN=${OPTARG};;
         c) AUTH0_CLIENT_ID=${OPTARG};;
-        s) scopes=$(${OPTARG} | tr , ' '); scopes_field=",\"scopes\":\"{scopes}\"";;
-        a) audience_field=",\"audience\":\"{OPTARG}\"";;
+        s) scopes=`echo ${OPTARG} | tr , ' '`; scopes_field=",\"scope\":\"${scopes}\"";;
+        a) audience_field=",\"audience\":\"${OPTARG}\"";;
         m) opt_mgmnt=1;;
         v) opt_verbose=1;; #set -x;;
         h|?) usage 0;;
