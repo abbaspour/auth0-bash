@@ -9,6 +9,7 @@ USAGE: $0 [-e env] [-a access_token] [-j job_id] [-v|-h]
         -a token    # access_token. default from environment variable
         -j id       # job_id
         -h|?        # usage
+        -d          # detailed error message
         -v          # verbose
 
 eg,
@@ -18,13 +19,15 @@ END
 }
 
 declare job_id=''
+declare uri=''
 
-while getopts "e:a:j:hv?" opt
+while getopts "e:a:j:dhv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
         a) access_token=${OPTARG};;
         j) job_id=${OPTARG};;
+        d) uri='/errors';;
         v) opt_verbose=1;; #set -x;;
         h|?) usage 0;;
         *) usage 1;;
@@ -37,5 +40,5 @@ done
 declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
 
 curl -H "Authorization: Bearer ${access_token}" \
-    --url ${AUTH0_DOMAIN_URL}api/v2/jobs/${job_id}
+    --url ${AUTH0_DOMAIN_URL}api/v2/jobs/${job_id}${uri}
 
