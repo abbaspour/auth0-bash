@@ -16,7 +16,7 @@ USAGE: $0 [-e env] [-a access_token] [-u username] [-p password] [-c connection]
         -c realm    # connection (defaults to "${AUTH0_CONNECTION}")
         -i user_id  # (optional) user ID
         -V          # Mark as email/phone verififed
-        -s          # send verify email 
+        -s          # send verify email
         -U k:v      # user_metadata key/value
         -A k:v      # app_metadata key/value
         -h|?        # usage
@@ -73,7 +73,7 @@ declare email_field=''; [[ -n "${email}" ]] && email_field="\"email\": \"${email
 declare verify_email_field=''; [[ -n "${verified_flag}" ]] && verify_email_field="\"verify_email\": true,"
 declare phone_number_field=''; [[ -n "${phone_number}" ]] && { phone_number_field="\"phone_number\": \"${phone_number}\","; AUTH0_CONNECTION='sms'; }
 
-declare verified_field=''; 
+declare verified_field='';
 if [[ -n "${verified_flag}" ]]; then
   if [[ ${AUTH0_CONNECTION} == 'sms' ]]; then verified_field="phone_verified:true,"
   else verified_field="\"email_verified\":true,"

@@ -5,10 +5,10 @@ declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-i id] [-v|-h]
+USAGE: $0 [-e env] [-a access_token] [-v|-h]
         -e file     # .env file location (default cwd)
         -a token    # access_token. default from environment variable
-        -i id       # resource server id
+        -t template # template name: verify_email, reset_email, welcome_email, blocked_account, stolen_credentials, enrollment_email, mfa_oob_code, change_password, password_reset
         -h|?        # usage
         -v          # verbose
 
@@ -18,14 +18,14 @@ END
     exit $1
 }
 
-declare uri=''
+declare template=''
 
-while getopts "e:a:i:hv?" opt
+while getopts "e:a:t:hv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
         a) access_token=${OPTARG};;
-        i) uri="/${OPTARG}";;
+        t) template=${OPTARG};;
         v) opt_verbose=1;; #set -x;;
         h|?) usage 0;;
         *) usage 1;;
@@ -33,8 +33,9 @@ do
 done
 
 [[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
+[[ -z "${template}" ]] && { echo >&2 "ERROR: template undefined."; usage 1; }
 
 declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
 
 curl -s -H "Authorization: Bearer ${access_token}" \
-    --url ${AUTH0_DOMAIN_URL}api/v2/resource-servers${uri}  | jq '.'
+    --url ${AUTH0_DOMAIN_URL}api/v2/email-templates/${template}  | jq '.'

@@ -32,7 +32,7 @@ do
         a) access_token=${OPTARG};;
         c) count=${OPTARG};;
         p) prefix=${OPTARG};;
-        x) declare -r password_hash=$(htpasswd -bnBC 10 "" ${OPTARG} | tr -d ':\n' | sed 's/$2y/$2b/'); password_field=",\"password_hash\":\"${password_hash}\"";;
+        x) declare -r password_hash=$(htpasswd -bnBC ${bc_rounds} "" ${OPTARG} | tr -d ':\n' | sed 's/$2y/$2b/'); password_field=",\"password_hash\":\"${password_hash}\"";;
         d) domain=${OPTARG};;
         V) is_email_verified='true';;
         v) opt_verbose=1;; #set -x;;
@@ -44,9 +44,7 @@ done
 function singleUser() {
     local no=$1
     cat <<EOL
-{
- "email":"user${prefix}.${no}@${domain}","email_verified":${is_email_verified}${password_field}
-}    
+{ "email":"user${prefix}.${no}@${domain}","email_verified":${is_email_verified}${password_field} }    
 EOL
 }
 
@@ -59,7 +57,7 @@ EOL
 #    }
 
 echo '['
-echo $(singleUser 1)
+echo "" $(singleUser 1)
 
 for i in `seq 2 ${count}`; do
     echo -n ','

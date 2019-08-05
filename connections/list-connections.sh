@@ -5,9 +5,10 @@ declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-v|-h]
+USAGE: $0 [-e env] [-a access_token] [-i connection_id] [-v|-h]
         -e file     # .env file location (default cwd)
         -a token    # access_token. default from environment variable
+        -i id       # connection id
         -h|?        # usage
         -v          # verbose
 
@@ -17,11 +18,14 @@ END
     exit $1
 }
 
-while getopts "e:a:hv?" opt
+declare uri='connections'
+
+while getopts "e:a:i:hv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
         a) access_token=${OPTARG};;
+        i) uri+="/${OPTARG}";;
         v) opt_verbose=1;; #set -x;;
         h|?) usage 0;;
         *) usage 1;;
@@ -33,4 +37,4 @@ done
 declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
 
 curl -s -H "Authorization: Bearer ${access_token}" \
-    --url ${AUTH0_DOMAIN_URL}api/v2/connections  | jq '.'
+    --url ${AUTH0_DOMAIN_URL}api/v2/${uri}  | jq '.'

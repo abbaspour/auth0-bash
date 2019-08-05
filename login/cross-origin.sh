@@ -97,7 +97,7 @@ declare BODY=$(cat <<EOL
 EOL
 )
 
-declare co_response=$(curl -s -c cookie.txt -H "Content-Type: application/json" \
+declare co_response=$(curl -s -b cookie.txt -H "Content-Type: application/json" \
     -H "origin: ${AUTH0_ORIGIN}" \
     -H "auth0-clients: ${AUTH0_CLIENT_B64}" \
     -d "${BODY}" https://${AUTH0_DOMAIN}/co/authenticate)

@@ -30,7 +30,7 @@ do
         e) source ${OPTARG};;
         a) access_token=${OPTARG};;
         n) client_name=${OPTARG};;
-        t) client_type=(${OPTARG});;
+        t) client_type=${OPTARG};;
         v) opt_verbose=1;; #set -x;;
         h|?) usage 0;;
         *) usage 1;;

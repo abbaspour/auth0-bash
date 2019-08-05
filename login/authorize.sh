@@ -135,7 +135,9 @@ case ${opt_flow} in
     *) echo >&2 "ERROR: unknown flow: ${opt_flow}"; usage 1;;
 esac
 
-declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&${response_param}&nonce=`urlencode ${opt_nonce}`&redirect_uri=`urlencode ${AUTH0_REDIRECT_URI}`&scope=`urlencode "${AUTH0_SCOPE}"`"
+[[ ${AUTH0_DOMAIN} =~ ^http ]] || AUTH0_DOMAIN=https://${AUTH0_DOMAIN}
+
+declare authorize_url="${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&${response_param}&nonce=`urlencode ${opt_nonce}`&redirect_uri=`urlencode ${AUTH0_REDIRECT_URI}`&scope=`urlencode "${AUTH0_SCOPE}"`"
 
 [[ -n "${AUTH0_AUDIENCE}" ]] && authorize_url+="&audience=`urlencode ${AUTH0_AUDIENCE}`"
 [[ -n "${AUTH0_CONNECTION}" ]] &&  authorize_url+="&connection=${AUTH0_CONNECTION}"

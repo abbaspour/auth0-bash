@@ -1,0 +1,11 @@
+{
+  "strategy": "waad",
+  "name": "msv2",
+  "options": {
+    "identity_api": "microsoft-identity-platform-v2.0",
+    "useCommonEndpoint": true,
+    "client_id": "xxxx",
+    "client_secret": "xxxx",
+    "tenant_domain": "Directory/tenant UUID"
+  }
+}

@@ -10,6 +10,7 @@ USAGE: $0 [-e file] [-t tenant] [-d domain]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
+        -u url         # JWKS url
         -c file        # Output cert file name
         -p file        # Output public key file name
         -D             # Dump certificate
@@ -27,14 +28,16 @@ declare cert_file=''
 declare pubkey_file=''
 declare opt_dump=''
 declare opt_verbose=0
+declare jwks_url=''
 
 
-while getopts "e:t:d:f:Dhv?" opt
+while getopts "e:t:d:f:u:Dhv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
         t) AUTH0_DOMAIN=`echo ${OPTARG}.auth0.com | tr '@' '.'`;;
         d) AUTH0_DOMAIN=${OPTARG};;
+        u) jwks_url=${OPTARG};;
         f) cert_file=${OPTARG};;
         D) opt_dump=1;; 
         v) opt_verbose=1;; #set -x;;
@@ -43,12 +46,17 @@ do
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
+if [[ -z "${jwks_url}" ]]; then
+    [[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
+    jwks_url=`curl -s https://${AUTH0_DOMAIN}/.well-known/openid-configuration | jq -r '.jwks_uri'`
+else
+    AUTH0_DOMAIN='generic'
+fi
+
 [[ -z "${cert_file}" ]] && cert_file=${AUTH0_DOMAIN}-crt.pem
 [[ -z "${pubkey_file}" ]] && pubkey_file=${AUTH0_DOMAIN}-pub.pem
 
-declare -r jwks_uri=`curl -s https://${AUTH0_DOMAIN}/.well-known/openid-configuration | jq -r '.jwks_uri'`
-declare -r x5c=`curl -s ${jwks_uri} | jq -r '.keys [0] .x5c [0]'`
+declare -r x5c=`curl -s ${jwks_url} | jq -r '.keys [0] .x5c [0]'`
 
 
 echo '-----BEGIN CERTIFICATE-----'  > ${cert_file}
