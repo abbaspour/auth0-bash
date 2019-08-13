@@ -37,7 +37,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u username] [-p pass
         -r realm       # Connection (default ${AUTH0_CONNECTION})
         -o origin      # Allowed Origin (default ${AUTH0_ORIGIN})
         -U callback    # callback URL (default ${AUTH0_REDIRECT_URI})
-        -a audience    # audience 
+        -a audience    # audience
         -s scopes      # scopes (comma-separated, default "${AUTH0_SCOPE}")
         -h|?           # usage
         -v             # verbose
