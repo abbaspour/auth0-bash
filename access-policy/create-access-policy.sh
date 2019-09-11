@@ -7,10 +7,10 @@ which awk > /dev/null || { echo >&2 "error: awk not found"; exit 3; }
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-A access_token] [-r resource_server] [-a audience] [-s scopes] [-m|-v|-h]
+USAGE: $0 [-e env] [-A access_token] [-c client_id] [-a audience] [-s scopes] [-m|-v|-h]
         -e file         # .env file location (default cwd)
         -A token        # access_token. default from environment variable
-        -r rs           # resource_server identifier
+        -c id           # client_id
         -a audience     # resource server API audience
         -s scopes       # scopes to grant
         -h|?            # usage
@@ -22,16 +22,16 @@ END
     exit $1
 }
 
-declare resource_server=''
+declare client_id=''
 declare audience=''
 declare api_scopes=''
 
-while getopts "e:A:r:a:s:hv?" opt
+while getopts "e:A:c:a:s:hv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
         A) access_token=${OPTARG};;
-        r) resource_server=${OPTARG};;
+        c) client_id=${OPTARG};;
         a) audience=${OPTARG};;
         s) api_scopes=${OPTARG};;
         v) opt_verbose=1;; #set -x;;
@@ -42,7 +42,7 @@ done
 
 [[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
 declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
-[[ -z "${resource_server}" ]] && { echo >&2 "ERROR: resource_server undefined."; usage 1; }
+[[ -z "${client_id}" ]] && { echo >&2 "ERROR: client_id undefined."; usage 1; }
 [[ -z "${audience}" ]] && { echo >&2 "ERROR: audience undefined."; usage 1; }
 [[ -z "${api_scopes}" ]] && { echo >&2 "ERROR: api_scopes undefined."; usage 1; }
 
@@ -54,7 +54,7 @@ scopes=${scopes%?}
 
 declare BODY=$(cat <<EOL
 {
-  "resource_server_identifier": "${resource_server}",
+  "client_id": "${client_id}",
   "audience": "${audience}",
   "scope": [ ${scopes} ]
 }
@@ -65,5 +65,5 @@ curl -k --request POST \
     -H "Authorization: Bearer ${access_token}" \
     --data "${BODY}" \
     --header 'content-type: application/json' \
-    --url ${AUTH0_DOMAIN_URL}api/v2/api-grants
+    --url ${AUTH0_DOMAIN_URL}api/v2/access-policies
 

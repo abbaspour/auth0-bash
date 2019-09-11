@@ -60,9 +60,9 @@ declare BODY=$(cat <<EOL
 EOL
 )
 
-curl --request POST \
+curl -k --request POST \
     -H "Authorization: Bearer ${access_token}" \
     --data "${BODY}" \
     --header 'content-type: application/json' \
-    --url ${AUTH0_DOMAIN_URL}api/v2/resource-servers 
+    --url ${AUTH0_DOMAIN_URL}api/v2/resource-servers
 

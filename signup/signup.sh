@@ -2,17 +2,17 @@
 
 . ./.env
 
-declare AUTH0_DOMAIN='tvnzdevpoc.au.auth0.com'
+declare AUTH0_DOMAIN='XXXX.auth0.com'
 declare CONNECTION='Username-Password-Authentication'
-declare AUTH0_CLIENT_ID='UHqd0F1sr2GE8MnvKD8S88ArJWqQyYrx'
+declare AUTH0_CLIENT_ID='XXXX'
 
 declare DATA=$(cat <<EOF
 {
-    "client_id":"${AUTH0_CLIENT_ID}", 
-    "email":"test.account@signup.com", 
-    "password":"XXXXX", 
-    "connection":"${CONNECTION}", 
-    "user_metadata":{ "plan": "silver", "team_id": "a111" }
+    "client_id":"${AUTH0_CLIENT_ID}",
+    "email":"user@gmail.com",
+    "password":"XXXXX",
+    "connection":"${CONNECTION}",
+    "user_metadata":{ }
 }
 EOF)
 

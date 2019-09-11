@@ -19,7 +19,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-s scopes] [-a audien
         -v             # verbose
 
 eg,
-     $0 -t amin01@au -c aIioQEeY7nJdX78vcQWDBcAqTABgKnZl 
+     $0 -t amin01@au -c aIioQEeY7nJdX78vcQWDBcAqTABgKnZl
 END
     exit $1
 }
@@ -66,6 +66,6 @@ declare BODY=$(cat <<EOL
 EOL
 )
 
-curl -s --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/oauth/device/code | jq .
+curl --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/oauth/device/code | jq .
 
 echo -e "\n Polling:\n ./exchange.sh -d ${AUTH0_DOMAIN} -c ${AUTH0_CLIENT_ID} -D DEVICECODE"

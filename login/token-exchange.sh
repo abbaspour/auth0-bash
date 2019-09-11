@@ -10,16 +10,16 @@ declare AUTH0_CONNECTION='Username-Password-Authentication'
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-t subject_token] [-a audience] [-s scope] [-i|-h|-v]
+USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-i subject_token] [-a audience] [-s scope] [-I|-h|-v]
         -e file               # .env file location (default cwd)
         -t tenant             # Auth0 tenant@region
         -d domain             # Auth0 domain
         -c client_id          # Auth0 client ID
         -x secret             # Auth0 client secret
-        -t subject_token      # Subject base64 access_token(default)/id_token
+        -i subject_token      # Subject base64 access_token(default)/id_token
         -a audiance           # Audience
         -s scopes             # comma separated list of scopes (default is "${AUTH0_SCOPE}")
-        -i                    # mark subject_token is id_token
+        -I                    # mark subject_token is id_token
         -h|?                  # usage
         -v                    # verbose
 
@@ -42,7 +42,7 @@ declare opt_verbose=0
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:d:c:x:t:a:s:i:hv?" opt
+while getopts "e:t:d:c:x:i:a:s:I:hv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -51,9 +51,9 @@ do
         c) AUTH0_CLIENT_ID=${OPTARG};;
         x) AUTH0_CLIENT_SECRET=${OPTARG};;
         a) AUTH0_AUDIENCE=${OPTARG};;
-        t) subject_token=${OPTARG};;
+        i) subject_token=${OPTARG};;
         s) AUTH0_SCOPE=`echo ${OPTARG} | tr ',' ' '`;;
-        i) subject_token_type='id_token';;
+        I) subject_token_type='id_token';;
         v) opt_verbose=1;; #set -x;;
         h|?) usage 0;;
         *) usage 1;;
@@ -81,7 +81,7 @@ declare BODY=$(cat <<EOL
 EOL
 )
 
-curl -H 'content-type: application/json' \
+curl -k -H 'content-type: application/json' \
      -d "${BODY}" \
      https://${AUTH0_DOMAIN}/oauth/token
 

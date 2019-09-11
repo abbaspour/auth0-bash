@@ -47,7 +47,7 @@ declare param_query=''
 
 declare param_version="search_engine=${search_engine}"
 
-curl -s --get -H "Authorization: Bearer ${access_token}" \
+curl -k -s --get -H "Authorization: Bearer ${access_token}" \
  -H 'content-type: application/json' \
  --data-urlencode "${param_query}" \
  --data-urlencode "${param_version}" \
