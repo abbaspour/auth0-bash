@@ -34,6 +34,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r conn
         -S state       # state
         -n nonce       # nonce
         -C             # copy to clipboard
+        -P             # pretty print
         -m             # Management API audience
         -o             # Open URL
         -b browser     # Choose browser to open (firefox, chrome, safari)
@@ -90,10 +91,11 @@ declare opt_state=''
 declare opt_nonce='mynonce'
 declare opt_verbose=0
 declare opt_browser=''
+declare opt_pp=0
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:d:c:a:r:R:f:u:p:s:b:M:S:n:mCohv?" opt
+while getopts "e:t:d:c:a:r:R:f:u:p:s:b:M:S:n:mCoPhv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -111,6 +113,7 @@ do
         S) opt_state=${OPTARG};;
         n) opt_nonce=${OPTARG};;
         C) opt_clipboard=1;;
+        P) opt_pp=1;;
         o) opt_open=1;;
         m) opt_mgmnt=1;;
         b) opt_browser="-a ${OPTARG} ";;
@@ -145,7 +148,12 @@ declare authorize_url="${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&${
 [[ -n "${AUTH0_RESPONSE_MODE}" ]] &&  authorize_url+="&response_mode=${AUTH0_RESPONSE_MODE}"
 [[ -n "${opt_state}" ]] &&  authorize_url+="&state=`urlencode ${opt_state}`"
 
-echo "${authorize_url}"
+if [[ -z ${opt_pp} ]]; then
+  echo "${authorize_url}"
+else
+  echo "${authorize_url}" | sed -E 's/&/ &\
+      /g'
+fi
 
 [[ -n "${opt_clipboard}" ]] && echo "${authorize_url}" | pbcopy
 [[ -n "${opt_open}" ]] && open ${opt_browser} "${authorize_url}"

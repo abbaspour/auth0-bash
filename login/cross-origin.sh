@@ -97,7 +97,7 @@ declare BODY=$(cat <<EOL
 EOL
 )
 
-declare co_response=$(curl -s -b cookie.txt -H "Content-Type: application/json" \
+declare co_response=$(curl -s -c cookie.txt -H "Content-Type: application/json" \
     -H "origin: ${AUTH0_ORIGIN}" \
     -H "auth0-clients: ${AUTH0_CLIENT_B64}" \
     -d "${BODY}" https://${AUTH0_DOMAIN}/co/authenticate)
@@ -115,7 +115,7 @@ declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIEN
 
 echo "authorize_url: ${authorize_url}"
 
-declare location=$(curl -s -I -b cookie.txt $authorize_url | tee /dev/tty | awk 'IGNORECASE = 1;/^location: /{print $2}')
+declare location=$(curl -s -I -b cookie.txt $authorize_url | awk 'IGNORECASE = 1;/^location: /{print $2}')
 
 echo "Redirect location: ${location}"
 

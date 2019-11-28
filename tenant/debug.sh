@@ -10,9 +10,6 @@ USAGE: $0 [-e file] [-t tenant] [-d domain]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
-        -c file        # Output cert file name
-        -p file        # Output public key file name
-        -D             # Dump certificate
         -h|?           # usage
         -v             # verbose
 
@@ -23,11 +20,6 @@ END
 }
 
 declare AUTH0_DOMAIN=''
-declare cert_file=''
-declare pubkey_file=''
-declare opt_dump=''
-declare opt_verbose=0
-
 
 while getopts "e:t:d:f:Dhv?" opt
 do
@@ -35,8 +27,6 @@ do
         e) source ${OPTARG};;
         t) AUTH0_DOMAIN=`echo ${OPTARG}.auth0.com | tr '@' '.'`;;
         d) AUTH0_DOMAIN=${OPTARG};;
-        f) cert_file=${OPTARG};;
-        D) opt_dump=1;; 
         v) opt_verbose=1;; #set -x;;
         h|?) usage 0;;
         *) usage 1;;
