@@ -4,16 +4,16 @@ set -eo pipefail
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-j job_id] [-v|-h]
+USAGE: $0 [-e env] [-a access_token] [-i job_id] [-v|-h]
         -e file     # .env file location (default cwd)
         -a token    # access_token. default from environment variable
-        -j id       # job_id
+        -i id       # job_id
         -h|?        # usage
         -d          # detailed error message
         -v          # verbose
 
 eg,
-     $0 -j j_123
+     $0 -i job_PwSvrMnLwgxZOWYg -d
 END
     exit $1
 }
@@ -21,12 +21,12 @@ END
 declare job_id=''
 declare uri=''
 
-while getopts "e:a:j:dhv?" opt
+while getopts "e:a:i:dhv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
         a) access_token=${OPTARG};;
-        j) job_id=${OPTARG};;
+        i) job_id=${OPTARG};;
         d) uri='/errors';;
         v) opt_verbose=1;; #set -x;;
         h|?) usage 0;;

@@ -12,7 +12,7 @@ USAGE: $0 [-e env] [-a access_token] [-c connection_id] [-f users.file] [-v|-h]
         -e file     # .env file location (default cwd)
         -a token    # access_token. default from environment variable
         -c id       # connection_id
-        -f file     # users file 
+        -f file     # users file
         -h|?        # usage
         -v          # verbose
 
@@ -41,10 +41,10 @@ done
 
 declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
 
-curl -v -H "Authorization: Bearer ${access_token}" \
+curl -H "Authorization: Bearer ${access_token}" \
     -F users=@${users_file} \
     -F connection_id=${connection_id} \
     -F upsert=false \
     -F send_completion_email=false \
-    --url ${AUTH0_DOMAIN_URL}api/v2/jobs/users-imports 
+    --url ${AUTH0_DOMAIN_URL}api/v2/jobs/users-imports
 
