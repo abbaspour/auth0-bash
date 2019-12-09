@@ -1,39 +1,35 @@
 #!/bin/bash
 
-set -eo pipefail
+set -eu #o pipefail
 
 declare iss='http://www.auth0.life/'
 declare kid='1'
-declare secret='secret'
+declare secret=''
 declare file=''
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-f file] [-s secret] [-i iss] [-k kid] [-e exp]
+USAGE: $0 [-f file] [-s secret] [-k kid] [-e exp]
         -f file        # JSON file to sign
         -s secret      # Shared secret (default ${secret})
-        -i iss         # Issuer (default ${iss})
         -k kid         # Key ID (default ${kid})
-        -e exp         # Expiry in minutes
         -h|?           # usage
         -v             # verbose
 
 eg,
-     $0 -f file.json
+     $0 -f file.json -s hardsecret
 END
     exit $1
 }
 
 declare opt_verbose=0
 
-while getopts "f:s:i:k:e:hv?" opt
+while getopts "f:s:k:hv?" opt
 do
     case ${opt} in
         f) file=${OPTARG};;
         s) secret=${OPTARG};;
-        i) iss=${OPTARG};;
         k) kid=${OPTARG};;
-        e) exp=${OPTARG};;
         v) opt_verbose=1;; #set -x;;
         h|?) usage 0;;
         *) usage 1;;
@@ -42,17 +38,16 @@ done
 
 [[ -z "${file}" ]] && { echo >&2 "ERROR: file undefined"; usage 1; }
 [[ ! -f "${file}" ]] && { echo >&2 "ERROR: unable to read file: ${file}"; usage 1; }
+[[ -z "${secret}" ]] && { echo >&2 "ERROR: secret undefined"; usage 1; }
 
 # header
-declare -r header=`printf '{"typ": "JWT", "alg": "HS256", "kid": "%s", "iss": "%s"}' "${kid}" "${iss}" | base64 -w0`
+declare -r header=`printf '{"typ": "JWT", "alg": "HS256", "kid": "%s"}' "${kid}" | openssl base64 -e -A | tr '+' '-' | tr '/' '_' | sed -E s/=+$//`
 
 # body
-declare -r body=`base64 -w0 ${file}`
+declare -r body=`cat ${file} | openssl base64 -e -A | tr '+' '-' | tr '/' '_' | sed -E s/=+$//`
 
 # signature
-declare -r signature=`echo -n "${header}.${body}" | openssl dgst -binary -sha256 -hmac "${secret}" | base64 -w0`
+declare -r signature=`echo -n "${header}.${body}" | openssl dgst -binary -sha256 -hmac "${secret}" | openssl base64 -e -A | tr '+' '-' | tr '/' '_' | sed -E s/=+$//`
 
 # jwt
 echo "${header}.${body}.${signature}"
-
-# TODO: add exp

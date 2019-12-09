@@ -7,15 +7,15 @@ declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-u user_id] [-v|-h]
+USAGE: $0 [-e env] [-a access_token] [-i user_id] [-v|-h]
         -e file     # .env file location (default cwd)
         -a token    # access_token. default from environment variable
-        -u user_id  # user_id
+        -i user_id  # user_id
         -h|?        # usage
         -v          # verbose
 
 eg,
-     $0 -u 'auth0|b0dec5bdba02248abd51388'
+     $0 -i 'auth0|b0dec5bdba02248abd51388'
 END
     exit $1
 }
@@ -34,12 +34,12 @@ urlencode() {
 
 declare user_id=''
 
-while getopts "e:a:u:hv?" opt
+while getopts "e:a:i:hv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
         a) access_token=${OPTARG};;
-        u) user_id=`urlencode ${OPTARG}`;;
+        i) user_id=`urlencode ${OPTARG}`;;
         v) opt_verbose=1;; #set -x;;
         h|?) usage 0;;
         *) usage 1;;
@@ -57,15 +57,15 @@ declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base
 
 declare DATA=$(cat <<EOF
 {
-    "user_metadata":{ "plan": "gold3" }
+    "user_metadata":{ "plan": "gold4" }
 }
 EOF
 )
 
-curl -X PATCH \
+curl -s -X PATCH \
   -H "Authorization: Bearer ${access_token}" \
   -H 'content-type: application/json' \
   -d "${DATA}" \
-  ${AUTH0_DOMAIN_URL}api/v2/users/${user_id}
+  ${AUTH0_DOMAIN_URL}api/v2/users/${user_id} | jq .
 
 

@@ -14,7 +14,7 @@ USAGE: $0 [-c number]
         -x password # password
         -s salt     # password salt prefix
         -S salt     # password salt suffix
-        -a name     # password hash algorithm; bcrypt (default), md5, sha1, sha256, sha512, argon2, pbkdf2
+        -a name     # password hash algorithm; bcrypt (default), md4, md5, ldap, sha1, sha256, sha512, argon2, pbkdf2
         -r round    # bcrypt rounds. default is $bc_rounds
         -V          # set email_verified to true
         -d domain   # email domain. default is ${domain}
@@ -85,11 +85,14 @@ EOL
 EOL
 );;
     pbkdf2)
-      declare -r hex_salt=$(openssl rand -hex 8)
+      echo >&2 "WIP algorithm: $algorithm"; usage 1;;
+      declare -r hex_salt=$(openssl rand -hex 16)
+      #declare -r hex_salt=$(openssl rand -base64 4)
       declare -ri itr=1000
-      declare -ri len=32
-      declare -r hash=$(echo -n "${password}" | ${OPENSSL_1_1_1} enc -aes-256-cbc -md sha512 -pbkdf2 -iter ${itr} -pass stdin -S ${hex_salt} -a -A)
-      declare -r password_hash=$(echo "\$pbkdf2-sha512\$i=${itr},l=${len}\$${hex_salt}\$${hash}")
+      declare -ri len=64
+      #declare -r hash=$(echo -n "${password}" | ${OPENSSL_1_1_1} enc -aes-256-cbc -md sha1 -pbkdf2 -iter ${itr} -pass stdin -S ${hex_salt} -a -A)
+      declare -r hash=$(node -e "const crypto = require('crypto'); console.log(crypto.pbkdf2Sync('${password}', Buffer.from('${hex_salt}', 'hex'), ${itr}, ${len}, 'sha1').toString('base64'));" )
+      declare -r password_hash=$(echo "\$pbkdf2-sha1\$i=${itr},l=${len}\$${hex_salt}\$${hash}")
       custom_password_hash_field=$(cat <<EOL
 , "custom_password_hash": {
     "algorithm": "pbkdf2",

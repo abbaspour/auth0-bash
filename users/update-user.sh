@@ -7,7 +7,7 @@ declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-u user_id] [-v|-h]
+USAGE: $0 [-e env] [-a access_token] [-i user_id] [-v|-h]
         -e file     # .env file location (default cwd)
         -a token    # access_token. default from environment variable
         -i user_id  # user_id
