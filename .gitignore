@@ -1,6 +1,7 @@
 .DS_Store
 *.swp
 *.pem
+jobs/*.json
 .env*
 node_modules
 cookie.txt
