@@ -24,7 +24,7 @@ END
 declare client_name=''
 declare client_type=''
 
-while getopts "e:a:n:t:hv?" opt
+while getopts "e:a:n:t:p:k:hv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -43,16 +43,13 @@ done
 
 declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
 
-for s in `echo $api_scopes | tr ',' ' '`; do
-    scopes+="{\"value\":\"${s}\"},"
-done
-scopes=${scopes%?}
 
 declare BODY=$(cat <<EOL
 {
   "name": "${client_name}",
   "app_type": "${client_type}",
   "is_first_party": true
+  ${signing_keys}
 }
 EOL
 )
@@ -61,5 +58,5 @@ curl -k --request POST \
     -H "Authorization: Bearer ${access_token}" \
     --data "${BODY}" \
     --header 'content-type: application/json' \
-    --url ${AUTH0_DOMAIN_URL}api/v2/clients 
+    --url ${AUTH0_DOMAIN_URL}api/v2/clients
 

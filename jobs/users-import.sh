@@ -41,10 +41,10 @@ done
 
 declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
 
-curl -H "Authorization: Bearer ${access_token}" \
+curl -s -H "Authorization: Bearer ${access_token}" \
     -F users=@${users_file} \
     -F connection_id=${connection_id} \
     -F upsert=false \
     -F send_completion_email=false \
-    --url ${AUTH0_DOMAIN_URL}api/v2/jobs/users-imports
+    --url ${AUTH0_DOMAIN_URL}api/v2/jobs/users-imports | jq -r '.id'
 
