@@ -25,8 +25,8 @@ declare sub=''
 declare aud=''
 declare file=''
 declare nonce_field=''
-declare -r iat=`date +%s`
-declare exp=`date -d "+1 days" +%s`
+declare -r iat=`/bin/date +%s`
+declare exp=`/bin/date -v+1d +%s`
 declare opt_verbose=0
 
 while getopts "t:d:i:a:s:e:n:o:hv?" opt

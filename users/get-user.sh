@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -euo pipefail
-tenant=amin01.au
 
 function usage() {
     cat <<END >&2
@@ -50,4 +49,4 @@ done
 declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
 
 curl -s --get -H "Authorization: Bearer ${access_token}" -H 'content-type: application/json' \
-    https://${tenant}.auth0.com/api/v2/users/${user_id} | jq .
+    ${AUTH0_DOMAIN_URL}api/v2/users/${user_id} | jq .
