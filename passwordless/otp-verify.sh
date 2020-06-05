@@ -69,11 +69,11 @@ done
 
 declare data=$(cat <<EOL
 {
+    "grant_type" : "http://auth0.com/oauth/grant-type/passwordless/otp",
     "client_id": "${AUTH0_CLIENT_ID}",
-    "connection": "${AUTH0_CONNECTION}",
-    "grant_type": "password",
+    "realm": "${AUTH0_CONNECTION}",
     "username": "${username}",
-    "password": "${otp_code}",
+    "otp": "${otp_code}",
     "scope": "${AUTH0_SCOPE}",
     "device": "bash"
 }
@@ -81,7 +81,7 @@ EOL
 )
 
 curl -v --request POST \
-  --url "https://${AUTH0_DOMAIN}/oauth/ro" \
+  --url "https://${AUTH0_DOMAIN}/oauth/token" \
   --header 'content-type: application/json' \
   --data "${data}"
 

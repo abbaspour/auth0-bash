@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ueo pipefail 
+set -ueo pipefail
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
@@ -18,6 +18,8 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-p
         -a code        # Authorization Code to exchange
         -D code        # Device Code to exchange
         -u callback    # callback URL
+        -b             # HTTP Basic authentication (default is POST payload)
+        -U             # token endpoint URI (default is '/oauth/token')
         -h|?           # usage
         -v             # verbose
 
@@ -36,8 +38,10 @@ declare authorization_code=''
 declare code_verifier=''
 declare grant_type='authorization_code'
 declare code_type='code'
+declare http_basic=0
+declare token_endpoint='/oauth/token'
 
-while getopts "e:t:d:c:u:a:x:p:D:hv?" opt
+while getopts "e:t:d:c:u:a:x:p:D:U:bhv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -48,7 +52,9 @@ do
         u) AUTH0_REDIRECT_URI=${OPTARG};;
         a) authorization_code=${OPTARG};;
         p) code_verifier=${OPTARG};;
+        U) token_endpoint=${OPTARG};;
         D) code_type='device_code'; grant_type='urn:ietf:params:oauth:grant-type:device_code'; authorization_code=${OPTARG};;
+        b) http_basic=1;;
         v) opt_verbose=1;; #set -x;;
         h|?) usage 0;;
         *) usage 1;;
@@ -61,10 +67,18 @@ done
 [[ -z "${authorization_code}" ]] && { echo >&2 "ERROR: authorization_code undefined"; usage 1; }
 
 declare secret=''
-[[ -n "${AUTH0_CLIENT_SECRET}" ]] && secret="\"client_secret\":\"${AUTH0_CLIENT_SECRET}\","
-[[ -n "${code_verifier}" ]] && secret="\"code_verifier\":\"${code_verifier}\","
+declare authorization_header=''
 
-declare BODY=$(cat <<EOL
+if [[ ${http_basic} -eq 1 ]]; then
+  authorization_header=$(printf "%s:%s" "${AUTH0_CLIENT_ID}" "${AUTH0_CLIENT_SECRET}" | openssl base64 -e -A)
+else
+  [[ -n "${AUTH0_CLIENT_SECRET}" ]] && secret="\"client_secret\":\"${AUTH0_CLIENT_SECRET}\","
+  [[ -n "${code_verifier}" ]] && secret="\"code_verifier\":\"${code_verifier}\","
+fi
+
+[[ ${AUTH0_DOMAIN} =~ ^http ]] || AUTH0_DOMAIN=https://${AUTH0_DOMAIN}
+
+declare -r BODY=$(cat <<EOL
 {
     "client_id":"${AUTH0_CLIENT_ID}",
     ${secret}
@@ -75,8 +89,15 @@ declare BODY=$(cat <<EOL
 EOL
 )
 
-curl --request POST \
-  --url https://${AUTH0_DOMAIN}/oauth/token \
+if [[ ${http_basic} -eq 1 ]]; then
+ curl --request POST \
+  -H "Authorization: Basic ${authorization_header}" \
+  --url ${AUTH0_DOMAIN}${token_endpoint} \
   --header 'content-type: application/json' \
   --data "${BODY}"
-
+else
+ curl --request POST \
+  --url ${AUTH0_DOMAIN}${token_endpoint} \
+  --header 'content-type: application/json' \
+  --data "${BODY}"
+fi

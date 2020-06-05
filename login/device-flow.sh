@@ -66,6 +66,6 @@ declare BODY=$(cat <<EOL
 EOL
 )
 
-curl --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/oauth/device/code | jq .
+curl -ss --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/oauth/device/code | jq .
 
 echo -e "\n Polling:\n ./exchange.sh -d ${AUTH0_DOMAIN} -c ${AUTH0_CLIENT_ID} -D DEVICECODE"

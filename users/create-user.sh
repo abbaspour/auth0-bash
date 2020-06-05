@@ -15,7 +15,7 @@ USAGE: $0 [-e env] [-a access_token] [-u username] [-p password] [-c connection]
         -p password # password
         -c realm    # connection (defaults to "${AUTH0_CONNECTION}")
         -i user_id  # (optional) user ID
-        -V          # Mark as email/phone verififed
+        -V          # Mark as email/phone verified
         -s          # send verify email
         -U k:v      # user_metadata key/value
         -A k:v      # app_metadata key/value
@@ -80,11 +80,11 @@ if [[ -n "${verified_flag}" ]]; then
   fi
 fi
 
-declare app_metadata_str=$(printf ",%s" "${app_metadata[@]}")
-app_metadata_str=${app_metadata_str:1}
+#declare app_metadata_str=$(printf ",%s" "${app_metadata[@]}")
+app_metadata_str='' #${app_metadata_str:1}
 
-declare user_metadata_str=$(printf ",%s" "${user_metadata[@]}")
-user_metadata_str=${user_metadata_str:1}
+#declare user_metadata_str=$(printf ",%s" "${user_metadata[@]}")
+user_metadata_str='' #${user_metadata_str:1}
 
   #${verify_email_field}
 

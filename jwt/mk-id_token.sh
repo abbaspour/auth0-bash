@@ -61,11 +61,3 @@ cat <<EOL
 }
 EOL
 
-#{
-#  "iss": "https://amin01.au.auth0.com/",
-#  "sub": "auth0|5b5e65d30368302c7d1223a6",
-#  "aud": "y4KJ1oOdLyx5lwILRInTbCCx221VCduh",
-#  "iat": 1575512074,
-#  "exp": 1575548074,
-#  "nonce": "mynonce"
-#}
