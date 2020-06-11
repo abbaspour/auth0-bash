@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Cross Origin + Silent Authentication</title>
+    <meta charset="utf-8">
+    <script src="https://cdn.auth0.com/js/auth0/9.13.2/auth0.min.js"></script>
+</head>
+<body>
+<label for="username">Username</label><input id="username" type="text"/>
+<br/>
+<label for="password">Password</label><input id="password" type="password"/>
+<br/>
+<input type="submit" value="Login" onclick="submit()"/>
+
+<div id="result"></div>
+
+<script>
+    const auth0_clientID = 'EjbKRfSyNo4ihgnmHeOpm34hIVjm3hmY';
+    const auth0_tenant = 'login0.local.dev';
+    const auth0_domain = `${auth0_tenant}.auth0.com`;
+    const redirect_uri = 'https://jwt.io';
+    const default_connection = 'DB';
+
+    const auth0js = new auth0.WebAuth({
+      domain: auth0_domain,
+      clientID: auth0_clientID,
+      responseType: 'id_token',
+      redirectUri: redirect_uri
+    });
+
+    function coauth_login_silent(realm, username, password) {
+        let data = {
+            client_id: auth0_clientID,
+            username: username,
+            password: password,
+            realm: realm,
+        };
+        auth0js.login(data, (err) => showResult(err));
+    }
+
+
+    function showResult(msg) {
+      document.getElementById('result').innerText = JSON.stringify(msg);
+    }
+
+    function submit() {
+        let username = document.getElementById('username').value;
+        let password = document.getElementById('password').value;
+        coauth_login_silent(default_connection, username, password);
+    }
+
+</script>
+</body>
+</html>
+
+
