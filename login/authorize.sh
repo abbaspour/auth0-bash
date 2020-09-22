@@ -33,6 +33,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r conn
         -M model       # response_mode of: web_message, form_post, fragment
         -S state       # state
         -n nonce       # nonce
+        -H hint        # login hint
         -C             # copy to clipboard
         -P             # pretty print
         -m             # Management API audience
@@ -89,13 +90,14 @@ declare opt_flow='implicit'
 declare opt_mgmnt=''
 declare opt_state=''
 declare opt_nonce='mynonce'
+declare opt_login_hint=''
 declare opt_verbose=0
 declare opt_browser=''
 declare opt_pp=0
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:d:c:a:r:R:f:u:p:s:b:M:S:n:mCoPhv?" opt
+while getopts "e:t:d:c:a:r:R:f:u:p:s:b:M:S:n:H:mCoPhv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -112,6 +114,7 @@ do
         s) AUTH0_SCOPE=`echo ${OPTARG} | tr ',' ' '`;;
         S) opt_state=${OPTARG};;
         n) opt_nonce=${OPTARG};;
+        H) opt_login_hint=${OPTARG};;
         C) opt_clipboard=1;;
         P) opt_pp=1;;
         o) opt_open=1;;
@@ -147,6 +150,7 @@ declare authorize_url="${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&${
 [[ -n "${AUTH0_PROMPT}" ]] &&  authorize_url+="&prompt=${AUTH0_PROMPT}"
 [[ -n "${AUTH0_RESPONSE_MODE}" ]] &&  authorize_url+="&response_mode=${AUTH0_RESPONSE_MODE}"
 [[ -n "${opt_state}" ]] &&  authorize_url+="&state=`urlencode ${opt_state}`"
+[[ -n "${opt_login_hint}" ]] &&  authorize_url+="&login_hint=`urlencode ${opt_login_hint}`"
 
 if [[ -z ${opt_pp} ]]; then
   echo "${authorize_url}"
