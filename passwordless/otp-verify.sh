@@ -80,8 +80,7 @@ declare data=$(cat <<EOL
 EOL
 )
 
-curl -v --request POST \
-  --url "https://${AUTH0_DOMAIN}/oauth/token" \
+curl  --url "https://${AUTH0_DOMAIN}/oauth/token" \
   --header 'content-type: application/json' \
   --data "${data}"
 
