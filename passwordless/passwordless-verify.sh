@@ -8,7 +8,7 @@ set -eo pipefail
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 
-declare AUTH0_SCOPE='openid email'
+declare AUTH0_SCOPE='openid'
 
 function usage() {
     cat <<END >&2
@@ -22,12 +22,14 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-r connection] [-R co
         -R types       # code or link (default is code)
         -s scopes      # comma separated list of scopes (default is "${AUTH0_SCOPE}")
         -p number      # SMS phone number
+        -u email       # Email address
+        -o otp         # OTP code
         -m             # Management API audience
         -h|?           # usage
         -v             # verbose
 
 eg,
-     $0 -t amin01@au -u user@email.com
+     $0 -t amin01@au -u user@email.com -o 1234
 END
     exit $1
 }
@@ -38,11 +40,12 @@ declare AUTH0_CONNECTION=''
 
 declare email=''
 declare phone_number=''
+declare verification_code=''
 declare send='code'
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:d:c:a:r:R:u:p:s:mCohv?" opt
+while getopts "e:t:d:c:a:r:R:u:p:s:o:mhv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -55,8 +58,7 @@ do
         u) email=${OPTARG};;
         p) phone_number=${OPTARG};;
         s) AUTH0_SCOPE=`echo ${OPTARG} | tr ',' ' '`;;
-        C) opt_clipboard=1;;
-        o) opt_open=1;;
+        o) verification_code=${OPTARG};;
         m) opt_mgmnt=1;;
         v) opt_verbose=1;; #set -x;;
         h|?) usage 0;;
@@ -67,6 +69,7 @@ done
 [[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
 [[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
 [[ -z "${AUTH0_CONNECTION}" ]] && { echo >&2 "ERROR: AUTH0_CONNECTION undefined. select 'sms' or 'email'"; usage 1; }
+[[ -z "${verification_code}" ]] && { echo >&2 "ERROR: OTP verification_code undefined."; usage 1; }
 
 declare recipient=''
 
@@ -82,7 +85,8 @@ declare data=$(cat <<EOL
 {
     "connection": "${AUTH0_CONNECTION}",
     ${recipient}
-    "verification_code": "${verification_code}"
+    "verification_code": "${verification_code}",
+    "scope": "${AUTH0_SCOPE}"
 }
 EOL
 )
