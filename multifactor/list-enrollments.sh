@@ -41,4 +41,4 @@ declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base
 
 curl -s -H "Authorization: Bearer ${access_token}" \
     --request GET \
-    --url "${AUTH0_DOMAIN_URL}api/v2/users/${user_id}/enrollments"
+    --url "${AUTH0_DOMAIN_URL}api/v2/users/${user_id}/enrollments" | jq .
