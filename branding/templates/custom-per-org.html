@@ -1,0 +1,372 @@
+<!-- from https://github.com/pravinady/tfe-ul-templates/blob/master/page-template-per-org.html -->
+<!DOCTYPE html>
+<html>
+
+<head>
+	{%- auth0:head -%}
+	<style type="text/css">
+		.footer {
+        background-color: rgb(120, 120, 120);
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        padding: 16px 0;
+        width: 100%;
+        color: white;
+        /* Use a high z-index for future-proofing */
+        z-index: 10;
+      }
+      .footer ul {
+        text-align: center;
+      }
+      .footer ul li {
+        display: inline-block;
+        margin: 0 4px;
+      }
+      .footer ul li:not(:first-of-type) {
+        margin-left: 0;
+      }
+      .footer ul li:not(:first-of-type)::before {
+        content: '';
+        display: inline-block;
+        vertical-align: middle;
+        width: 4px;
+        height: 4px;
+        margin-right: 4px;
+        background-color: white;
+        border-radius: 50%;
+      }
+      .footer a {
+        color: white;
+      }
+      .pt-variables-scroll {
+          overflow:scroll;
+          height:500px;
+      }
+      #pt-variables {
+        font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+      }
+      #pt-variables td, #pt-variables th {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+      /*#pt-variables tr:nth-child(even){background-color: #f2f2f2;}*/
+      /*#pt-variables tr:hover {background-color: #ddd;}*/
+      #pt-variables th {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        text-align: left;
+        background-color: #5bc0de;
+        color: white;
+      }
+	</style>
+	 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+	   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+	 <script type="text/javascript">
+
+    $(document).ready(function(){
+      console.log('jquery loaded');
+    });
+</script>
+</head>
+
+<body class="_widget-auto-layout">
+	{%- auth0:widget -%}
+
+	<footer class="footer">
+	 <ul>
+      <li><a data-toggle="collapse" data-target="#div-pt-variables" href="#">Template Info</a></li>
+      </ul>
+      <ul>
+        <li>
+          <div class="container">
+
+          <div id="div-pt-variables" class="collapse pt-variables-scroll">
+            <span>
+              <table id="pt-variables">
+                <tr>
+                  <th>Page Template Variable Name</th>
+                  <th>Page Template Variable Value</th>
+                </tr>
+                <tr>
+                  <td>
+                    branding.logo_url
+                  </td>
+                  <td>
+                    {{branding.logo_url}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    branding.colors.primary
+                  </td>
+                  <td>
+                    {{branding.colors.primary}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    branding.colors.page_background
+                  </td>
+                  <td>
+                    {{branding.colors.page_background}}
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    tenant.friendly_name
+                  </td>
+                  <td>
+                    {{tenant.friendly_name}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    tenant.support_email
+                  </td>
+                  <td>
+                    {{tenant.support_email}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    tenant.support_url
+                  </td>
+                  <td>
+                    {{tenant.support_url}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    locale
+                  </td>
+                  <td>
+                    {{locale}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    prompt.name
+                  </td>
+                  <td>
+                    {{prompt.name}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    prompt.screen.name
+                  </td>
+                  <td>
+                    {{prompt.screen.name}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    prompt.screen.texts.pageTitle
+                  </td>
+                  <td>
+                    {{prompt.screen.texts.pageTitle}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    application.id
+                  </td>
+                  <td>
+                    {{application.id}}
+                  </td>
+                </tr>
+                 <tr>
+                  <td>
+                    application.name
+                  </td>
+                  <td>
+                    {{application.name}}
+                  </td>
+                </tr>
+                 <tr>
+                  <td>
+                    application.logo_uri
+                  </td>
+                  <td>
+                    {{application.logo_url}}
+                  </td>
+                </tr>
+                 <tr>
+                  <td>
+                    application.logo_url
+                  </td>
+                  <td>
+                    {{application.logo_url}}
+                  </td>
+                </tr>
+                 <tr>
+                  <td>
+                    application.metadata.BUS_UNIT
+                  </td>
+                  <td>
+                    {{application.metadata.BUS_UNIT}}
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    user.user_id
+                  </td>
+                  <td>
+                    {{user.user_id}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.picture
+                  </td>
+                  <td>
+                    {{user.picture}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.email
+                  </td>
+                  <td>
+                    {{user.email}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.email_verified
+                  </td>
+                  <td>
+                    {{user.email_verified}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.app_metadata.Role
+                  </td>
+                  <td>
+                    {{user.app_metadata.Role}}
+                    {{user.app_metadata.role}}
+                    {{user.metadata.Role}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.user_metadata.Theme
+                  </td>
+                  <td>
+                    {{user.user_metadata.Theme}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.family_name
+                  </td>
+                  <td>
+                    {{user.family_name}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.given_name
+                  </td>
+                  <td>
+                    {{user.given_name}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.name
+                  </td>
+                  <td>
+                    {{user.name}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.nickname
+                  </td>
+                  <td>
+                    {{user.nickname}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.username
+                  </td>
+                  <td>
+                    {{user.username}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.last_password_reset
+                  </td>
+                  <td>
+                    {{user.last_password_reset}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.last_login
+                  </td>
+                  <td>
+                    {{user.last_login}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.last_ip
+                  </td>
+                  <td>
+                    {{user.last_ip}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    organization.id
+                  </td>
+                  <td>
+                    {{organization.id}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    organization.name
+                  </td>
+                  <td>
+                    {{organization.name}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    organization.display_name
+                  </td>
+                  <td>
+                    {{organization.display_name}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    organization.metadata.plan
+                  </td>
+                  <td>
+                    {{organization.metadata.plan}}
+                  </td>
+                </tr>
+              </table>
+            </span>
+          </div>
+        </div>
+        </li>
+      </ul>
+    </footer>
+</body>
+
+</html>

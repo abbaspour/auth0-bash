@@ -1,0 +1,513 @@
+<!-- from https://github.com/pravinady/tfe-ul-templates/blob/master/page-template-brand-per-app.html -->
+<!DOCTYPE html>
+<html>
+
+<head>
+	{%- auth0:head -%}
+	<style>
+		body {
+			background-size: 80%;
+			background-repeat: no-repeat;
+			background-position: right;
+		}
+
+		.prompt-wrapper {
+			position: relative;
+			display: flex;
+			align-items: center;
+			width: 480px;
+			height: 100%;
+			justify-content: center;
+			background-color: white;
+			float: left;
+		}
+
+		.header {
+			background-color: rgb(120, 120, 120);
+			position: absolute;
+			top: 0;
+			left: 0;
+			padding: 16px 0;
+			width: 100%;
+			color: white;
+			/* Use a high z-index for future-proofing */
+			z-index: 10;
+		}
+
+		.footer {
+			background-color: rgb(120, 120, 120);
+			bottom: 0;
+			left: 0;
+			padding: 16px 0;
+			position: fixed;
+			width: 100%;
+			height: 40px;
+			color: white;
+			/* Use a high z-index for future-proofing */
+			z-index: 10;
+		}
+
+		.footer ul {
+			text-align: center;
+		}
+
+		.footer ul li {
+			display: inline-block;
+			margin: 0 4px;
+		}
+
+		.footer ul li:not(:first-of-type) {
+			margin-left: 0;
+		}
+
+		.footer ul li:not(:first-of-type)::before {
+			content: '';
+			display: inline-block;
+			vertical-align: middle;
+			width: 4px;
+			height: 4px;
+			margin-right: 4px;
+			background-color: white;
+			border-radius: 50%;
+		}
+
+		.footer a {
+			color: white;
+		}
+
+		.pt-variables-scroll {
+			overflow: scroll;
+			height: 500px;
+		}
+
+		#pt-variables {
+			font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+			border-collapse: collapse;
+			width: 100%;
+		}
+
+		#pt-variables td,
+		#pt-variables th {
+			border: 1px solid #ddd;
+			padding: 8px;
+			text-align: left;
+		}
+
+		/*#pt-variables tr:nth-child(even){background-color: #f2f2f2;}*/
+		/*#pt-variables tr:hover {background-color: #ddd;}*/
+		#pt-variables th {
+			padding-top: 12px;
+			padding-bottom: 12px;
+			text-align: left;
+			background-color: #5bc0de;
+			color: white;
+		}
+	</style>
+	<title>{{ prompt.screen.texts.pageTitle }}</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function(){
+      console.log('jquery loaded');
+      setAppBranding();
+    });
+
+    function setAppBranding(){
+
+      {% if application.metadata.BUS_UNIT == "Reinsurance" %}
+        //set app branding
+        $("body").css('background-image', 'url("https://pravinady-test.s3-us-west-2.amazonaws.com/reinsurance.jpg")');
+        $("body").css("background-repeat", "no-repeat");
+        $("body").css("background-position", "right");
+
+        //This is not supported as of today
+        $("#prompt-logo-center").attr("src", "https://pravinady-test.s3-us-west-2.amazonaws.com/reinsurance-logo.png");
+
+        {% if prompt.name != "mfa" and prompt.name != "mfa-otp" and prompt.name != "mfa-push" %}
+          $("body").css("background-size", "80%");
+          $('#div-ul-widget').removeClass('_widget-auto-layout');
+          $('#div-ul-widget').addClass('prompt-wrapper');
+          $('.prompt-wrapper').css("float", "left");
+
+        {% else %}
+          $("body").css("background-size", "cover");
+          $('#div-ul-widget').removeClass('prompt-wrapper');
+          $('#div-ul-widget').addClass('_widget-auto-layout');
+        {% endif %}
+
+      {% elsif application.metadata.BUS_UNIT == "Risk" %}
+        $("body").css('background-image', 'url("https://pravinady-test.s3-us-west-2.amazonaws.com/risk.jpg")');
+        $("body").css("background-repeat", "no-repeat");
+        $("body").css("background-position", "left");
+        $("body").css("background-color", "white");
+
+        //This is not supported as of today
+        $("#prompt-logo-center").attr("src", "https://pravinady-test.s3-us-west-2.amazonaws.com/risk-logo.png");
+
+        {% if prompt.name != "mfa" and prompt.name != "mfa-otp" and prompt.name != "mfa-push" %}
+          $("body").css("background-size", "80%");
+          $('#div-ul-widget').removeClass('_widget-auto-layout');
+          $('#div-ul-widget').addClass('prompt-wrapper');
+          $('.prompt-wrapper').css("float", "right");
+        {% else %}
+          $("body").css("background-size", "cover");
+          $('#div-ul-widget').removeClass('prompt-wrapper');
+          $('#div-ul-widget').addClass('_widget-auto-layout');
+        {% endif %}
+      {% else %}
+        $('#div-ul-widget').removeClass('prompt-wrapper');
+        $('#div-ul-widget').addClass('_widget-auto-layout');
+        $("body").css('background', "radial-gradient(#228, #222)");
+      {% endif %}
+    }
+
+    function isShowHeader() {
+
+       {% assign isHeaderVisible = false %}
+       {% if prompt.name != "login-id" and prompt.name != "login-password" and prompt.name != "login" and prompt.name != "reset-password" and prompt.name != "email-verification" and prompt.name != "signup" and and prompt.name != "signup-id"%}
+          console.log('header will be visible');
+          {% assign isHeaderVisible = true %}
+       {% else %}
+          console.log('header will not be visible');
+       {% endif %}
+     }
+	</script>
+</head>
+
+<body>
+	{% if isHeaderVisible == true %}
+	<header class="header">
+		<ul>
+			{% if locale == "hi" %}
+			<p style="text-align: right; margin-right:20px">स्वागत हे {{user.given_name}}</p>
+			{% elsif locale == "es" %}
+			<p style="text-align: right; margin-right:20px">Bienvenidas {{user.given_name}}</p>
+			{% else %}
+			<p style="text-align: right; margin-right:20px">Welcome {{user.given_name}}</p>
+			{% endif %}
+		</ul>
+	</header>
+	{% endif %}
+	<div id="div-ul-widget">
+		{%- auth0:widget -%}
+		<!-- {% if prompt.name != "mfa" and prompt.name != "mfa-otp" and prompt.name != "mfa-push" %}
+        {%- auth0:widget -%}
+    {% else %}
+        {%- auth0:widget -%}
+    {% endif %} -->
+	</div>
+	<footer class="footer">
+		<ul>
+			{% if locale == "hi" %}
+			<li><a href="{{application.metadata.PRIVACY_URL}}">गोपनीयता नीति</a></li>
+			<li><a href="{{application.metadata.TOS_URL}}">सेवा की शर्तें</a></li>
+			<li><a data-toggle="modal" data-target="#myModal" href="#">जानकारी टेम्पलेट</a></li>
+			{% elsif locale == "es" %}
+			<li><a href="{{application.metadata.PRIVACY_URL}}">Política de privacidad</a></li>
+			<li><a href="{{application.metadata.TOS_URL}}">Términos de servicio</a></li>
+			<li><a data-toggle="modal" data-target="#myModal" href="#">plantilla de información</a></li>
+			{% else %}
+			<li><a href="{{application.metadata.PRIVACY_URL}}">Privacy Policy</a></li>
+			<li><a href="{{application.metadata.TOS_URL}}">Terms of Service</a></li>
+			<li><a data-toggle="modal" data-target="#myModal" href="#">Template Info</a>
+				{% endif %}
+		</ul>
+	</footer>
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title" id="myModalLabel">Page Template Variables</h4>
+				</div>
+				<div class="modal-body">
+					<div id="div-pt-variables" class="pt-variables-scroll">
+						<span>
+              <table id="pt-variables">
+                <tr>
+                  <th>Page Template Variable Name</th>
+                  <th>Page Template Variable Value</th>
+                </tr>
+                <tr>
+                  <td>
+                    branding.logo_url
+                  </td>
+                  <td>
+                    {{branding.logo_url}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    branding.colors.primary
+                  </td>
+                  <td>
+                    {{branding.colors.primary}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    branding.colors.page_background
+                  </td>
+                  <td>
+                    {{branding.colors.page_background}}
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    tenant.friendly_name
+                  </td>
+                  <td>
+                    {{tenant.friendly_name}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    tenant.support_email
+                  </td>
+                  <td>
+                    {{tenant.support_email}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    tenant.support_url
+                  </td>
+                  <td>
+                    {{tenant.support_url}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    locale
+                  </td>
+                  <td>
+                    {{locale}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    prompt.name
+                  </td>
+                  <td>
+                    {{prompt.name}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    prompt.screen.name
+                  </td>
+                  <td>
+                    {{prompt.screen.name}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    prompt.screen.texts.pageTitle
+                  </td>
+                  <td>
+                    {{prompt.screen.texts.pageTitle}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    application.id
+                  </td>
+                  <td>
+                    {{application.id}}
+                  </td>
+                </tr>
+                 <tr>
+                  <td>
+                    application.name
+                  </td>
+                  <td>
+                    {{application.name}}
+                  </td>
+                </tr>
+                 <tr>
+                  <td>
+                    application.logo_uri
+                  </td>
+                  <td>
+                    {{application.logo_url}}
+                  </td>
+                </tr>
+                 <tr>
+                  <td>
+                    application.logo_url
+                  </td>
+                  <td>
+                    {{application.logo_url}}
+                  </td>
+                </tr>
+                 <tr>
+                  <td>
+                    application.metadata.BUS_UNIT
+                  </td>
+                  <td>
+                    {{application.metadata.BUS_UNIT}}
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    user.user_id
+                  </td>
+                  <td>
+                    {{user.user_id}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.picture
+                  </td>
+                  <td>
+                    {{user.picture}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.email
+                  </td>
+                  <td>
+                    {{user.email}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.email_verified
+                  </td>
+                  <td>
+                    {{user.email_verified}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.app_metadata.Role
+                  </td>
+                  <td>
+                    {{user.app_metadata.Role}}
+                    {{user.app_metadata.role}}
+                    {{user.metadata.Role}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.user_metadata.Theme
+                  </td>
+                  <td>
+                    {{user.user_metadata.Theme}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.family_name
+                  </td>
+                  <td>
+                    {{user.family_name}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.given_name
+                  </td>
+                  <td>
+                    {{user.given_name}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.name
+                  </td>
+                  <td>
+                    {{user.name}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.nickname
+                  </td>
+                  <td>
+                    {{user.nickname}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.username
+                  </td>
+                  <td>
+                    {{user.username}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.last_password_reset
+                  </td>
+                  <td>
+                    {{user.last_password_reset}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.last_login
+                  </td>
+                  <td>
+                    {{user.last_login}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    user.last_ip
+                  </td>
+                  <td>
+                    {{user.last_ip}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    organization.id
+                  </td>
+                  <td>
+                    {{organization.id}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    organization.name
+                  </td>
+                  <td>
+                    {{organization.name}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    organization.display_name
+                  </td>
+                  <td>
+                    {{organization.display_name}}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    organization.metadata.PLAN
+                  </td>
+                  <td>
+                    {{organization.metadata.PLAN}}
+
+                  </td>
+                </tr>
+              </table>
+            </span>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+
+</html>
