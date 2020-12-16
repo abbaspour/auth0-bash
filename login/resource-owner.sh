@@ -22,6 +22,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u username] [-p pass
         -r realm       # Connection (default is "${AUTH0_CONNECTION}")
         -s scopes      # comma separated list of scopes (default is "${AUTH0_SCOPE}")
         -i IP          # set origin IP header. Default is 'x-forwarded-for'
+        -k key         # cname-api-key
         -A             # switch to 'auth0-forwarded-for' for trust IP header
         -m             # Management API audience
         -h|?           # usage
@@ -40,6 +41,7 @@ declare AUTH0_AUDIENCE=''
 
 declare username=''
 declare password=''
+declare cname_api_key=''
 declare origin_ip='127.0.0.1'
 
 declare ff_prefix='x'
@@ -48,7 +50,7 @@ declare opt_verbose=0
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:u:p:d:c:x:a:r:s:i:Amhv?" opt
+while getopts "e:t:u:p:d:c:x:a:r:s:i:k:Amhv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -62,6 +64,7 @@ do
         r) AUTH0_CONNECTION=${OPTARG};;
         s) AUTH0_SCOPE=`echo ${OPTARG} | tr ',' ' '`;;
         i) origin_ip=${OPTARG};;
+        k) cname_api_key=${OPTARG};;
         A) ff_prefix='auth0';;
         m) opt_mgmnt=1;;
         v) opt_verbose=1;; #set -x;;
@@ -94,8 +97,11 @@ declare BODY=$(cat <<EOL
 EOL
 )
 
-curl --header "$ff_prefix-forwarded-for: ${origin_ip}" \
+curl -k --header "$ff_prefix-forwarded-for: ${origin_ip}" \
+     --header "true-client-ip: 20.30.40.50" \
+     --header "cname-api-key: ${cname_api_key}" \
      --header 'content-type: application/json' \
      -d "${BODY}" \
      https://${AUTH0_DOMAIN}/oauth/token
 
+echo
