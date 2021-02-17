@@ -10,7 +10,7 @@ declare AUTH0_CONNECTION='Username-Password-Authentication'
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-m mfa_token] [-a authenticator_type]
+USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-m mfa_token] [-a authenticator_type] [-i authenticator_id]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
@@ -18,6 +18,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-m
         -x secret      # Auth0 client secret
         -m token       # MFA token
         -a type        # authenticator type: otp, oob
+        -i id          # authenticator_id
         -h|?           # usage
         -v             # verbose
 
@@ -31,13 +32,14 @@ declare AUTH0_DOMAIN=''
 declare AUTH0_CLIENT_ID=''
 declare AUTH0_CLIENT_SECRET=''
 declare authenticator_type=''
+declare authenticator_id=''
 declare mfa_token=''
 
 declare opt_verbose=0
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:d:c:x:m:a:hv?" opt
+while getopts "e:t:d:c:x:m:a:i:hv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -47,6 +49,7 @@ do
         x) AUTH0_CLIENT_SECRET=${OPTARG};;
         m) mfa_token=${OPTARG};;
         a) authenticator_type=${OPTARG};;
+        i) authenticator_id=${OPTARG};;
         v) opt_verbose=1;; #set -x;;
         h|?) usage 0;;
         *) usage 1;;
@@ -57,6 +60,7 @@ done
 [[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
 [[ -z "${mfa_token}" ]] && { echo >&2 "ERROR: mfa_token undefined"; usage 1; }
 [[ -z "${authenticator_type}" ]] && { echo >&2 "ERROR: authenticator_type undefined"; usage 1; }
+[[ -z "${authenticator_id}" ]] && { echo >&2 "ERROR: authenticator_id undefined"; usage 1; }
 
 
 declare secret=''
@@ -68,15 +72,16 @@ declare BODY=$(cat <<EOL
     "client_id": "${AUTH0_CLIENT_ID}",
     ${secret}
     "challenge_type": "${authenticator_type}",
+    "authenticator_id": "${authenticator_id}",
     "mfa_token": "${mfa_token}"
 }
 EOL
 )
 
-declare response_json=`curl -s --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/mfa/challenge`
+declare response_json=$(curl -s --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/mfa/challenge)
 
 if [ "${authenticator_type}" == "oob" ]; then
-    oob_code=`echo ${response_json} | jq -r '.oob_code'` 
+    oob_code=$(echo "${response_json}" | jq -r '.oob_code')
     echo "export oob_code=\"${oob_code}\""
 fi
 

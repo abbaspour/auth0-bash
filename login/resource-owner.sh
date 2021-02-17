@@ -42,7 +42,7 @@ declare AUTH0_AUDIENCE=''
 declare username=''
 declare password=''
 declare cname_api_key=''
-declare origin_ip='127.0.0.1'
+declare origin_ip='1.2.3.4'
 
 declare ff_prefix='x'
 declare opt_mgmnt=''
