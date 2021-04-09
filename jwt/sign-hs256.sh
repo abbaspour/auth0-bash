@@ -2,7 +2,6 @@
 
 set -eu #o pipefail
 
-declare iss='http://www.auth0.life/'
 declare secret=''
 declare algorithm='HS256'
 declare file=''
@@ -43,7 +42,7 @@ done
 declare -r header=$(printf '{"alg": "%s", "typ": "JWT"}' "${algorithm}" | openssl base64 -e -A | tr '+' '-' | tr '/' '_' | sed -E s/=+$//)
 
 # body
-declare -r body=$(openssl base64 -e -A "${file}" | tr '+' '-' | tr '/' '_' | sed -E s/=+$//)
+declare -r body=$(cat "${file}" | openssl base64 -e -A | tr '+' '-' | tr '/' '_' | sed -E s/=+$//)
 
 # signature
 declare signature=''

@@ -1,10 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -ueo pipefail
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
+readonly DIR
+DIR=$(dirname "${BASH_SOURCE[0]}")
 
+[[ -f ${DIR}/.env ]] && . "${DIR}"/.env
 
 function usage() {
     cat <<END >&2
@@ -33,7 +34,7 @@ declare refresh_token=''
 while getopts "e:t:d:c:r:x:hv?" opt
 do
     case ${opt} in
-        e) source ${OPTARG};;
+        e) source "${OPTARG}";;
         t) AUTH0_DOMAIN=$(echo "${OPTARG}".auth0.com | tr '@' '.');;
         d) AUTH0_DOMAIN=${OPTARG};;
         c) AUTH0_CLIENT_ID=${OPTARG};;

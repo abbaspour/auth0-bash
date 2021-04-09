@@ -23,7 +23,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r conn
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
         -c client_id   # Auth0 client ID
-        -a audiance    # Audience
+        -a audience    # Audience
         -r realm       # Connection
         -R types       # comma separated response types (default is "${AUTH0_RESPONSE_TYPE}")
         -f flow        # OAuth2 flow type (implicit,code,pkce,hybrid)
@@ -34,6 +34,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r conn
         -S state       # state
         -n nonce       # nonce
         -H hint        # login hint
+        -O org_id      # organisation id
         -C             # copy to clipboard
         -P             # pretty print
         -m             # Management API audience
@@ -91,13 +92,14 @@ declare opt_mgmnt=''
 declare opt_state=''
 declare opt_nonce='mynonce'
 declare opt_login_hint=''
+declare opt_org_id=''
 declare opt_verbose=0
 declare opt_browser=''
 declare opt_pp=0
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:d:c:a:r:R:f:u:p:s:b:M:S:n:H:mCoPhv?" opt
+while getopts "e:t:d:c:a:r:R:f:u:p:s:b:M:S:n:H:O:mCoPhv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -115,12 +117,13 @@ do
         S) opt_state=${OPTARG};;
         n) opt_nonce=${OPTARG};;
         H) opt_login_hint=${OPTARG};;
+        O) org_id=${OPTARG};;
         C) opt_clipboard=1;;
         P) opt_pp=1;;
         o) opt_open=1;;
         m) opt_mgmnt=1;;
         b) opt_browser="-a ${OPTARG} ";;
-        v) opt_verbose=1;; #set -x;;
+        v) set -x;;
         h|?) usage 0;;
         *) usage 1;;
     esac
@@ -136,7 +139,7 @@ declare response_param=''
 case ${opt_flow} in
     implicit) response_param="response_type=`urlencode "${AUTH0_RESPONSE_TYPE}"`";;
     *code) response_param='response_type=code';;
-    pkce|hybrid) code_verifier=$(gen_code_verifier); code_challenge=$(gen_code_challenge ${code_verifier}); echo "code_verifier=${code_verifier}"; response_param="code_challenge_method=S256&code_challenge=${code_challenge}"
+    pkce|hybrid) code_verifier=$(gen_code_verifier); code_challenge=$(gen_code_challenge "${code_verifier}"); echo "code_verifier=${code_verifier}"; response_param="code_challenge_method=S256&code_challenge=${code_challenge}"
         if  [[ ${opt_flow} == 'pkce' ]]; then response_param+='&response_type=code'; else response_param+='&response_type=code%20token%20id_token'; fi;;
     *) echo >&2 "ERROR: unknown flow: ${opt_flow}"; usage 1;;
 esac
@@ -145,12 +148,13 @@ esac
 
 declare authorize_url="${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&${response_param}&nonce=`urlencode ${opt_nonce}`&redirect_uri=`urlencode ${AUTH0_REDIRECT_URI}`&scope=`urlencode "${AUTH0_SCOPE}"`"
 
-[[ -n "${AUTH0_AUDIENCE}" ]] && authorize_url+="&audience=`urlencode ${AUTH0_AUDIENCE}`"
+[[ -n "${AUTH0_AUDIENCE}" ]] && authorize_url+="&audience=$(urlencode "${AUTH0_AUDIENCE}")"
 [[ -n "${AUTH0_CONNECTION}" ]] &&  authorize_url+="&connection=${AUTH0_CONNECTION}"
 [[ -n "${AUTH0_PROMPT}" ]] &&  authorize_url+="&prompt=${AUTH0_PROMPT}"
 [[ -n "${AUTH0_RESPONSE_MODE}" ]] &&  authorize_url+="&response_mode=${AUTH0_RESPONSE_MODE}"
-[[ -n "${opt_state}" ]] &&  authorize_url+="&state=`urlencode ${opt_state}`"
-[[ -n "${opt_login_hint}" ]] &&  authorize_url+="&login_hint=`urlencode ${opt_login_hint}`"
+[[ -n "${opt_state}" ]] &&  authorize_url+="&state=$(urlencode "${opt_state}")"
+[[ -n "${opt_login_hint}" ]] &&  authorize_url+="&login_hint=$(urlencode "${opt_login_hint}")"
+[[ -n "${org_id}" ]] &&  authorize_url+="&organization=$(urlencode "${org_id}")"
 
 if [[ -z ${opt_pp} ]]; then
   echo "${authorize_url}"
