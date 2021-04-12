@@ -7,6 +7,13 @@ set -euo pipefail
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
+command -v ack >/dev/null     || { echo >&2 "ERROR: ack not found"; exit 3; }
+command -v grep >/dev/null    || { echo >&2 "ERROR: grep not found"; exit 3; }
+command -v curl >/dev/null    || { echo >&2 "ERROR: curl not found"; exit 3; }
+command -v perl >/dev/null    || { echo >&2 "ERROR: perl not found"; exit 3; }
+command -v base64 >/dev/null  || { echo >&2 "ERROR: base64 not found"; exit 3; }
+command -v awk >/dev/null     || { echo >&2 "ERROR: awk not found"; exit 3; }
+
 function urlencode() {
     local length="${#1}"
     for (( i = 0; i < length; i++ )); do
@@ -65,7 +72,6 @@ declare AUTH0_AUDIENCE=''
 declare USERNAME=''
 declare PASSWORD=''
 declare opt_mgmnt=''
-declare opt_verbose=0
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
@@ -73,7 +79,7 @@ while getopts "e:t:d:c:a:u:x:r:o:U:s:mhv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
-        t) AUTH0_DOMAIN=`echo ${OPTARG}.auth0.com | tr '@' '.'`;;
+        t) AUTH0_DOMAIN=$(echo ${OPTARG}.auth0.com | tr '@' '.');;
         d) AUTH0_DOMAIN=${OPTARG};;
         c) AUTH0_CLIENT_ID=${OPTARG};;
         a) AUTH0_AUDIENCE=${OPTARG};;
@@ -82,9 +88,9 @@ do
         r) AUTH0_CONNECTION=${OPTARG};;
         o) AUTH0_ORIGIN=${OPTARG};;
         U) AUTH0_REDIRECT_URI=${OPTARG};;
-        s) AUTH0_SCOPE=`echo ${OPTARG} | tr ',' ' '`;;
+        s) AUTH0_SCOPE=$(echo ${OPTARG} | tr ',' ' ');;
         m) opt_mgmnt=1;;
-        v) opt_verbose=1;; #set -x;;
+        v) set -x;;
         h|?) usage 0;;
         *) usage 1;;
     esac
@@ -95,33 +101,35 @@ done
 [[ -z "${USERNAME}" ]] && { echo >&2 "ERROR: USERNAME undefined"; usage 1; }
 [[ -z "${PASSWORD}" ]] && { echo >&2 "ERROR: PASSWORD undefined"; usage 1; }
 
-declare -r AUTH0_TENANT=$(echo ${AUTH0_DOMAIN} | awk -F[./] '{print $1}')
+rm -f cookie.txt
+
+declare -r AUTH0_TENANT=$(echo "${AUTH0_DOMAIN}" | awk -F[./] '{print $1}')
 
 [[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"
 
-declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&response_type=`urlencode "id_token"`&redirect_uri=`urlencode ${AUTH0_REDIRECT_URI}`&scope=`urlencode ${AUTH0_SCOPE}`&state=mystate&nonce=${DEFAULT_NONCE}" #&auth0Client=${AUTH0_CLIENT_B64}
+declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&response_type=id_token&redirect_uri=`urlencode ${AUTH0_REDIRECT_URI}`&scope=`urlencode ${AUTH0_SCOPE}`&state=mystate&nonce=${DEFAULT_NONCE}&iss=`urlencode https://${AUTH0_DOMAIN}/}`" #&auth0Client=${AUTH0_CLIENT_B64}
 
-[[ -n "${AUTH0_AUDIENCE}" ]] && authorize_url+="&audience=`urlencode ${AUTH0_AUDIENCE}`"
+[[ -n "${AUTH0_AUDIENCE}" ]] && authorize_url+="&audience=$(urlencode "${AUTH0_AUDIENCE}")"
 [[ -n "${AUTH0_CONNECTION}" ]] &&  authorize_url+="&realm=${AUTH0_CONNECTION}"
 
 echo "authorize_url: ${authorize_url}"
 
-declare login_location=$(curl -s -I -b cookie.txt --url "$authorize_url" | grep -i -E "^location: " | awk '{print $2}' | tr -d '\r')
+readonly login_location=$(curl -s -I -c cookie.txt --url "$authorize_url" | grep -i -E "^location: " | awk '{print $2}' | tr -d '\r')
 
-loign=`urldecode ${login_location}`
+#readonly login_location=$(urldecode "${login_location}")
 
-declare -r login_page=https://${AUTH0_DOMAIN}${loign}
+declare -r login_page=https://${AUTH0_DOMAIN}${login_location}
 
 echo "Redirect to login page: ${login_page}"
 
-declare  -r authParams_b64=$(curl -v -c cookie.txt -b cookie.txt --url "${login_page}" 2>&1 | grep  "window.atob('[^']*" -o | cut -c14-)
+readonly authParams_b64=$(curl -s -c cookie.txt -b cookie.txt --url "${login_page}" 2>&1 | grep  "window.atob('[^']*" -o | cut -c14-)
 
-declare -r authParams=$(echo ${authParams_b64} | base64 -di 2>/dev/null)
+readonly authParams=$(echo "${authParams_b64}" | base64 -di 2>/dev/null)
 
-declare -r _csrf=$(echo ${authParams} | jq -cr '._csrf' )
-declare -r state=$(echo ${authParams} | jq -cr '.state' )
+readonly _csrf=$(echo "${authParams}" | jq -cr '._csrf' )
+readonly  state=$(echo "${authParams}" | jq -cr '.state' )
 
-declare BODY=$(cat <<EOL
+readonly BODY=$(cat <<EOL
 {
     "client_id": "${AUTH0_CLIENT_ID}",
     "redirect_uri": "${AUTH0_REDIRECT_URI}",
@@ -149,20 +157,20 @@ declare -r callback_url="https://${AUTH0_DOMAIN}/login/callback"
 declare -r wresult=$(echo ${form_post_body} | ack 'name="wresult" value="(?P<wresult>[^"]*)' --output '$1')
 declare -r wctx=$(echo ${form_post_body} | ack 'name="wctx" value="(?P<wctx>[^"]*)' --output '$1')
 
-wctx_decoded=$(htmldecode "${wctx}")
+readonly wctx_decoded=$(htmldecode "${wctx}")
 
 #echo "callback_url: ${callback_url}"
 #echo "wresult: ${wresult}"
 #echo "wctx_decoded: ${wctx_decoded}"
 
-declare -r jwt_io_fragment=$(curl -s -b cookie.txt \
+readonly jwt_io_fragment=$(curl -s -b cookie.txt \
   -d "wa=wsignin1.0&wresult=${wresult}&wctx=${wctx_decoded}" \
-  --url ${callback_url} | ack 'Found. Redirecting to (.+)' --output '$1')
+  --url "${callback_url}" | ack 'Found. Redirecting to (.+)' --output '$1')
 
-echo "jwt_io_fragment: ${jwt_io_fragment}"
+#echo "jwt_io_fragment: ${jwt_io_fragment}"
 
-declare id_token=$(echo ${jwt_io_fragment} | grep -oE "id_token=([^&]+)" | awk -F= '{print $2}')
-declare id_token_json=$(echo ${id_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null)
+declare id_token=$(echo "${jwt_io_fragment}" | grep -oE "id_token=([^&]+)" | awk -F= '{print $2}')
+declare id_token_json=$(echo "${id_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null)
 
 echo "ID     Token: ${id_token_json}"
 
