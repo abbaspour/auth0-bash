@@ -3,7 +3,6 @@
 set -ueo pipefail
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
 function usage() {
     cat <<END >&2
@@ -34,6 +33,8 @@ declare opt_mgmnt=''
 
 declare audience_field=''
 declare scopes_field=''
+
+[[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
 while getopts "e:t:d:c:a:s:mhv?" opt
 do
@@ -68,4 +69,4 @@ EOL
 
 curl -ss --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/oauth/device/code | jq .
 
-echo -e "\n Polling:\n ./exchange.sh -d ${AUTH0_DOMAIN} -c ${AUTH0_CLIENT_ID} -D DEVICECODE"
+echo -e "\n Polling:\n ./exchange.sh -d ${AUTH0_DOMAIN} -c ${AUTH0_CLIENT_ID} -D DEVICE_CODE"
