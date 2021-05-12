@@ -1,11 +1,8 @@
 #!/bin/bash
 
-#!/bin/bash
-
 set -eo pipefail
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
-
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 declare AUTH0_SCOPE='openid email'
 
@@ -16,7 +13,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-r connection] [-R co
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
         -c client_id   # Auth0 client ID
-        -a audiance    # Audience
+        -a audience    # Audience
         -r realm       # Connection (email or sms)
         -R types       # code or link (default is code)
         -s scopes      # comma separated list of scopes (default is "${AUTH0_SCOPE}")
@@ -47,7 +44,7 @@ while getopts "e:t:d:c:a:r:R:u:p:s:mCPohv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
-        t) AUTH0_DOMAIN=`echo ${OPTARG}.auth0.com | tr '@' '.'`;;
+        t) AUTH0_DOMAIN=$(echo "${OPTARG}.auth0.com" | tr '@' '.');;
         d) AUTH0_DOMAIN=${OPTARG};;
         c) AUTH0_CLIENT_ID=${OPTARG};;
         a) AUTH0_AUDIENCE=${OPTARG};;
@@ -55,7 +52,7 @@ do
         R) send=${OPTARG};;
         u) email=${OPTARG};;
         p) phone_number=${OPTARG};;
-        s) AUTH0_SCOPE=`echo ${OPTARG} | tr ',' ' '`;;
+        s) AUTH0_SCOPE=$(echo "${OPTARG}" | tr ',' ' ');;
         C) opt_clipboard=1;;
         o) opt_open=1;; 
         P) opt_preview=1;; 
@@ -80,7 +77,7 @@ esac
 
 [[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"         # audience is unsupported in OTP (23/08/18)
 
-declare data=$(cat <<EOL
+readonly data=$(cat <<EOL
 {
     "client_id":"${AUTH0_CLIENT_ID}", 
     "connection":"${AUTH0_CONNECTION}", 

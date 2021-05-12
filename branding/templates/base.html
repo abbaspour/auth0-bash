@@ -1,11 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Welcome to {{ application.name }}</title>
-	{%- auth0:head -%}
-	<style>body { background: #000; }</style>
+    <title>Welcome to {{ application.name }}</title>
+    {%- auth0:head -%}
+    <style>
+        body {
+            background: #000;
+        }
+
+        .center {
+            margin: auto;
+            width: 50%;
+            border: 3px solid green;
+            padding: 10px;
+        }
+    </style>
 </head>
 <body>
-	{%- auth0:widget -%}
+<div class="center">
+    {%- auth0:widget -%}
+</div>
 </body>
 </html>
