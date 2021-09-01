@@ -18,13 +18,15 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u username] [-p pass
         -x secret      # Auth0 client secret
         -u username    # Username or email
         -p password    # Password
-        -a audiance    # Audience
+        -a audience    # Audience
         -r realm       # Connection (default is "${AUTH0_CONNECTION}")
         -s scopes      # comma separated list of scopes (default is "${AUTH0_SCOPE}")
         -i IP          # set origin IP header. Default is 'x-forwarded-for'
-        -k key         # cname-api-key
+        -C key         # cname-api-key
         -A             # switch to 'auth0-forwarded-for' for trust IP header
         -m             # Management API audience
+        -k kid         # client public key jwt id
+        -f private.pem # client private key pem file
         -h|?           # usage
         -v             # verbose
 
@@ -46,15 +48,16 @@ declare origin_ip='1.2.3.4'
 
 declare ff_prefix='x'
 declare opt_mgmnt=''
-declare opt_verbose=0
+declare kid=''
+declare private_pem=''
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:u:p:d:c:x:a:r:s:i:k:Amhv?" opt
+while getopts "e:t:u:p:d:c:x:a:r:s:i:C:k:f:Amhv?" opt
 do
     case ${opt} in
-        e) source ${OPTARG};;
-        t) AUTH0_DOMAIN=`echo ${OPTARG}.auth0.com | tr '@' '.'`;;
+        e) source "${OPTARG}";;
+        t) AUTH0_DOMAIN=$(echo ${OPTARG}.auth0.com | tr '@' '.');;
         u) username=${OPTARG};;
         p) password=${OPTARG};;
         d) AUTH0_DOMAIN=${OPTARG};;
@@ -64,10 +67,12 @@ do
         r) AUTH0_CONNECTION=${OPTARG};;
         s) AUTH0_SCOPE=`echo ${OPTARG} | tr ',' ' '`;;
         i) origin_ip=${OPTARG};;
-        k) cname_api_key=${OPTARG};;
+        C) cname_api_key=${OPTARG};;
+        k) kid=${OPTARG};;
+        f) private_pem=${OPTARG};;
         A) ff_prefix='auth0';;
         m) opt_mgmnt=1;;
-        v) opt_verbose=1;; #set -x;;
+        v) set -x;;
         h|?) usage 0;;
         *) usage 1;;
     esac
@@ -83,25 +88,36 @@ done
 declare secret=''
 [[ -n "${AUTH0_CLIENT_SECRET}" ]] && secret="\"client_secret\": \"${AUTH0_CLIENT_SECRET}\","
 
+if [[ -n "${kid}" && -n "${private_pem}" && -f "${private_pem}" ]]; then
+  readonly assertion=$(../clients/client-assertion.sh -d "${AUTH0_DOMAIN}" -i "${AUTH0_CLIENT_ID}" -k "${kid}" -f "${private_pem}" )
+  readonly client_assertion=$(cat <<EOL
+  , "client_assertion" : "${assertion}",
+  "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+EOL
+)
+  echo "client_assertion: ${client_assertion}"
+fi
+
 declare BODY=$(cat <<EOL
 {
             "grant_type": "http://auth0.com/oauth/grant-type/password-realm",
             "realm" : "${AUTH0_CONNECTION}",
-            "client_id": "${AUTH0_CLIENT_ID}",
-            ${secret}
+            "client_id": "${AUTH0_CLIENT_ID}", ${secret}
             "scope": "${AUTH0_SCOPE}",
             "audience": "${AUTH0_AUDIENCE}",
             "username": "${username}",
             "password": "${password}"
+            ${client_assertion}
 }
 EOL
 )
 
-curl -k --header "$ff_prefix-forwarded-for: ${origin_ip}" \
-     --header "true-client-ip: 20.30.40.50" \
-     --header "cname-api-key: ${cname_api_key}" \
-     --header 'content-type: application/json' \
+# --header "$ff_prefix-forwarded-for: ${origin_ip}" \
+# --header "true-client-ip: 20.30.40.50" \
+# --header "cname-api-key: ${cname_api_key}" \
+
+curl -k --header 'content-type: application/json' \
      -d "${BODY}" \
-     https://${AUTH0_DOMAIN}/oauth/token
+     "https://${AUTH0_DOMAIN}/oauth/token"
 
 echo

@@ -17,7 +17,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-r connection] [-R co
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
         -c client_id   # Auth0 client ID
-        -a audiance    # Audience
+        -a audience    # Audience
         -r realm       # Connection (email or sms)
         -R types       # code or link (default is code)
         -s scopes      # comma separated list of scopes (default is "${AUTH0_SCOPE}")

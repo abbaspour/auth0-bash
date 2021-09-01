@@ -35,6 +35,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r conn
         -n nonce       # nonce
         -H hint        # login hint
         -O org_id      # organisation id
+        -i invitation  # invitation
         -C             # copy to clipboard
         -P             # pretty print
         -m             # Management API audience
@@ -70,12 +71,12 @@ base64URLEncode() {
 }
 
 gen_code_verifier() {
-    local rand=$(random32)
+    readonly rand=$(random32)
     echo $(base64URLEncode ${rand})
 }
 
 gen_code_challenge() {
-    local cc=$(echo -n "$1" | openssl dgst -binary -sha256)
+    readonly cc=$(echo -n "$1" | openssl dgst -binary -sha256)
     echo $(base64URLEncode "$cc")
 }
 
@@ -92,14 +93,14 @@ declare opt_mgmnt=''
 declare opt_state=''
 declare opt_nonce='mynonce'
 declare opt_login_hint=''
-declare opt_org_id=''
-declare opt_verbose=0
+declare org_id=''
+declare invitation=''
 declare opt_browser=''
 declare opt_pp=0
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:d:c:a:r:R:f:u:p:s:b:M:S:n:H:O:mCoPhv?" opt
+while getopts "e:t:d:c:a:r:R:f:u:p:s:b:M:S:n:H:O:i:mCoPhv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -118,6 +119,7 @@ do
         n) opt_nonce=${OPTARG};;
         H) opt_login_hint=${OPTARG};;
         O) org_id=${OPTARG};;
+        i) invitation=${OPTARG};;
         C) opt_clipboard=1;;
         P) opt_pp=1;;
         o) opt_open=1;;
@@ -154,6 +156,7 @@ declare authorize_url="${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&${
 [[ -n "${AUTH0_RESPONSE_MODE}" ]] &&  authorize_url+="&response_mode=${AUTH0_RESPONSE_MODE}"
 [[ -n "${opt_state}" ]] &&  authorize_url+="&state=$(urlencode "${opt_state}")"
 [[ -n "${opt_login_hint}" ]] &&  authorize_url+="&login_hint=$(urlencode "${opt_login_hint}")"
+[[ -n "${invitation}" ]] &&  authorize_url+="&invitation=$(urlencode "${invitation}")"
 [[ -n "${org_id}" ]] &&  authorize_url+="&organization=$(urlencode "${org_id}")"
 
 if [[ -z ${opt_pp} ]]; then

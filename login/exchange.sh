@@ -20,6 +20,8 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-p
         -u callback    # callback URL
         -b             # HTTP Basic authentication (default is POST payload)
         -U             # token endpoint URI (default is '/oauth/token')
+        -k kid         # client public key jwt id
+        -f private.pem # client private key pem file
         -h|?           # usage
         -v             # verbose
 
@@ -33,19 +35,20 @@ declare AUTH0_DOMAIN=''
 declare AUTH0_CLIENT_ID=''
 declare AUTH0_CLIENT_SECRET=''
 declare AUTH0_REDIRECT_URI='https://jwt.io'
-declare opt_verbose=0
 declare authorization_code=''
 declare code_verifier=''
 declare grant_type='authorization_code'
 declare code_type='code'
 declare http_basic=0
+declare kid=''
+declare private_pem=''
 declare token_endpoint='/oauth/token'
 
-while getopts "e:t:d:c:u:a:x:p:D:U:bhv?" opt
+while getopts "e:t:d:c:u:a:x:p:D:U:k:f:bhv?" opt
 do
     case ${opt} in
-        e) source ${OPTARG};;
-        t) AUTH0_DOMAIN=`echo ${OPTARG}.auth0.com | tr '@' '.'`;;
+        e) source "${OPTARG}";;
+        t) AUTH0_DOMAIN=$(echo ${OPTARG}.auth0.com | tr '@' '.');;
         d) AUTH0_DOMAIN=${OPTARG};;
         c) AUTH0_CLIENT_ID=${OPTARG};;
         x) AUTH0_CLIENT_SECRET=${OPTARG};;
@@ -53,9 +56,11 @@ do
         a) authorization_code=${OPTARG};;
         p) code_verifier=${OPTARG};;
         U) token_endpoint=${OPTARG};;
+        k) kid=${OPTARG};;
+        f) private_pem=${OPTARG};;
         D) code_type='device_code'; grant_type='urn:ietf:params:oauth:grant-type:device_code'; authorization_code=${OPTARG};;
         b) http_basic=1;;
-        v) opt_verbose=1;; #set -x;;
+        v) set -x;;
         h|?) usage 0;;
         *) usage 1;;
     esac
@@ -76,7 +81,14 @@ else
   [[ -n "${code_verifier}" ]] && secret="\"code_verifier\":\"${code_verifier}\","
 fi
 
-[[ ${AUTH0_DOMAIN} =~ ^http ]] || AUTH0_DOMAIN=https://${AUTH0_DOMAIN}
+if [[ -n "${kid}" && -n "${private_pem}" && -f "${private_pem}" ]]; then
+  readonly assertion=$(../clients/client-assertion.sh -d "${AUTH0_DOMAIN}" -i "${AUTH0_CLIENT_ID}" -k "${kid}" -f "${private_pem}" )
+  readonly client_assertion=$(cat <<EOL
+  , "client_assertion" : "${assertion}",
+  "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+EOL
+)
+fi
 
 declare -r BODY=$(cat <<EOL
 {
@@ -85,19 +97,22 @@ declare -r BODY=$(cat <<EOL
     "${code_type}": "${authorization_code}",
     "grant_type":"${grant_type}",
     "redirect_uri": "${AUTH0_REDIRECT_URI}"
+    ${client_assertion}
 }
 EOL
 )
 
+[[ ${AUTH0_DOMAIN} =~ ^http ]] || AUTH0_DOMAIN=https://${AUTH0_DOMAIN}
+
 if [[ ${http_basic} -eq 1 ]]; then
  curl --request POST \
   -H "Authorization: Basic ${authorization_header}" \
-  --url ${AUTH0_DOMAIN}${token_endpoint} \
+  --url "${AUTH0_DOMAIN}${token_endpoint}" \
   --header 'content-type: application/json' \
   --data "${BODY}"
 else
  curl --request POST \
-  --url ${AUTH0_DOMAIN}${token_endpoint} \
+  --url "${AUTH0_DOMAIN}${token_endpoint}" \
   --header 'content-type: application/json' \
   --data "${BODY}"
 fi

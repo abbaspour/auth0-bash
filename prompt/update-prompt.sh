@@ -1,11 +1,11 @@
 #!/bin/bash
 
-set -eo pipefail
+set -euo pipefail
 
 function usage() {
     cat <<END >&2
 USAGE: $0 [-e env] [-a access_token] [-p prompt] [-l language] [-s screen] [-i text-id] [-t text]
-        -e file      # .env file location (default cwd)
+        -e file     # .env file location (default cwd)
         -a token    # access_token. default from environment variable
         -p prompt   # prompt name
         -l lang     # language (default en)
@@ -48,9 +48,9 @@ done
 [[ -z "${text_id}" ]] && { echo >&2 "ERROR: text_id undefined."; usage 1; }
 [[ -z "${text}" ]] && { echo >&2 "ERROR: text undefined."; usage 1; }
 
-declare -r AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
+readonly AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
 
-declare BODY=$(cat <<EOL
+readonly BODY=$(cat <<EOL
 {
   "${screen}": {
     "${text_id}": "${text}"
