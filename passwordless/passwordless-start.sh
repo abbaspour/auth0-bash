@@ -95,9 +95,9 @@ readonly data=$(cat <<EOL
 }
 EOL
 )
-
-curl --request POST -H 'auth0-forwarded-for: 1.2.3.4' \
+ # -H 'auth0-forwarded-for: 1.2.3.4' \
+curl --request POST -v \
   --url "https://${AUTH0_DOMAIN}/passwordless/start" \
   --header 'content-type: application/json' \
-  --data "${data}"
+  --data "${data}" 
 
