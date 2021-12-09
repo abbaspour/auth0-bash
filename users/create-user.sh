@@ -75,7 +75,7 @@ declare phone_number_field=''; [[ -n "${phone_number}" ]] && { phone_number_fiel
 
 declare verified_field='';
 if [[ -n "${verified_flag}" ]]; then
-  if [[ ${AUTH0_CONNECTION} == 'sms' ]]; then verified_field="phone_verified:true,"
+  if [[ ${AUTH0_CONNECTION} == 'sms' ]]; then verified_field="\"phone_verified\":true,"
   else verified_field="\"email_verified\":true,"
   fi
 fi
