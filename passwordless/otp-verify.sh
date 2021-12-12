@@ -20,6 +20,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u email] [-x code] [
         -a audiance    # Audience
         -s scopes      # comma separated list of scopes (default is "${AUTH0_SCOPE}")
         -p number      # SMS phone number
+        -u email       # Email 
         -x code        # OTP code received in SMS or Email
         -m             # Management API audience
         -h|?           # usage

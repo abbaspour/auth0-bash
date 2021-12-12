@@ -55,7 +55,7 @@ readonly key_txt=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' "${key_file}")
 readonly BODY=$(curl --silent --request GET \
     -H "Authorization: Bearer ${access_token}" \
     --url "${AUTH0_DOMAIN_URL}api/v2/connections/${connection_id}" \
-    --header 'content-type: application/json' | jq "del(.realms, .id, .strategy, .name, .provisioning_ticket_url, .options.signing_keys) | .options += {\"signing_keys\":{\"cert\": \"${cert_txt}\",\"key\": \"${key_txt}\"}}" | jq -r)
+    --header 'content-type: application/json' | jq "del(.realms, .id, .strategy, .name, .provisioning_ticket_url, .options.signing_keys, .options.signing_key) | .options += {\"signing_key\":{\"cert\": \"${cert_txt}\",\"key\": \"${key_txt}\"}}" | jq -r)
 
 
 curl --request PATCH \
