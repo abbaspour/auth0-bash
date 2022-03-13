@@ -82,7 +82,7 @@ done
 [[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
 [[ -z "${username}" ]] && { echo >&2 "ERROR: username undefined"; usage 1; }
 
-[[ -z "${AUTH0_AUDIENCE}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/userinfo"
+#[[ -z "${AUTH0_AUDIENCE}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/userinfo"
 [[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"
 
 declare secret=''
@@ -116,7 +116,7 @@ EOL
 # --header "true-client-ip: 20.30.40.50" \
 # --header "cname-api-key: ${cname_api_key}" \
 
-curl -k --header 'content-type: application/json' \
+curl -s -k --header 'content-type: application/json' \
      -d "${BODY}" \
      "https://${AUTH0_DOMAIN}/oauth/token"
 

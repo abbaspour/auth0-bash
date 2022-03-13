@@ -13,7 +13,7 @@ USAGE: $0 [-c number]
         -x password # password
         -s salt     # password salt prefix
         -S salt     # password salt suffix
-        -a name     # password hash algorithm; bcrypt (default), md4, md5, ldap, sha1, sha256, sha512, argon2, pbkdf2
+        -a name     # password hash algorithm; bcrypt (default), md4, md5, ldap, sha1, sha256, sha512, argon2, pbkdf2-sha1, pbkdf2-sha256
         -r round    # bcrypt rounds. default is $bc_rounds
         -V          # set email_verified to true
         -d domain   # email domain. default is ${domain}
@@ -91,8 +91,19 @@ EOL
  }
 EOL
 );;
-    pbkdf2)
-      echo >&2 "WIP algorithm: $algorithm"; usage 1;;
+    pbkdf2*)
+      declare -r hashing_alg=$(echo "${algorithm}" | awk -F- '{print $2}')
+      declare -r password_hash=$(./pbkdf2.sh -p "${password}" -a ${hashing_alg} -s "${salt_prefix}")
+ custom_password_hash_field=$(cat <<EOL
+, "custom_password_hash": {
+    "algorithm": "pbkdf2",
+    "hash": {
+      "value": "${password_hash}",
+      "encoding": "utf8"
+    }
+ }
+EOL
+);;
     *)
       echo >&2 "Unsupported algorithm: $algorithm"; usage 1;;
   esac

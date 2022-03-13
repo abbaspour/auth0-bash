@@ -27,7 +27,7 @@ declare -r AUTH0_CLIENT_B64=$(echo -n $AUTH0_CLIENT | base64)
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u username] [-p pass] [-r connection] [-o origin] [-U callback] [-v|-h]
+USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u username] [-p password] [-r connection] [-o origin] [-U callback] [-v|-h]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
@@ -38,6 +38,8 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u username] [-p pass
         -o origin      # Allowed Origin (default ${AUTH0_ORIGIN})
         -U callback    # callback URL (default ${AUTH0_REDIRECT_URI})
         -a audience    # audience
+        -S state       # state
+        -n nonce       # nonce
         -s scopes      # scopes (comma-separated, default "${AUTH0_SCOPE}")
         -h|?           # usage
         -v             # verbose
@@ -55,14 +57,16 @@ declare USERNAME=''
 declare PASSWORD=''
 declare opt_mgmnt=''
 declare opt_verbose=0
+declare opt_state=''
+declare opt_nonce=''
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:d:c:a:u:p:r:o:U:s:mhv?" opt
+while getopts "e:t:d:c:a:u:p:r:o:U:s:S:n:mhv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
-        t) AUTH0_DOMAIN=`echo ${OPTARG}.auth0.com | tr '@' '.'`;;
+        t) AUTH0_DOMAIN=$(echo ${OPTARG}.auth0.com | tr '@' '.');;
         d) AUTH0_DOMAIN=${OPTARG};;
         c) AUTH0_CLIENT_ID=${OPTARG};;
         a) AUTH0_AUDIENCE=${OPTARG};;
@@ -71,7 +75,9 @@ do
         r) AUTH0_CONNECTION=${OPTARG};;
         o) AUTH0_ORIGIN=${OPTARG};;
         U) AUTH0_REDIRECT_URI=${OPTARG};;
-        s) AUTH0_SCOPE=`echo ${OPTARG} | tr ',' ' '`;;
+        s) AUTH0_SCOPE=$(echo ${OPTARG} | tr ',' ' ');;
+        S) opt_state=${OPTARG};;
+        n) opt_nonce=${OPTARG};;
         m) opt_mgmnt=1;;
         v) opt_verbose=1;; #set -x;;
         h|?) usage 0;;
@@ -110,28 +116,33 @@ echo login_ticket=${login_ticket}
 
 [[ ${login_ticket} == "null" ]] && { echo >&2 "login_ticket collection failed"; exit 3; }
 
-declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&response_type=`urlencode "id_token token"`&redirect_uri=`urlencode ${AUTH0_REDIRECT_URI}`&scope=`urlencode ${AUTH0_SCOPE}`&login_ticket=${login_ticket}&state=mystate&nonce=mynonce&auth0Client=${AUTH0_CLIENT_B64}"
+declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&response_type=`urlencode "token id_token"`&redirect_uri=`urlencode ${AUTH0_REDIRECT_URI}`&login_ticket=${login_ticket}" # &auth0Client=${AUTH0_CLIENT_B64}
 
 [[ -n "${AUTH0_AUDIENCE}" ]] && authorize_url+="&audience=`urlencode ${AUTH0_AUDIENCE}`"
-[[ -n "${AUTH0_CONNECTION}" ]] &&  authorize_url+="&realm=${AUTH0_CONNECTION}"
+[[ -n "${AUTH0_CONNECTION}" ]] &&  authorize_url+="&connection=${AUTH0_CONNECTION}"
+[[ -n "${AUTH0_SCOPE}" ]] &&  authorize_url+="&scope=`urlencode "${AUTH0_SCOPE}"`"
+[[ -n "${opt_state}" ]] &&  authorize_url+="&state=`urlencode ${opt_state}`"
+[[ -n "${opt_nonce}" ]] &&  authorize_url+="&nonce=`urlencode ${opt_nonce}`"
 
 echo "authorize_url: ${authorize_url}"
 
-declare location=$(curl -s -I -b cookie.txt $authorize_url | awk 'IGNORECASE = 1;/^location: /{print $2}')
+declare location=$(curl -v -b cookie.txt $authorize_url | awk 'IGNORECASE = 1;/^location: /{print $2}')
 
 echo "Redirect location: ${location}"
 
+[[ ${location} =~ ^/u/ ]] && { echo >&2 "WARNING: MFA enabled. CO not possible without user interaction"; exit 3; }
 [[ ${location} =~ ^/mf ]] && { echo >&2 "WARNING: MFA enabled. CO not possible without user interaction"; exit 3; }
 [[ ${location} =~ ^/decision ]] && { echo >&2 "WARNING: Consent required. CO not possible without user interaction. Try normal ./authorize.sh first."; exit 3; }
 
-declare access_token=$(echo ${location} | grep -oE "access_token=([^&]+)" | awk -F= '{print $2}')
-declare id_token=$(echo ${location} | grep -oE "id_token=([^&]+)" | awk -F= '{print $2}')
+declare access_token=$(echo "${location}" | grep -oE "access_token=([^&]+)" | awk -F= '{print $2}')
+declare id_token=$(echo "${location}" | grep -oE "id_token=([^&]+)" | awk -F= '{print $2}')
+declare state=$(echo "${location}" | grep -oE "state=([^&]+)" | awk -F= '{print $2}')
 
 ## TODO: check if `base64` installed
-
 declare access_token_json=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null)
 declare id_token_json=$(echo ${id_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null)
 
-echo "Access Token: ${access_token_json}"
+echo "Access Token: ${access_token}"
 echo "ID     Token: ${id_token_json}"
+echo "state       : ${state}"
 

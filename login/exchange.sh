@@ -88,6 +88,8 @@ if [[ -n "${kid}" && -n "${private_pem}" && -f "${private_pem}" ]]; then
   "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
 EOL
 )
+else
+  readonly client_assertion=''
 fi
 
 declare -r BODY=$(cat <<EOL

@@ -36,8 +36,9 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r conn
         -H hint        # login hint
         -O org_id      # organisation id
         -i invitation  # invitation
+        -l locale      # ui_locales
         -C             # copy to clipboard
-        -P             # pretty print
+        -P             # disable pretty print
         -m             # Management API audience
         -o             # Open URL
         -b browser     # Choose browser to open (firefox, chrome, safari)
@@ -94,13 +95,14 @@ declare opt_state=''
 declare opt_nonce='mynonce'
 declare opt_login_hint=''
 declare org_id=''
+declare ui_locales=''
 declare invitation=''
 declare opt_browser=''
-declare opt_pp=0
+declare opt_pp=1
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:d:c:a:r:R:f:u:p:s:b:M:S:n:H:O:i:mCoPhv?" opt
+while getopts "e:t:d:c:a:r:R:f:u:p:s:b:M:S:n:H:O:i:l:mCoPhv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -120,8 +122,9 @@ do
         H) opt_login_hint=${OPTARG};;
         O) org_id=${OPTARG};;
         i) invitation=${OPTARG};;
+        l) ui_locales=${OPTARG};;
         C) opt_clipboard=1;;
-        P) opt_pp=1;;
+        P) opt_pp=0;;
         o) opt_open=1;;
         m) opt_mgmnt=1;;
         b) opt_browser="-a ${OPTARG} ";;
@@ -158,8 +161,9 @@ declare authorize_url="${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&${
 [[ -n "${opt_login_hint}" ]] &&  authorize_url+="&login_hint=$(urlencode "${opt_login_hint}")"
 [[ -n "${invitation}" ]] &&  authorize_url+="&invitation=$(urlencode "${invitation}")"
 [[ -n "${org_id}" ]] &&  authorize_url+="&organization=$(urlencode "${org_id}")"
+[[ -n "${ui_locales}" ]] &&  authorize_url+="&ui_locales=${ui_locales}"
 
-if [[ -z ${opt_pp} ]]; then
+if [[ ${opt_pp} -eq 0 ]]; then
   echo "${authorize_url}"
 else
   echo "${authorize_url}" | sed -E 's/&/ &\
