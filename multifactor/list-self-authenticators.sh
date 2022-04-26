@@ -30,7 +30,8 @@ done
 
 [[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
 
-declare -r AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
+#declare -r AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
+declare -r AUTH0_DOMAIN_URL='https://abbaspour.auth0.com/'
 
 curl -s -H "Authorization: Bearer ${access_token}" \
     --request GET \

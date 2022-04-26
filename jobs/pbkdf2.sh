@@ -11,9 +11,9 @@ function usage() {
 USAGE: $0 [-e file] [-f file] [-v|-h]
         -p password    # password
         -s salt        # salt (base64). defaults to a random value
-        -i iter        # iterations (defaults to ${iterations})
-        -l keylen      # output key length (defaults to ${keylen})
-        -a algorithm   # hashing algorithm such as sha1, sha256, md, etc (defaults to ${algorithm })
+        -i iter        # iterations (defaults to $iterations)
+        -l keylen      # output key length (defaults to $keylen)
+        -a algorithm   # hashing algorithm such as sha1, sha256, md, etc (defaults to $algorithm)
         -h|?           # usage
         -v             # verbose
 
