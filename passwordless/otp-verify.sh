@@ -17,11 +17,12 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u email] [-x code] [
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
         -c client_id   # Auth0 client ID
-        -a audiance    # Audience
+        -x secret      # Auth0 client secret (optional)
+        -a audience    # Audience
         -s scopes      # comma separated list of scopes (default is "${AUTH0_SCOPE}")
         -p number      # SMS phone number
-        -u email       # Email 
-        -x code        # OTP code received in SMS or Email
+        -u email       # Email
+        -o code        # OTP code received in SMS or Email
         -m             # Management API audience
         -h|?           # usage
         -v             # verbose
@@ -41,17 +42,18 @@ declare otp_code=''
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:d:c:a:x:u:p:s:mhv?" opt
+while getopts "e:t:d:c:a:x:u:p:s:o:mhv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
         t) AUTH0_DOMAIN=`echo ${OPTARG}.auth0.com | tr '@' '.'`;;
         d) AUTH0_DOMAIN=${OPTARG};;
         c) AUTH0_CLIENT_ID=${OPTARG};;
+        x) AUTH0_CLIENT_SECRET=${OPTARG};;
         a) AUTH0_AUDIENCE=${OPTARG};;
         u) username=${OPTARG};AUTH0_CONNECTION='email';;
         p) username=${OPTARG};AUTH0_CONNECTION='sms';;
-        x) otp_code=${OPTARG};;
+        o) otp_code=${OPTARG};;
         s) AUTH0_SCOPE=`echo ${OPTARG} | tr ',' ' '`;;
         m) opt_mgmnt=1;;
         v) opt_verbose=1;; #set -x;;
@@ -68,10 +70,13 @@ done
 
 [[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"         # audience is unsupported in OTP (23/08/18)
 
+declare secret=''
+[[ -n "${AUTH0_CLIENT_SECRET}" ]] && secret="\"client_secret\":\"${AUTH0_CLIENT_SECRET}\","
+
 declare data=$(cat <<EOL
 {
     "grant_type" : "http://auth0.com/oauth/grant-type/passwordless/otp",
-    "client_id": "${AUTH0_CLIENT_ID}",
+    "client_id": "${AUTH0_CLIENT_ID}", ${secret}
     "realm": "${AUTH0_CONNECTION}",
     "username": "${username}",
     "otp": "${otp_code}",

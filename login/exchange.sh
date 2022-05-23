@@ -19,7 +19,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-p
         -D code        # Device Code to exchange
         -u callback    # callback URL
         -b             # HTTP Basic authentication (default is POST payload)
-        -U             # token endpoint URI (default is '/oauth/token')
+        -U endpoint    # token endpoint URI (default is '/oauth/token')
         -k kid         # client public key jwt id
         -f private.pem # client private key pem file
         -h|?           # usage
@@ -78,7 +78,7 @@ if [[ ${http_basic} -eq 1 ]]; then
   authorization_header=$(printf "%s:%s" "${AUTH0_CLIENT_ID}" "${AUTH0_CLIENT_SECRET}" | openssl base64 -e -A)
 else
   [[ -n "${AUTH0_CLIENT_SECRET}" ]] && secret="\"client_secret\":\"${AUTH0_CLIENT_SECRET}\","
-  [[ -n "${code_verifier}" ]] && secret="\"code_verifier\":\"${code_verifier}\","
+  [[ -n "${code_verifier}" ]] && secret+="\"code_verifier\":\"${code_verifier}\","
 fi
 
 if [[ -n "${kid}" && -n "${private_pem}" && -f "${private_pem}" ]]; then

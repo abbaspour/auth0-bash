@@ -13,7 +13,7 @@ USAGE: $0 [-e env] [-a access_token] [-i connection_id] [-v|-h]
         -v          # verbose
 
 eg,
-     $0 
+     $0
 END
     exit $1
 }

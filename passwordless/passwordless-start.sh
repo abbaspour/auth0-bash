@@ -8,7 +8,7 @@ declare AUTH0_SCOPE='openid email'
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x secret] [-r email|sms] [-R code|link] [-u email] [-p phone_number] [-s scope] [-m|-h]
+USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x secret] [-r email|sms] [-R code|link] [-u email] [-p phone_number] [-s scope] [-l lang] [-m|-h]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
@@ -21,6 +21,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x secret] [-r email|
         -p number      # SMS phone number
         -u email       # Email address
         -U redirect    # redirect_uri
+        -l language    # preferred language. default is ${language}
         -m             # Management API audience
         -P             # Preview mode
         -h|?           # usage
@@ -40,10 +41,11 @@ declare redirect_uri='https://jwt.io'
 declare email=''
 declare phone_number=''
 declare send='code'
+declare language='en'
 
 [[ -f ${DIR}/.env ]] && . "${DIR}/.env"
 
-while getopts "e:t:d:c:x:a:r:R:u:p:s:U:mCPohv?" opt
+while getopts "e:t:d:c:x:a:r:R:u:p:s:U:l:mCPohv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -56,6 +58,7 @@ do
         R) send=${OPTARG};;
         u) email=${OPTARG};;
         p) phone_number=${OPTARG};;
+        l) language=${OPTARG};;
         s) AUTH0_SCOPE=$(echo "${OPTARG}" | tr ',' ' ');;
         U) redirect_uri=${OPTARG};;
         C) opt_clipboard=1;;
@@ -99,5 +102,6 @@ EOL
 curl --request POST \
   --url "https://${AUTH0_DOMAIN}/passwordless/start" \
   --header 'content-type: application/json' \
+  --header "x-request-language: ${language}" \
   --data "${data}"
 

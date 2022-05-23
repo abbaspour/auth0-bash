@@ -15,6 +15,7 @@ declare AUTH0_REDIRECT_URI='https://jwt.io'
 declare AUTH0_SCOPE='openid profile email'
 declare AUTH0_RESPONSE_TYPE='token id_token'
 declare AUTH0_RESPONSE_MODE=''
+declare authorization_endpoint='authorize'
 
 function usage() {
     cat <<END >&2
@@ -37,6 +38,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r conn
         -O org_id      # organisation id
         -i invitation  # invitation
         -l locale      # ui_locales
+        -E endpoint    # change authorization_endpoint. default is ${authorization_endpoint}
         -C             # copy to clipboard
         -P             # disable pretty print
         -m             # Management API audience
@@ -102,7 +104,7 @@ declare opt_pp=1
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:d:c:a:r:R:f:u:p:s:b:M:S:n:H:O:i:l:mCoPhv?" opt
+while getopts "e:t:d:c:a:r:R:f:u:p:s:b:M:S:n:H:O:i:l:E:mCoPhv?" opt
 do
     case ${opt} in
         e) source ${OPTARG};;
@@ -123,6 +125,7 @@ do
         O) org_id=${OPTARG};;
         i) invitation=${OPTARG};;
         l) ui_locales=${OPTARG};;
+        E) authorization_endpoint=${OPTARG};;
         C) opt_clipboard=1;;
         P) opt_pp=0;;
         o) opt_open=1;;
@@ -151,7 +154,7 @@ esac
 
 [[ ${AUTH0_DOMAIN} =~ ^http ]] || AUTH0_DOMAIN=https://${AUTH0_DOMAIN}
 
-declare authorize_url="${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&${response_param}&nonce=`urlencode ${opt_nonce}`&redirect_uri=`urlencode ${AUTH0_REDIRECT_URI}`&scope=`urlencode "${AUTH0_SCOPE}"`"
+declare authorize_url="${AUTH0_DOMAIN}/${authorization_endpoint}?client_id=${AUTH0_CLIENT_ID}&${response_param}&nonce=`urlencode ${opt_nonce}`&redirect_uri=`urlencode ${AUTH0_REDIRECT_URI}`&scope=`urlencode "${AUTH0_SCOPE}"`"
 
 [[ -n "${AUTH0_AUDIENCE}" ]] && authorize_url+="&audience=$(urlencode "${AUTH0_AUDIENCE}")"
 [[ -n "${AUTH0_CONNECTION}" ]] &&  authorize_url+="&connection=${AUTH0_CONNECTION}"
