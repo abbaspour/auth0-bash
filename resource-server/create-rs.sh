@@ -44,7 +44,7 @@ done
 [[ -z "${api_identifier}" ]] && { echo >&2 "ERROR: api_identifier undefined."; usage 1; }
 [[ -z "${api_name}" ]] && { echo >&2 "ERROR: api_name undefined."; usage 1; }
 
-declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
 
 for s in `echo $api_scopes | tr ',' ' '`; do
     scopes+="{\"value\":\"${s}\"},"

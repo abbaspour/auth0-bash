@@ -39,7 +39,7 @@ done
 [[ -z "${user_id}" ]] && { echo >&2 "ERROR: user_id undefined."; usage 1; }
 [[ -z "${mfa_provider}" ]] && { echo >&2 "ERROR: mfa_provider undefined."; usage 1; }
 
-declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
 
 curl -v -H "Authorization: Bearer ${access_token}" \
     --request DELETE \

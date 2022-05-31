@@ -39,7 +39,7 @@ done
 [[ -z "${primary_userId}" ]] && { echo >&2 "ERROR: primary_userId undefined"; usage 1; }
 [[ -z "${secondary_userId}" ]] && { echo >&2 "ERROR: secondary_userId undefined"; usage 1; }
 
-declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
 
 declare -r provider=`echo ${secondary_userId} | awk -F\| '{print $1}'`
 

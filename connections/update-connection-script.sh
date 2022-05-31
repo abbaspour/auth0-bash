@@ -44,7 +44,7 @@ done
 [[ -z "${js_file}" ]] && { echo >&2 "ERROR: js_file undefined."; usage 1; }
 [[ -f "${js_file}" ]] || { echo >&2 "ERROR: js_file missing: ${js_file}"; usage 1; }
 
-declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
 
 declare -r script_single_line=`sed 's/$/\\\\n/' ${js_file} | tr -d '\n'` 
 

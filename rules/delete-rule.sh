@@ -37,7 +37,7 @@ done
 [[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
 [[ -z "${rule_id}" ]] && { echo >&2 "ERROR: rule_id undefined."; usage 1; }
 
-declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
 
 curl ${opt_verbose} -X DELETE -H "Authorization: Bearer ${access_token}" \
   --url ${AUTH0_DOMAIN_URL}api/v2/rules/${rule_id} 

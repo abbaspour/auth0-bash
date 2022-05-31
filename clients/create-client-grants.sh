@@ -44,7 +44,7 @@ do
 done
 
 [[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
-declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
 [[ ! -z "${use_management_api}" ]] && audience=${AUTH0_DOMAIN_URL}api/v2/
 [[ -z "${client_id}" ]] && { echo >&2 "ERROR: client_id undefined."; usage 1; }
 
