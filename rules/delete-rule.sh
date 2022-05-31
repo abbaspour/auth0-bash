@@ -21,6 +21,8 @@ END
 declare rule_id=''
 declare opt_verbose=''
 
+[[ -f ${DIR}/.env ]] && . ${DIR}/.env
+
 while getopts "e:a:f:i:hv?" opt
 do
     case ${opt} in

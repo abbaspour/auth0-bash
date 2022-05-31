@@ -3,6 +3,7 @@
 set -euo pipefail
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
 function usage() {

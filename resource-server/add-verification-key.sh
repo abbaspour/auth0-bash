@@ -3,6 +3,8 @@
 set -eo pipefail
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
+[[ -f ${DIR}/.env ]] && . ${DIR}/.env
+
 which awk > /dev/null || { echo >&2 "error: awk not found"; exit 3; }
 which base64 > /dev/null || { echo >&2 "error: base64 not found"; exit 3; }
 which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }

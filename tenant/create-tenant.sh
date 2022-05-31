@@ -22,6 +22,8 @@ END
 
 declare tenant_name=''
 
+[[ -f ${DIR}/.env ]] && . ${DIR}/.env
+
 while getopts "e:a:n:t:hv?" opt
 do
     case ${opt} in

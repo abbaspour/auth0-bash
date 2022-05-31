@@ -22,6 +22,8 @@ END
 
 declare admin_email=''
 
+[[ -f ${DIR}/.env ]] && . ${DIR}/.env
+
 while getopts "e:a:m:t:hv?" opt
 do
     case ${opt} in

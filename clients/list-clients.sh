@@ -22,6 +22,8 @@ END
 
 declare query=''
 
+[[ -f ${DIR}/.env ]] && . ${DIR}/.env
+
 while getopts "e:a:i:13hv?" opt
 do
     case ${opt} in

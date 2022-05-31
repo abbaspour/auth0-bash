@@ -3,6 +3,8 @@
 set -eo pipefail
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
+[[ -f ${DIR}/.env ]] && . ${DIR}/.env
+
 declare enrollment_id=''
 
 function usage() {

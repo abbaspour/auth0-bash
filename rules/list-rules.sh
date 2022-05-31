@@ -24,6 +24,8 @@ END
 declare JQ_SCRIPT='.'
 declare pp=0
 
+[[ -f ${DIR}/.env ]] && . ${DIR}/.env
+
 while getopts "e:a:s:phv?" opt
 do
     case ${opt} in

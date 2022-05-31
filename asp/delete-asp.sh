@@ -21,7 +21,7 @@ eg,
 END
     exit $1
 }
-
+[[ -f ${DIR}/.env ]] && . ${DIR}/.env
 while getopts "e:a:i:u:hv?" opt
 do
     case ${opt} in

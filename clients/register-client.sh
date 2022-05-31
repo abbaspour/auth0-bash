@@ -7,6 +7,8 @@
 set -eo pipefail
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
+[[ -f ${DIR}/.env ]] && . ${DIR}/.env
+
 which awk > /dev/null || { echo >&2 "error: awk not found"; exit 3; }
 
 function usage() {
