@@ -1,6 +1,12 @@
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 #!/bin/bash
 
-# make sure 
+# make sure
 # 1. "OIDC Dynamic Application Registration" is enabled for your tenant. Visit Manage > Tenant Settings > Advanced
 # 2. desired connection is domain level. PATCH connection to set `is_domain_connection` to true or use update-connection.sh
 
@@ -9,7 +15,10 @@ declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-which awk > /dev/null || { echo >&2 "error: awk not found"; exit 3; }
+which awk >/dev/null || {
+    echo >&2 "error: awk not found"
+    exit 3
+}
 
 function usage() {
     cat <<END >&2
@@ -34,27 +43,33 @@ declare client_name=''
 declare token_endpoint_auth_method='client_secret_post'
 declare input_redirect_uris=''
 
-while getopts "e:t:d:n:r:phv?" opt
-do
+while getopts "e:t:d:n:r:phv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        t) AUTH0_DOMAIN=`echo ${OPTARG}.auth0.com | tr '@' '.'`;;
-        d) AUTH0_DOMAIN=${OPTARG};;
-        n) client_name=${OPTARG};;
-        r) input_redirect_uris=${OPTARG};;
-        p) token_endpoint_auth_method='none';;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    t) AUTH0_DOMAIN=$(echo ${OPTARG}.auth0.com | tr '@' '.') ;;
+    d) AUTH0_DOMAIN=${OPTARG} ;;
+    n) client_name=${OPTARG} ;;
+    r) input_redirect_uris=${OPTARG} ;;
+    p) token_endpoint_auth_method='none' ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined."; usage 1; }
-[[ -z "${client_name}" ]] && { echo >&2 "ERROR: client_name undefined."; usage 1; }
+[[ -z "${AUTH0_DOMAIN}" ]] && {
+    echo >&2 "ERROR: AUTH0_DOMAIN undefined."
+    usage 1
+}
+[[ -z "${client_name}" ]] && {
+    echo >&2 "ERROR: client_name undefined."
+    usage 1
+}
 
-declare -r redirect_uris=$(echo ${input_redirect_uris} |  sed 's/,/","/g') 
+declare -r redirect_uris=$(echo ${input_redirect_uris} | sed 's/,/","/g')
 
-declare BODY=$(cat <<EOL
+declare BODY=$(
+    cat <<EOL
 {
   "client_name": "${client_name}",
   "redirect_uris": ["${redirect_uris}"],
@@ -64,7 +79,6 @@ EOL
 )
 
 curl --request POST \
-     --data "${BODY}" \
-     --header 'content-type: application/json' \
-     --url https://${AUTH0_DOMAIN}/oidc/register
-
+    --data "${BODY}" \
+    --header 'content-type: application/json' \
+    --url https://${AUTH0_DOMAIN}/oidc/register

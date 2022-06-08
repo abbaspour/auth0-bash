@@ -1,9 +1,18 @@
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 #!/bin/bash
 
 set -eo pipefail
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
-which awk > /dev/null || { echo >&2 "error: awk not found"; exit 3; }
+which awk >/dev/null || {
+    echo >&2 "error: awk not found"
+    exit 3
+}
 
 function usage() {
     cat <<END >&2
@@ -24,24 +33,30 @@ declare tenant_name=''
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:a:n:t:hv?" opt
-do
+while getopts "e:a:n:t:hv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        a) access_token=${OPTARG};;
-        n) tenant_name=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    a) access_token=${OPTARG} ;;
+    n) tenant_name=${OPTARG} ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
-[[ -z "${tenant_name}" ]] && { echo >&2 "ERROR: tenant_name undefined."; usage 1; }
+[[ -z "${access_token}" ]] && {
+    echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "
+    usage 1
+}
+[[ -z "${tenant_name}" ]] && {
+    echo >&2 "ERROR: tenant_name undefined."
+    usage 1
+}
 
-declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
-declare BODY=$(cat <<EOL
+declare BODY=$(
+    cat <<EOL
 {
   "name": "${tenant_name}"
 }
@@ -55,5 +70,3 @@ curl -k --request POST \
     --url ${AUTH0_DOMAIN_URL}api/v2/tenants
 
 exit 0
-
-

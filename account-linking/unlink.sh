@@ -1,3 +1,9 @@
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 #!/bin/bash
 
 set -euo pipefail
@@ -24,26 +30,37 @@ declare userId=''
 declare provider=''
 declare opt_verbose=0
 
-while getopts "e:a:i:p:s:hv?" opt
-do
+while getopts "e:a:i:p:s:hv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        a) access_token=${OPTARG};;
-        i) userId=${OPTARG};;
-        p) provider=${OPTARG};;
-        s) secondary_userId=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    a) access_token=${OPTARG} ;;
+    i) userId=${OPTARG} ;;
+    p) provider=${OPTARG} ;;
+    s) secondary_userId=${OPTARG} ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined"; usage 1; }
-[[ -z "${userId}" ]] && { echo >&2 "ERROR: userId undefined"; usage 1; }
-[[ -z "${secondary_userId}" ]] && { echo >&2 "ERROR: secondary_userId undefined"; usage 1; }
-[[ -z "${provider}" ]] && { echo >&2 "ERROR: provider undefined"; usage 1; }
+[[ -z "${access_token}" ]] && {
+    echo >&2 "ERROR: access_token undefined"
+    usage 1
+}
+[[ -z "${userId}" ]] && {
+    echo >&2 "ERROR: userId undefined"
+    usage 1
+}
+[[ -z "${secondary_userId}" ]] && {
+    echo >&2 "ERROR: secondary_userId undefined"
+    usage 1
+}
+[[ -z "${provider}" ]] && {
+    echo >&2 "ERROR: provider undefined"
+    usage 1
+}
 
-declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
-curl -X DELETE  -H "Authorization: Bearer $access_token" \
+curl -X DELETE -H "Authorization: Bearer $access_token" \
     --url "${AUTH0_DOMAIN_URL}api/v2/users/${userId}/identities/${provider}/${secondary_userId}"

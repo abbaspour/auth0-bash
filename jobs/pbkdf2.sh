@@ -1,3 +1,9 @@
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 #!/bin/bash
 
 set -euo pipefail
@@ -26,23 +32,26 @@ END
 declare password=''
 declare salt=$(openssl rand -base64 12)
 
-while getopts "p:s:i:l:a:hv?" opt
-do
+while getopts "p:s:i:l:a:hv?" opt; do
     case ${opt} in
-        p) password=${OPTARG};;
-        s) salt=${OPTARG};;
-        i) iterations=${OPTARG};;
-        l) keylen=${OPTARG};;
-        a) algorithm=${OPTARG};;
-        v) set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    p) password=${OPTARG} ;;
+    s) salt=${OPTARG} ;;
+    i) iterations=${OPTARG} ;;
+    l) keylen=${OPTARG} ;;
+    a) algorithm=${OPTARG} ;;
+    v) set -x ;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${password}" ]] && { echo >&2 "ERROR: password undefined"; usage 1; }
+[[ -z "${password}" ]] && {
+    echo >&2 "ERROR: password undefined"
+    usage 1
+}
 
-declare -r key=$(cat <<EOL | node
+declare -r key=$(
+    cat <<EOL | node
 const crypto = require('crypto');
 const key = crypto.pbkdf2Sync("${password}", Buffer.from("${salt}", 'base64'), ${iterations}, ${keylen}, "${algorithm}");
 console.log(key.toString('base64'));

@@ -1,3 +1,9 @@
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 #!/bin/bash
 
 set -eo pipefail
@@ -18,23 +24,25 @@ END
 declare pair_name=''
 declare opt_verbose=0
 
-while getopts "n:hv?" opt
-do
+while getopts "n:hv?" opt; do
     case ${opt} in
-        n) pair_name=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    n) pair_name=${OPTARG} ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${pair_name}" ]] && { echo >&2 "ERROR: pair_name undefined."; usage 1; }
+[[ -z "${pair_name}" ]] && {
+    echo >&2 "ERROR: pair_name undefined."
+    usage 1
+}
 
 declare -r private_key="${pair_name}-private.pem"
 declare -r cert_key="${pair_name}-cert.pem"
 declare -r public_key="${pair_name}-public.pem"
 
-cat > openssl.cnf <<-EOF
+cat >openssl.cnf <<-EOF
   [req]
   distinguished_name = req_distinguished_name
   x509_extensions = v3_req
@@ -46,7 +54,7 @@ cat > openssl.cnf <<-EOF
   extendedKeyUsage = serverAuth
 EOF
 
-openssl req  -nodes -new -x509  -config openssl.cnf -keyout ${private_key} -out ${cert_key}
-openssl x509 -inform PEM -in ${cert_key} -pubkey -noout > ${public_key}
+openssl req -nodes -new -x509 -config openssl.cnf -keyout ${private_key} -out ${cert_key}
+openssl x509 -inform PEM -in ${cert_key} -pubkey -noout >${public_key}
 
 rm openssl.cnf

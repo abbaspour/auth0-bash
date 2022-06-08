@@ -1,3 +1,9 @@
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 #!/bin/bash
 
 set -eo pipefail
@@ -44,12 +50,12 @@ END
 
 urlencode() {
     local length="${#1}"
-    for (( i = 0; i < length; i++ )); do
+    for ((i = 0; i < length; i++)); do
         local c="${1:i:1}"
         case $c in
-            [a-zA-Z0-9.~_-]) printf "$c" ;;
-            *) printf '%s' "$c" | xxd -p -c1 |
-                   while read c; do printf '%%%s' "$c"; done ;;
+        [a-zA-Z0-9.~_-]) printf "$c" ;;
+        *) printf '%s' "$c" | xxd -p -c1 |
+            while read c; do printf '%%%s' "$c"; done ;;
         esac
     done
 }
@@ -69,32 +75,37 @@ declare opt_browser=''
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:d:c:a:r:R:f:u:p:s:b:mCohv?" opt
-do
+while getopts "e:t:d:c:a:r:R:f:u:p:s:b:mCohv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        t) AUTH0_DOMAIN=`echo ${OPTARG}.auth0.com | tr '@' '.'`;;
-        d) AUTH0_DOMAIN=${OPTARG};;
-        c) AUTH0_CLIENT_ID=${OPTARG};;
-        a) AUTH0_AUDIENCE=${OPTARG};;
-        r) AUTH0_CONNECTION=${OPTARG};;
-        R) AUTH0_RESPONSE_TYPE=`echo ${OPTARG} | tr ',' ' '`;;
-        f) opt_flow=${OPTARG};;
-        u) AUTH0_REDIRECT_URI=${OPTARG};;
-        p) AUTH0_PROMPT=${OPTARG};;
-        s) AUTH0_SCOPE=`echo ${OPTARG} | tr ',' ' '`;;
-        C) opt_clipboard=1;;
-        o) opt_open=1;;
-        m) opt_mgmnt=1;;
-        b) opt_browser="-a ${OPTARG} ";;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    t) AUTH0_DOMAIN=$(echo ${OPTARG}.auth0.com | tr '@' '.') ;;
+    d) AUTH0_DOMAIN=${OPTARG} ;;
+    c) AUTH0_CLIENT_ID=${OPTARG} ;;
+    a) AUTH0_AUDIENCE=${OPTARG} ;;
+    r) AUTH0_CONNECTION=${OPTARG} ;;
+    R) AUTH0_RESPONSE_TYPE=$(echo ${OPTARG} | tr ',' ' ') ;;
+    f) opt_flow=${OPTARG} ;;
+    u) AUTH0_REDIRECT_URI=${OPTARG} ;;
+    p) AUTH0_PROMPT=${OPTARG} ;;
+    s) AUTH0_SCOPE=$(echo ${OPTARG} | tr ',' ' ') ;;
+    C) opt_clipboard=1 ;;
+    o) opt_open=1 ;;
+    m) opt_mgmnt=1 ;;
+    b) opt_browser="-a ${OPTARG} " ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
-[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
+[[ -z "${AUTH0_DOMAIN}" ]] && {
+    echo >&2 "ERROR: AUTH0_DOMAIN undefined"
+    usage 1
+}
+[[ -z "${AUTH0_CLIENT_ID}" ]] && {
+    echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"
+    usage 1
+}
 
 declare authorize_url="https://${AUTH0_DOMAIN}/preview/login?clients=${AUTH0_CLIENT_ID}"
 
@@ -102,4 +113,3 @@ echo "${authorize_url}"
 
 [[ -n "${opt_clipboard}" ]] && echo "${authorize_url}" | pbcopy
 [[ -n "${opt_open}" ]] && open ${opt_browser} "${authorize_url}"
-

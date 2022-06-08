@@ -1,3 +1,9 @@
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 #!/bin/bash
 
 set -eo pipefail
@@ -5,7 +11,10 @@ declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-which awk > /dev/null || { echo >&2 "error: awk not found"; exit 3; }
+which awk >/dev/null || {
+    echo >&2 "error: awk not found"
+    exit 3
+}
 
 function usage() {
     cat <<END >&2
@@ -26,30 +35,35 @@ END
 declare grant_id=''
 declare api_scopes=''
 
-while getopts "e:A:i:s:hv?" opt
-do
+while getopts "e:A:i:s:hv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        A) access_token=${OPTARG};;
-        i) grant_id=${OPTARG};;
-        s) api_scopes=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    A) access_token=${OPTARG} ;;
+    i) grant_id=${OPTARG} ;;
+    s) api_scopes=${OPTARG} ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
-declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
-[[ -z "${grant_id}" ]] && { echo >&2 "ERROR: grant_id undefined."; usage 1; }
+[[ -z "${access_token}" ]] && {
+    echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "
+    usage 1
+}
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
+[[ -z "${grant_id}" ]] && {
+    echo >&2 "ERROR: grant_id undefined."
+    usage 1
+}
 
-
-for s in `echo $api_scopes | tr ',' ' '`; do
+for s in $(echo $api_scopes | tr ',' ' '); do
     scopes+="\"${s}\","
 done
 scopes=${scopes%?}
 
-declare BODY=$(cat <<EOL
+declare BODY=$(
+    cat <<EOL
 {
   "scope": [ ${scopes} ]
 }

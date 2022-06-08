@@ -1,10 +1,15 @@
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 #!/bin/bash
 
 set -ueo pipefail
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
-
 
 function usage() {
     cat <<END >&2
@@ -32,25 +37,33 @@ declare opt_verbose=0
 declare refresh_token=''
 declare AUTH0_SCOPE=''
 
-while getopts "e:t:d:c:r:x:s:hv?" opt
-do
+while getopts "e:t:d:c:r:x:s:hv?" opt; do
     case ${opt} in
-        e) source "${OPTARG}";;
-        t) AUTH0_DOMAIN=$(echo "${OPTARG}.auth0.com" | tr '@' '.');;
-        d) AUTH0_DOMAIN=${OPTARG};;
-        c) AUTH0_CLIENT_ID=${OPTARG};;
-        x) AUTH0_CLIENT_SECRET=${OPTARG};;
-        r) refresh_token=${OPTARG};;
-        s) AUTH0_SCOPE=$(echo "${OPTARG}" | tr ',' ' ');;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source "${OPTARG}" ;;
+    t) AUTH0_DOMAIN=$(echo "${OPTARG}.auth0.com" | tr '@' '.') ;;
+    d) AUTH0_DOMAIN=${OPTARG} ;;
+    c) AUTH0_CLIENT_ID=${OPTARG} ;;
+    x) AUTH0_CLIENT_SECRET=${OPTARG} ;;
+    r) refresh_token=${OPTARG} ;;
+    s) AUTH0_SCOPE=$(echo "${OPTARG}" | tr ',' ' ') ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
-[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
-[[ -z "${refresh_token}" ]] && { echo >&2 "ERROR: refresh_token undefined"; usage 1; }
+[[ -z "${AUTH0_DOMAIN}" ]] && {
+    echo >&2 "ERROR: AUTH0_DOMAIN undefined"
+    usage 1
+}
+[[ -z "${AUTH0_CLIENT_ID}" ]] && {
+    echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"
+    usage 1
+}
+[[ -z "${refresh_token}" ]] && {
+    echo >&2 "ERROR: refresh_token undefined"
+    usage 1
+}
 
 declare secret=''
 [[ -n "${AUTH0_CLIENT_SECRET}" ]] && secret="\"client_secret\":\"${AUTH0_CLIENT_SECRET}\","
@@ -58,7 +71,8 @@ declare secret=''
 declare scope=''
 [[ -n "${AUTH0_SCOPE}" ]] && secret="\"scope\":\"${AUTH0_SCOPE}\","
 
-declare BODY=$(cat <<EOL
+declare BODY=$(
+    cat <<EOL
 {
     "client_id":"${AUTH0_CLIENT_ID}",
     ${secret}
@@ -70,7 +84,6 @@ EOL
 )
 
 curl --request POST \
-  --url https://${AUTH0_DOMAIN}/oauth/token \
-  --header 'content-type: application/json' \
-  --data "${BODY}"
-
+    --url https://${AUTH0_DOMAIN}/oauth/token \
+    --header 'content-type: application/json' \
+    --data "${BODY}"

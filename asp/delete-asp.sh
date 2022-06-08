@@ -1,3 +1,9 @@
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 #!/bin/bash
 
 set -eo pipefail
@@ -22,24 +28,32 @@ END
     exit $1
 }
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
-while getopts "e:a:i:u:hv?" opt
-do
+while getopts "e:a:i:u:hv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        a) access_token=${OPTARG};;
-        u) user_id=${OPTARG};;
-        i) asp_id=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    a) access_token=${OPTARG} ;;
+    u) user_id=${OPTARG} ;;
+    i) asp_id=${OPTARG} ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
-[[ -z "${user_id}" ]] && { echo >&2 "ERROR: user_id undefined."; usage 1; }
-[[ -z "${asp_id}" ]] && { echo >&2 "ERROR: asp_id undefined."; usage 1; }
+[[ -z "${access_token}" ]] && {
+    echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "
+    usage 1
+}
+[[ -z "${user_id}" ]] && {
+    echo >&2 "ERROR: user_id undefined."
+    usage 1
+}
+[[ -z "${asp_id}" ]] && {
+    echo >&2 "ERROR: asp_id undefined."
+    usage 1
+}
 
-declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
 curl -H "Authorization: Bearer ${access_token}" \
     --request DELETE \

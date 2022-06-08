@@ -1,3 +1,9 @@
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 #!/bin/bash
 
 set -euo pipefail
@@ -6,19 +12,18 @@ declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 urlencode() {
     local length="${#1}"
-    for (( i = 0; i < length; i++ )); do
+    for ((i = 0; i < length; i++)); do
         local c="${1:i:1}"
         case $c in
-            [a-zA-Z0-9.~_-]) printf "$c" ;;
-            *) printf '%s' "$c" | xxd -p -c1 |
-                   while read c; do printf '%%%s' "$c"; done ;;
+        [a-zA-Z0-9.~_-]) printf "$c" ;;
+        *) printf '%s' "$c" | xxd -p -c1 |
+            while read c; do printf '%%%s' "$c"; done ;;
         esac
     done
 }
 
-
-declare AUTH0_REDIRECT_URI='https://jwt.io'                     # add this to "Allowed Callback URLs" of your application
-declare AUTH0_ORIGIN='https://jwt.io'                           # add this to "Allowed Web Origins" of your application
+declare AUTH0_REDIRECT_URI='https://jwt.io' # add this to "Allowed Callback URLs" of your application
+declare AUTH0_ORIGIN='https://jwt.io'       # add this to "Allowed Web Origins" of your application
 declare AUTH0_CONNECTION='Username-Password-Authentication'
 declare AUTH0_SCOPE='openid profile email'
 
@@ -62,37 +67,49 @@ declare opt_nonce=''
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:d:c:a:u:p:r:o:U:s:S:n:mhv?" opt
-do
+while getopts "e:t:d:c:a:u:p:r:o:U:s:S:n:mhv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        t) AUTH0_DOMAIN=$(echo ${OPTARG}.auth0.com | tr '@' '.');;
-        d) AUTH0_DOMAIN=${OPTARG};;
-        c) AUTH0_CLIENT_ID=${OPTARG};;
-        a) AUTH0_AUDIENCE=${OPTARG};;
-        u) USERNAME=${OPTARG};;
-        p) PASSWORD=${OPTARG};;
-        r) AUTH0_CONNECTION=${OPTARG};;
-        o) AUTH0_ORIGIN=${OPTARG};;
-        U) AUTH0_REDIRECT_URI=${OPTARG};;
-        s) AUTH0_SCOPE=$(echo ${OPTARG} | tr ',' ' ');;
-        S) opt_state=${OPTARG};;
-        n) opt_nonce=${OPTARG};;
-        m) opt_mgmnt=1;;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    t) AUTH0_DOMAIN=$(echo ${OPTARG}.auth0.com | tr '@' '.') ;;
+    d) AUTH0_DOMAIN=${OPTARG} ;;
+    c) AUTH0_CLIENT_ID=${OPTARG} ;;
+    a) AUTH0_AUDIENCE=${OPTARG} ;;
+    u) USERNAME=${OPTARG} ;;
+    p) PASSWORD=${OPTARG} ;;
+    r) AUTH0_CONNECTION=${OPTARG} ;;
+    o) AUTH0_ORIGIN=${OPTARG} ;;
+    U) AUTH0_REDIRECT_URI=${OPTARG} ;;
+    s) AUTH0_SCOPE=$(echo ${OPTARG} | tr ',' ' ') ;;
+    S) opt_state=${OPTARG} ;;
+    n) opt_nonce=${OPTARG} ;;
+    m) opt_mgmnt=1 ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
-[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
-[[ -z "${USERNAME}" ]] && { echo >&2 "ERROR: USERNAME undefined"; usage 1; }
-[[ -z "${PASSWORD}" ]] && { echo >&2 "ERROR: PASSWORD undefined"; usage 1; }
+[[ -z "${AUTH0_DOMAIN}" ]] && {
+    echo >&2 "ERROR: AUTH0_DOMAIN undefined"
+    usage 1
+}
+[[ -z "${AUTH0_CLIENT_ID}" ]] && {
+    echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"
+    usage 1
+}
+[[ -z "${USERNAME}" ]] && {
+    echo >&2 "ERROR: USERNAME undefined"
+    usage 1
+}
+[[ -z "${PASSWORD}" ]] && {
+    echo >&2 "ERROR: PASSWORD undefined"
+    usage 1
+}
 
 [[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"
 
-declare BODY=$(cat <<EOL
+declare BODY=$(
+    cat <<EOL
 {
     "client_id":"${AUTH0_CLIENT_ID}",
     "username":"${USERNAME}",
@@ -114,15 +131,18 @@ echo "CO Response: ${co_response}"
 declare login_ticket=$(echo $co_response | jq -cr .login_ticket)
 echo login_ticket=${login_ticket}
 
-[[ ${login_ticket} == "null" ]] && { echo >&2 "login_ticket collection failed"; exit 3; }
+[[ ${login_ticket} == "null" ]] && {
+    echo >&2 "login_ticket collection failed"
+    exit 3
+}
 
-declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&response_type=`urlencode "token id_token"`&redirect_uri=`urlencode ${AUTH0_REDIRECT_URI}`&login_ticket=${login_ticket}" # &auth0Client=${AUTH0_CLIENT_B64}
+declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&response_type=$(urlencode "token id_token")&redirect_uri=$(urlencode ${AUTH0_REDIRECT_URI})&login_ticket=${login_ticket}" # &auth0Client=${AUTH0_CLIENT_B64}
 
-[[ -n "${AUTH0_AUDIENCE}" ]] && authorize_url+="&audience=`urlencode ${AUTH0_AUDIENCE}`"
-[[ -n "${AUTH0_CONNECTION}" ]] &&  authorize_url+="&connection=${AUTH0_CONNECTION}"
-[[ -n "${AUTH0_SCOPE}" ]] &&  authorize_url+="&scope=`urlencode "${AUTH0_SCOPE}"`"
-[[ -n "${opt_state}" ]] &&  authorize_url+="&state=`urlencode ${opt_state}`"
-[[ -n "${opt_nonce}" ]] &&  authorize_url+="&nonce=`urlencode ${opt_nonce}`"
+[[ -n "${AUTH0_AUDIENCE}" ]] && authorize_url+="&audience=$(urlencode ${AUTH0_AUDIENCE})"
+[[ -n "${AUTH0_CONNECTION}" ]] && authorize_url+="&connection=${AUTH0_CONNECTION}"
+[[ -n "${AUTH0_SCOPE}" ]] && authorize_url+="&scope=$(urlencode "${AUTH0_SCOPE}")"
+[[ -n "${opt_state}" ]] && authorize_url+="&state=$(urlencode ${opt_state})"
+[[ -n "${opt_nonce}" ]] && authorize_url+="&nonce=$(urlencode ${opt_nonce})"
 
 echo "authorize_url: ${authorize_url}"
 
@@ -130,9 +150,18 @@ declare location=$(curl -v -b cookie.txt $authorize_url | awk 'IGNORECASE = 1;/^
 
 echo "Redirect location: ${location}"
 
-[[ ${location} =~ ^/u/ ]] && { echo >&2 "WARNING: MFA enabled. CO not possible without user interaction"; exit 3; }
-[[ ${location} =~ ^/mf ]] && { echo >&2 "WARNING: MFA enabled. CO not possible without user interaction"; exit 3; }
-[[ ${location} =~ ^/decision ]] && { echo >&2 "WARNING: Consent required. CO not possible without user interaction. Try normal ./authorize.sh first."; exit 3; }
+[[ ${location} =~ ^/u/ ]] && {
+    echo >&2 "WARNING: MFA enabled. CO not possible without user interaction"
+    exit 3
+}
+[[ ${location} =~ ^/mf ]] && {
+    echo >&2 "WARNING: MFA enabled. CO not possible without user interaction"
+    exit 3
+}
+[[ ${location} =~ ^/decision ]] && {
+    echo >&2 "WARNING: Consent required. CO not possible without user interaction. Try normal ./authorize.sh first."
+    exit 3
+}
 
 declare access_token=$(echo "${location}" | grep -oE "access_token=([^&]+)" | awk -F= '{print $2}')
 declare id_token=$(echo "${location}" | grep -oE "id_token=([^&]+)" | awk -F= '{print $2}')
@@ -145,4 +174,3 @@ declare id_token_json=$(echo ${id_token} | awk -F. '{print $2}' | base64 -di 2>/
 echo "Access Token: ${access_token}"
 echo "ID     Token: ${id_token_json}"
 echo "state       : ${state}"
-

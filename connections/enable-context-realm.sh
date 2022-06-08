@@ -1,3 +1,9 @@
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 #!/bin/bash
 
 ### usage in custom-db
@@ -25,24 +31,28 @@ END
 declare connection_id=''
 declare mode=true
 
-while getopts "e:a:i:Ehv?" opt
-do
+while getopts "e:a:i:Ehv?" opt; do
     case ${opt} in
-        e) source "${OPTARG}";;
-        a) access_token=${OPTARG};;
-        i) connection_id=${OPTARG};;
-        D) mode=false;;
-        v) set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source "${OPTARG}" ;;
+    a) access_token=${OPTARG} ;;
+    i) connection_id=${OPTARG} ;;
+    D) mode=false ;;
+    v) set -x ;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
-[[ -z "${connection_id}" ]] && { echo >&2 "ERROR: connection_id undefined."; usage 1; }
+[[ -z "${access_token}" ]] && {
+    echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "
+    usage 1
+}
+[[ -z "${connection_id}" ]] && {
+    echo >&2 "ERROR: connection_id undefined."
+    usage 1
+}
 
 readonly AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
-
 
 readonly BODY=$(curl --silent --request GET \
     -H "Authorization: Bearer ${access_token}" \

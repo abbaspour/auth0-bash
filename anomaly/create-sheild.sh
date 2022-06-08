@@ -1,3 +1,9 @@
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 #!/bin/bash
 
 set -euo pipefail
@@ -19,12 +25,12 @@ END
 
 urlencode() {
     local length="${#1}"
-    for (( i = 0; i < length; i++ )); do
+    for ((i = 0; i < length; i++)); do
         local c="${1:i:1}"
         case $c in
-            [a-zA-Z0-9.~_-]) printf "$c" ;;
-            *) printf '%s' "$c" | xxd -p -c1 |
-                   while read c; do printf '%%%s' "$c"; done ;;
+        [a-zA-Z0-9.~_-]) printf "$c" ;;
+        *) printf '%s' "$c" | xxd -p -c1 |
+            while read c; do printf '%%%s' "$c"; done ;;
         esac
     done
 }
@@ -32,23 +38,26 @@ urlencode() {
 declare action=''
 declare trigger_id=''
 
-while getopts "e:A:a:t:hv?" opt
-do
+while getopts "e:A:a:t:hv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        A) access_token=${OPTARG};;
-        a) action=${OPTARG};;
-        t) trigger_id=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    A) access_token=${OPTARG} ;;
+    a) action=${OPTARG} ;;
+    t) trigger_id=${OPTARG} ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z ${access_token} ]] && { echo >&2 -e "ERROR: no 'access_token' defined. \nopen -a safari https://manage.auth0.com/#/apis/ \nexport access_token=\`pbpaste\`"; exit 1; }
+[[ -z ${access_token} ]] && {
+    echo >&2 -e "ERROR: no 'access_token' defined. \nopen -a safari https://manage.auth0.com/#/apis/ \nexport access_token=\`pbpaste\`"
+    exit 1
+}
 declare -r AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
 
-declare BODY=$(cat <<EOL
+declare BODY=$(
+    cat <<EOL
 {
   "action": "${action}",
   "trigger": "${trigger_id}"
@@ -56,7 +65,6 @@ declare BODY=$(cat <<EOL
 EOL
 )
 
-
 curl -s -H "Authorization: Bearer ${access_token}" -H 'content-type: application/json' \
-  --url  "${AUTH0_DOMAIN_URL}api/v2/anomaly/shields" \
-  --data "${BODY}"
+    --url "${AUTH0_DOMAIN_URL}api/v2/anomaly/shields" \
+    --data "${BODY}"

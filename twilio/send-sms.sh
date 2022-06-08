@@ -1,3 +1,9 @@
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 #!/bin/bash
 
 set -eo pipefail
@@ -32,30 +38,43 @@ END
 
 declare opt_verbose=0
 
-while getopts "e:f:t:m:s:x:hv?" opt
-do
+while getopts "e:f:t:m:s:x:hv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        f) TWILIO_FROM=${OPTARG};;
-        t) TWILIO_TO=${OPTARG};;
-        m) MESSAGE=${OPTARG};;
-        s) TWILIO_SID=${OPTARG};;
-        x) TWILIO_AUTH_TOKEN=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    f) TWILIO_FROM=${OPTARG} ;;
+    t) TWILIO_TO=${OPTARG} ;;
+    m) MESSAGE=${OPTARG} ;;
+    s) TWILIO_SID=${OPTARG} ;;
+    x) TWILIO_AUTH_TOKEN=${OPTARG} ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${TWILIO_SID}" ]] && { echo >&2 "ERROR: TWILIO_SID undefined"; usage 1; }
-[[ -z "${TWILIO_AUTH_TOKEN}" ]] && { echo >&2 "ERROR: TWILIO_AUTH_TOKEN undefined"; usage 1; }
-[[ -z "${TWILIO_FROM}" ]] && { echo >&2 "ERROR: TWILIO_FROM undefined"; usage 1; }
-[[ -z "${TWILIO_TO}" ]] && { echo >&2 "ERROR: TWILIO_TO undefined"; usage 1; }
-[[ -z "${MESSAGE}" ]] && { echo >&2 "ERROR: MESSAGE undefined"; usage 1; }
+[[ -z "${TWILIO_SID}" ]] && {
+    echo >&2 "ERROR: TWILIO_SID undefined"
+    usage 1
+}
+[[ -z "${TWILIO_AUTH_TOKEN}" ]] && {
+    echo >&2 "ERROR: TWILIO_AUTH_TOKEN undefined"
+    usage 1
+}
+[[ -z "${TWILIO_FROM}" ]] && {
+    echo >&2 "ERROR: TWILIO_FROM undefined"
+    usage 1
+}
+[[ -z "${TWILIO_TO}" ]] && {
+    echo >&2 "ERROR: TWILIO_TO undefined"
+    usage 1
+}
+[[ -z "${MESSAGE}" ]] && {
+    echo >&2 "ERROR: MESSAGE undefined"
+    usage 1
+}
 
 curl -X POST https://api.twilio.com/2010-04-01/Accounts/${TWILIO_SID}/Messages.json \
---data-urlencode "Body=${MESSAGE}" \
---data-urlencode "From=${TWILIO_FROM}" \
---data-urlencode "To=${TWILIO_TO}" \
--u ${TWILIO_SID}:${TWILIO_AUTH_TOKEN}
-
+    --data-urlencode "Body=${MESSAGE}" \
+    --data-urlencode "From=${TWILIO_FROM}" \
+    --data-urlencode "To=${TWILIO_TO}" \
+    -u ${TWILIO_SID}:${TWILIO_AUTH_TOKEN}

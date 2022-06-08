@@ -1,3 +1,9 @@
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 #!/bin/bash
 
 set -euo pipefail
@@ -23,19 +29,21 @@ declare grantId=''
 declare user_id=''
 declare opt_verbose=0
 
-while getopts "e:a:i:u:hv?" opt
-do
+while getopts "e:a:i:u:hv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        a) access_token=${OPTARG};;
-        i) grantId=${OPTARG};;
-        u) user_id=${OPTARG};;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    a) access_token=${OPTARG} ;;
+    i) grantId=${OPTARG} ;;
+    u) user_id=${OPTARG} ;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
+[[ -z "${access_token}" ]] && {
+    echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "
+    usage 1
+}
 #[[ -z "${grantId}" ]] && { echo >&2 "ERROR: grant_id undefined."; usage 1; }
 
 declare -r AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
@@ -49,5 +57,6 @@ elif [[ -n "${user_id}" ]]; then
         -H "Authorization: Bearer ${access_token}" \
         --url "${AUTH0_DOMAIN_URL}api/v2/grants?user_id=${user_id}"
 else
-   echo >&2 "ERROR: grant_id or user_id required."; usage 1;
+    echo >&2 "ERROR: grant_id or user_id required."
+    usage 1
 fi

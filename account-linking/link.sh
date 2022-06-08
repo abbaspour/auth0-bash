@@ -1,3 +1,9 @@
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 #!/bin/bash
 
 set -euo pipefail
@@ -22,28 +28,37 @@ declare secondary_userId=''
 declare primary_userId=''
 declare opt_verbose=0
 
-while getopts "e:a:p:s:hv?" opt
-do
+while getopts "e:a:p:s:hv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        a) access_token=${OPTARG};;
-        p) primary_userId=${OPTARG};;
-        s) secondary_userId=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    a) access_token=${OPTARG} ;;
+    p) primary_userId=${OPTARG} ;;
+    s) secondary_userId=${OPTARG} ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
-[[ -z "${primary_userId}" ]] && { echo >&2 "ERROR: primary_userId undefined"; usage 1; }
-[[ -z "${secondary_userId}" ]] && { echo >&2 "ERROR: secondary_userId undefined"; usage 1; }
+[[ -z "${access_token}" ]] && {
+    echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "
+    usage 1
+}
+[[ -z "${primary_userId}" ]] && {
+    echo >&2 "ERROR: primary_userId undefined"
+    usage 1
+}
+[[ -z "${secondary_userId}" ]] && {
+    echo >&2 "ERROR: secondary_userId undefined"
+    usage 1
+}
 
-declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
-declare -r provider=`echo ${secondary_userId} | awk -F\| '{print $1}'`
+declare -r provider=$(echo ${secondary_userId} | awk -F\| '{print $1}')
 
-declare -r BODY=$(cat <<EOL
+declare -r BODY=$(
+    cat <<EOL
 {
   "provider": "${provider}",
   "user_id": "${secondary_userId}"

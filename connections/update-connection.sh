@@ -1,3 +1,9 @@
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 #!/bin/bash
 
 set -eo pipefail
@@ -26,30 +32,41 @@ declare json_file=''
 declare connection_id=''
 declare mk_domain=0
 
-while getopts "e:a:i:f:dhv?" opt
-do
+while getopts "e:a:i:f:dhv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        a) access_token=${OPTARG};;
-        i) connection_id=${OPTARG};;
-        f) json_file=${OPTARG};;
-        d) mk_domain=1;;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    a) access_token=${OPTARG} ;;
+    i) connection_id=${OPTARG} ;;
+    f) json_file=${OPTARG} ;;
+    d) mk_domain=1 ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
-[[ -z "${connection_id}" ]] && { echo >&2 "ERROR: connection_id undefined."; usage 1; }
+[[ -z "${access_token}" ]] && {
+    echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "
+    usage 1
+}
+[[ -z "${connection_id}" ]] && {
+    echo >&2 "ERROR: connection_id undefined."
+    usage 1
+}
 if [[ ${mk_domain} -ne 0 ]]; then
-    json_file=`mktemp`
-    echo '{"is_domain_connection": true}' > ${json_file}
+    json_file=$(mktemp)
+    echo '{"is_domain_connection": true}' >${json_file}
 fi
-[[ -z "${json_file}" ]] && { echo >&2 "ERROR: json_file undefined."; usage 1; }
-[[ -f "${json_file}" ]] || { echo >&2 "ERROR: json_file missing: ${json_file}"; usage 1; }
+[[ -z "${json_file}" ]] && {
+    echo >&2 "ERROR: json_file undefined."
+    usage 1
+}
+[[ -f "${json_file}" ]] || {
+    echo >&2 "ERROR: json_file missing: ${json_file}"
+    usage 1
+}
 
-declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
 curl --request PATCH \
     -H "Authorization: Bearer ${access_token}" \

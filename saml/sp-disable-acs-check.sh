@@ -1,3 +1,9 @@
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 #!/bin/bash
 
 # https://auth0.com/docs/configure/saml-configuration/saml-sso-integrations/sign-and-encrypt-saml-requests#use-custom-certificate-to-sign-requests
@@ -23,24 +29,28 @@ END
 declare connection_id=''
 declare mode=false
 
-while getopts "e:a:i:Ehv?" opt
-do
+while getopts "e:a:i:Ehv?" opt; do
     case ${opt} in
-        e) source "${OPTARG}";;
-        a) access_token=${OPTARG};;
-        i) connection_id=${OPTARG};;
-        E) mode=true;;
-        v) set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source "${OPTARG}" ;;
+    a) access_token=${OPTARG} ;;
+    i) connection_id=${OPTARG} ;;
+    E) mode=true ;;
+    v) set -x ;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
-[[ -z "${connection_id}" ]] && { echo >&2 "ERROR: connection_id undefined."; usage 1; }
+[[ -z "${access_token}" ]] && {
+    echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "
+    usage 1
+}
+[[ -z "${connection_id}" ]] && {
+    echo >&2 "ERROR: connection_id undefined."
+    usage 1
+}
 
 readonly AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
-
 
 readonly BODY=$(curl --silent --request GET \
     -H "Authorization: Bearer ${access_token}" \

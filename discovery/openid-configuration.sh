@@ -1,3 +1,9 @@
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 #!/bin/bash
 
 # https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata
@@ -22,19 +28,20 @@ END
 declare AUTH0_DOMAIN=''
 declare opt_verbose=0
 
-
-while getopts "e:t:d:hv?" opt
-do
+while getopts "e:t:d:hv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        t) AUTH0_DOMAIN=`echo ${OPTARG}.auth0.com | tr '@' '.'`;;
-        d) AUTH0_DOMAIN=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    t) AUTH0_DOMAIN=$(echo ${OPTARG}.auth0.com | tr '@' '.') ;;
+    d) AUTH0_DOMAIN=${OPTARG} ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
+[[ -z "${AUTH0_DOMAIN}" ]] && {
+    echo >&2 "ERROR: AUTH0_DOMAIN undefined"
+    usage 1
+}
 
 curl -s https://${AUTH0_DOMAIN}/.well-known/openid-configuration | jq '.'

@@ -1,3 +1,9 @@
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 #!/bin/bash
 
 set -eo pipefail
@@ -26,31 +32,46 @@ declare script_type=''
 declare js_file=''
 declare connection_id=''
 
-while getopts "e:a:i:t:f:hv?" opt
-do
+while getopts "e:a:i:t:f:hv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        a) access_token=${OPTARG};;
-        i) connection_id=${OPTARG};;
-        t) script_type=${OPTARG};;
-        f) js_file=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    a) access_token=${OPTARG} ;;
+    i) connection_id=${OPTARG} ;;
+    t) script_type=${OPTARG} ;;
+    f) js_file=${OPTARG} ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
-[[ -z "${connection_id}" ]] && { echo >&2 "ERROR: connection_id undefined."; usage 1; }
-[[ -z "${script_type}" ]] && { echo >&2 "ERROR: script_type undefined."; usage 1; }
-[[ -z "${js_file}" ]] && { echo >&2 "ERROR: js_file undefined."; usage 1; }
-[[ -f "${js_file}" ]] || { echo >&2 "ERROR: js_file missing: ${js_file}"; usage 1; }
+[[ -z "${access_token}" ]] && {
+    echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "
+    usage 1
+}
+[[ -z "${connection_id}" ]] && {
+    echo >&2 "ERROR: connection_id undefined."
+    usage 1
+}
+[[ -z "${script_type}" ]] && {
+    echo >&2 "ERROR: script_type undefined."
+    usage 1
+}
+[[ -z "${js_file}" ]] && {
+    echo >&2 "ERROR: js_file undefined."
+    usage 1
+}
+[[ -f "${js_file}" ]] || {
+    echo >&2 "ERROR: js_file missing: ${js_file}"
+    usage 1
+}
 
-declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
-declare -r script_single_line=`sed 's/$/\\\\n/' ${js_file} | tr -d '\n'` 
+declare -r script_single_line=$(sed 's/$/\\\\n/' ${js_file} | tr -d '\n')
 
-declare BODY=$(cat <<EOL
+declare BODY=$(
+    cat <<EOL
 {
  "options" : {
   "scripts": {

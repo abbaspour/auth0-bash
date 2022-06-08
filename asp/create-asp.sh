@@ -1,9 +1,18 @@
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 #!/bin/bash
 
 set -eo pipefail
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
-which awk > /dev/null || { echo >&2 "error: awk not found"; exit 3; }
+which awk >/dev/null || {
+    echo >&2 "error: awk not found"
+    exit 3
+}
 
 function usage() {
     cat <<END >&2
@@ -28,36 +37,47 @@ declare audience=''
 declare api_scopes=''
 declare asp_name=''
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
-while getopts "e:A:i:a:s:n:hv?" opt
-do
+while getopts "e:A:i:a:s:n:hv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        A) access_token=${OPTARG};;
-        i) user_id=${OPTARG};;
-        a) audience=${OPTARG};;
-        s) api_scopes=${OPTARG};;
-        n) asp_name=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    A) access_token=${OPTARG} ;;
+    i) user_id=${OPTARG} ;;
+    a) audience=${OPTARG} ;;
+    s) api_scopes=${OPTARG} ;;
+    n) asp_name=${OPTARG} ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
-[[ -z "${user_id}" ]] && { echo >&2 "ERROR: user_id undefined."; usage 1; }
-[[ -z "${audience}" ]] && { echo >&2 "ERROR: audience undefined."; usage 1; }
-[[ -z "${asp_name}" ]] && { echo >&2 "ERROR: asp_name undefined."; usage 1; }
+[[ -z "${access_token}" ]] && {
+    echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "
+    usage 1
+}
+[[ -z "${user_id}" ]] && {
+    echo >&2 "ERROR: user_id undefined."
+    usage 1
+}
+[[ -z "${audience}" ]] && {
+    echo >&2 "ERROR: audience undefined."
+    usage 1
+}
+[[ -z "${asp_name}" ]] && {
+    echo >&2 "ERROR: asp_name undefined."
+    usage 1
+}
 
-
-declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
 declare scopes=''
-for s in `echo $api_scopes | tr ',' ' '`; do
+for s in $(echo $api_scopes | tr ',' ' '); do
     scopes+="\"${s}\","
 done
 scopes=${scopes%?}
 
-declare BODY=$(cat <<EOL
+declare BODY=$(
+    cat <<EOL
 {
   "label" : "${asp_name}",
   "audience": "${audience}",
@@ -71,4 +91,3 @@ curl --request POST \
     --data "${BODY}" \
     --header 'content-type: application/json' \
     --url ${AUTH0_DOMAIN_URL}api/v2/users/${user_id}/application-passwords
-

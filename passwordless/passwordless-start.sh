@@ -1,3 +1,9 @@
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 #!/bin/bash
 
 set -eo pipefail
@@ -45,50 +51,74 @@ declare language='en'
 
 [[ -f ${DIR}/.env ]] && . "${DIR}/.env"
 
-while getopts "e:t:d:c:x:a:r:R:u:p:s:U:l:mCPohv?" opt
-do
+while getopts "e:t:d:c:x:a:r:R:u:p:s:U:l:mCPohv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        t) AUTH0_DOMAIN=$(echo "${OPTARG}.auth0.com" | tr '@' '.');;
-        d) AUTH0_DOMAIN=${OPTARG};;
-        c) AUTH0_CLIENT_ID=${OPTARG};;
-        x) AUTH0_CLIENT_SECRET=${OPTARG};;
-        a) AUTH0_AUDIENCE=${OPTARG};;
-        r) AUTH0_CONNECTION=${OPTARG};;
-        R) send=${OPTARG};;
-        u) email=${OPTARG};;
-        p) phone_number=${OPTARG};;
-        l) language=${OPTARG};;
-        s) AUTH0_SCOPE=$(echo "${OPTARG}" | tr ',' ' ');;
-        U) redirect_uri=${OPTARG};;
-        C) opt_clipboard=1;;
-        o) opt_open=1;;
-        P) opt_preview=1;;
-        m) opt_mgmnt=1;;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    t) AUTH0_DOMAIN=$(echo "${OPTARG}.auth0.com" | tr '@' '.') ;;
+    d) AUTH0_DOMAIN=${OPTARG} ;;
+    c) AUTH0_CLIENT_ID=${OPTARG} ;;
+    x) AUTH0_CLIENT_SECRET=${OPTARG} ;;
+    a) AUTH0_AUDIENCE=${OPTARG} ;;
+    r) AUTH0_CONNECTION=${OPTARG} ;;
+    R) send=${OPTARG} ;;
+    u) email=${OPTARG} ;;
+    p) phone_number=${OPTARG} ;;
+    l) language=${OPTARG} ;;
+    s) AUTH0_SCOPE=$(echo "${OPTARG}" | tr ',' ' ') ;;
+    U) redirect_uri=${OPTARG} ;;
+    C) opt_clipboard=1 ;;
+    o) opt_open=1 ;;
+    P) opt_preview=1 ;;
+    m) opt_mgmnt=1 ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
-[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
-[[ -z "${AUTH0_CONNECTION}" ]] && { echo >&2 "ERROR: AUTH0_CONNECTION undefined. select 'sms' or 'email'"; usage 1; }
+[[ -z "${AUTH0_DOMAIN}" ]] && {
+    echo >&2 "ERROR: AUTH0_DOMAIN undefined"
+    usage 1
+}
+[[ -z "${AUTH0_CLIENT_ID}" ]] && {
+    echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"
+    usage 1
+}
+[[ -z "${AUTH0_CONNECTION}" ]] && {
+    echo >&2 "ERROR: AUTH0_CONNECTION undefined. select 'sms' or 'email'"
+    usage 1
+}
 
 declare recipient=''
 
 case "${AUTH0_CONNECTION}" in
-    sms) [[ -z "${phone_number}" ]] && { echo >&2 "ERROR: phone_number undefined"; usage 1; }; recipient="\"phone_number\":\"${phone_number}\",";;
-    email) [[ -z "${email}" ]] && { echo >&2 "ERROR: email undefined"; usage 1; }; recipient="\"email\":\"${email}\",";;
-    *)  echo >&2 "ERROR: unknown connection: ${AUTH0_CONNECTION}"; usage 1;;
+sms)
+    [[ -z "${phone_number}" ]] && {
+        echo >&2 "ERROR: phone_number undefined"
+        usage 1
+    }
+    recipient="\"phone_number\":\"${phone_number}\","
+    ;;
+email)
+    [[ -z "${email}" ]] && {
+        echo >&2 "ERROR: email undefined"
+        usage 1
+    }
+    recipient="\"email\":\"${email}\","
+    ;;
+*)
+    echo >&2 "ERROR: unknown connection: ${AUTH0_CONNECTION}"
+    usage 1
+    ;;
 esac
 
-[[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"         # audience is unsupported in OTP (23/08/18)
+[[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/" # audience is unsupported in OTP (23/08/18)
 
 declare secret=''
 [[ -n "${AUTH0_CLIENT_SECRET}" ]] && secret="\"client_secret\":\"${AUTH0_CLIENT_SECRET}\","
 
-readonly data=$(cat <<EOL
+readonly data=$(
+    cat <<EOL
 {
     "client_id":"${AUTH0_CLIENT_ID}", ${secret}
     "connection":"${AUTH0_CONNECTION}",
@@ -98,10 +128,9 @@ readonly data=$(cat <<EOL
 }
 EOL
 )
- # -H 'auth0-forwarded-for: 1.2.3.4' \
+# -H 'auth0-forwarded-for: 1.2.3.4' \
 curl --request POST \
-  --url "https://${AUTH0_DOMAIN}/passwordless/start" \
-  --header 'content-type: application/json' \
-  --header "x-request-language: ${language}" \
-  --data "${data}"
-
+    --url "https://${AUTH0_DOMAIN}/passwordless/start" \
+    --header 'content-type: application/json' \
+    --header "x-request-language: ${language}" \
+    --data "${data}"

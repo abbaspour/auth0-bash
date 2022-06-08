@@ -1,9 +1,14 @@
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 #!/bin/bash
 
 set -eo pipefail
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
-
 
 declare AUTH0_SCOPE='openid profile email'
 declare AUTH0_CONNECTION='Username-Password-Authentication'
@@ -39,35 +44,48 @@ declare opt_verbose=0
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
-while getopts "e:t:d:c:x:m:a:i:hv?" opt
-do
+while getopts "e:t:d:c:x:m:a:i:hv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        t) AUTH0_DOMAIN=`echo ${OPTARG}.auth0.com | tr '@' '.'`;;
-        d) AUTH0_DOMAIN=${OPTARG};;
-        c) AUTH0_CLIENT_ID=${OPTARG};;
-        x) AUTH0_CLIENT_SECRET=${OPTARG};;
-        m) mfa_token=${OPTARG};;
-        a) authenticator_type=${OPTARG};;
-        i) authenticator_id=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    t) AUTH0_DOMAIN=$(echo ${OPTARG}.auth0.com | tr '@' '.') ;;
+    d) AUTH0_DOMAIN=${OPTARG} ;;
+    c) AUTH0_CLIENT_ID=${OPTARG} ;;
+    x) AUTH0_CLIENT_SECRET=${OPTARG} ;;
+    m) mfa_token=${OPTARG} ;;
+    a) authenticator_type=${OPTARG} ;;
+    i) authenticator_id=${OPTARG} ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
-[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
-[[ -z "${mfa_token}" ]] && { echo >&2 "ERROR: mfa_token undefined"; usage 1; }
-[[ -z "${authenticator_type}" ]] && { echo >&2 "ERROR: authenticator_type undefined"; usage 1; }
-[[ -z "${authenticator_id}" ]] && { echo >&2 "ERROR: authenticator_id undefined"; usage 1; }
-
+[[ -z "${AUTH0_DOMAIN}" ]] && {
+    echo >&2 "ERROR: AUTH0_DOMAIN undefined"
+    usage 1
+}
+[[ -z "${AUTH0_CLIENT_ID}" ]] && {
+    echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"
+    usage 1
+}
+[[ -z "${mfa_token}" ]] && {
+    echo >&2 "ERROR: mfa_token undefined"
+    usage 1
+}
+[[ -z "${authenticator_type}" ]] && {
+    echo >&2 "ERROR: authenticator_type undefined"
+    usage 1
+}
+[[ -z "${authenticator_id}" ]] && {
+    echo >&2 "ERROR: authenticator_id undefined"
+    usage 1
+}
 
 declare secret=''
 [[ -n "${AUTH0_CLIENT_SECRET}" ]] && secret="\"client_secret\": \"${AUTH0_CLIENT_SECRET}\","
 
-
-declare BODY=$(cat <<EOL
+declare BODY=$(
+    cat <<EOL
 {
     "client_id": "${AUTH0_CLIENT_ID}",
     ${secret}
@@ -84,4 +102,3 @@ if [ "${authenticator_type}" == "oob" ]; then
     oob_code=$(echo "${response_json}" | jq -r '.oob_code')
     echo "export oob_code=\"${oob_code}\""
 fi
-
