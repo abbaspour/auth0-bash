@@ -9,17 +9,10 @@
 
 set -euo pipefail
 
-<<<<<<< HEAD
-which awk >/dev/null || {
-    echo >&2 "error: awk not found"
-    exit 3
-}
-=======
 which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
 which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
->>>>>>> 4f4050b (fix: add extra check for curl and jq availabilty)
 
 function usage() {
     cat <<END >&2
@@ -76,6 +69,10 @@ done
 }
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
+
+declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
+declare -r EXPECTED_SCOPE="create:user_application_passwords"
+[[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
 
 declare scopes=''
 for s in $(echo $api_scopes | tr ',' ' '); do

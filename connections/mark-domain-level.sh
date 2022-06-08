@@ -14,17 +14,6 @@ which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
-
-
-<<<<<<< HEAD
-which awk >/dev/null || {
-    echo >&2 "error: awk not found"
-    exit 3
-}
-=======
-
->>>>>>> 4f4050b (fix: add extra check for curl and jq availabilty)
-
 function usage() {
     cat <<END >&2
 USAGE: $0 [-e env] [-a access_token] [-i client_id] [-v|-h]
@@ -52,10 +41,13 @@ while getopts "e:a:i:hv?" opt; do
     esac
 done
 
-[[ -z "${client_id}" ]] && {
-    echo >&2 "ERROR: client_id undefined."
-    usage 1
-}
+[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
+
+declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
+declare -r EXPECTED_SCOPE="update:connections"
+[[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
+
+[[ -z "${client_id}" ]] && { echo >&2 "ERROR: client_id undefined."; usage 1; }
 
 readonly AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
 

@@ -51,6 +51,11 @@ done
     echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "
     usage 1
 }
+
+declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
+declare -r EXPECTED_SCOPE="create:connections"
+[[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
+
 [[ -z "${json_file}" ]] && {
     echo >&2 "ERROR: json_file undefined."
     usage 1

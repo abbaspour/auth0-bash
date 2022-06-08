@@ -53,26 +53,16 @@ while getopts "e:a:i:t:f:hv?" opt; do
     esac
 done
 
-[[ -z "${access_token}" ]] && {
-    echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "
-    usage 1
-}
-[[ -z "${connection_id}" ]] && {
-    echo >&2 "ERROR: connection_id undefined."
-    usage 1
-}
-[[ -z "${script_type}" ]] && {
-    echo >&2 "ERROR: script_type undefined."
-    usage 1
-}
-[[ -z "${js_file}" ]] && {
-    echo >&2 "ERROR: js_file undefined."
-    usage 1
-}
-[[ -f "${js_file}" ]] || {
-    echo >&2 "ERROR: js_file missing: ${js_file}"
-    usage 1
-}
+[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
+
+declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
+declare -r EXPECTED_SCOPE="update:connections"
+[[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
+
+[[ -z "${connection_id}" ]] && { echo >&2 "ERROR: connection_id undefined."; usage 1; }
+[[ -z "${script_type}" ]] && { echo >&2 "ERROR: script_type undefined."; usage 1; }
+[[ -z "${js_file}" ]] && { echo >&2 "ERROR: js_file undefined."; usage 1; }
+[[ -f "${js_file}" ]] || { echo >&2 "ERROR: js_file missing: ${js_file}"; usage 1; }
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
