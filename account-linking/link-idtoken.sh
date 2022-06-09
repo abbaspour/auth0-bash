@@ -8,6 +8,9 @@
 
 set -euo pipefail
 
+which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
+which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
+
 function usage() {
     cat <<END >&2
 USAGE: $0 [-e env] [-a access_token] [-p user_id] [-s id_token] [-v|-h]
@@ -54,7 +57,7 @@ done
     usage 1
 }
 
-declare -r AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
 
 declare -r BODY=$(
     cat <<EOL

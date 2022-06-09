@@ -6,7 +6,11 @@
 
 #!/bin/bash
 
-set -eo pipefail
+set -euo pipefail
+
+which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
+which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
+
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env

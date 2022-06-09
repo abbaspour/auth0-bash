@@ -6,15 +6,23 @@
 
 #!/bin/bash
 
-set -eo pipefail
+set -euo pipefail
+
+which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
+which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
+
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 [[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
+<<<<<<< HEAD
 which awk >/dev/null || {
     echo >&2 "error: awk not found"
     exit 3
 }
+=======
+
+>>>>>>> 4f4050b (fix: add extra check for curl and jq availabilty)
 
 function usage() {
     cat <<END >&2

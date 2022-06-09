@@ -8,24 +8,14 @@
 
 # downloads x5c of jwks.json into a PEM file
 
-set -eo pipefail
+set -euo pipefail
 
-command -v fold &>/dev/null || {
-    echo >&2 "ERROR: fold not found"
-    exit 1
-}
-command -v jq &>/dev/null || {
-    echo >&2 "ERROR: jq not found"
-    exit 1
-}
-command -v curl &>/dev/null || {
-    echo >&2 "ERROR: curl not found"
-    exit 1
-}
-command -v openssl &>/dev/null || {
-    echo >&2 "ERROR: openssl not found"
-    exit 1
-}
+which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
+which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
+command -v fold &>/dev/null || { echo >&2 "ERROR: fold not found"; exit 1; }
+command -v jq &>/dev/null || { echo >&2 "ERROR: jq not found"; exit 1; }
+command -v curl &>/dev/null || { echo >&2 "ERROR: curl not found"; exit 1; }
+command -v openssl &>/dev/null || { echo >&2 "ERROR: openssl not found"; exit 1; }
 
 function usage() {
     cat <<END >&2

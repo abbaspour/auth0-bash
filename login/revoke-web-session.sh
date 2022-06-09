@@ -51,7 +51,7 @@ done
 
 [[ -z "${access_token}" ]] && { echo >&2 -e "ERROR: no 'access_token' defined. \nopen -a safari https://manage.auth0.com/#/apis/ \nexport access_token=\`pbpaste\`"; usage 1; }
 
-declare -r AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
 
 declare -r email=$(curl -s --get -H "Authorization: Bearer ${access_token}" -H 'content-type: application/json' \
     ${AUTH0_DOMAIN_URL}api/v2/users/${user_id} | jq -r .email)

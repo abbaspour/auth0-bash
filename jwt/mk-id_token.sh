@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
-set -eo pipefail
+set -euo pipefail
 
+which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
+which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
 function usage() {
     cat <<END >&2
 USAGE: $0 [-t tenant] [-d domain] [-i iss] [-a audience] [-s sub] [-e exp] [-n nonce] [-o file]

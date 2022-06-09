@@ -6,13 +6,19 @@
 
 #!/bin/bash
 
-set -eo pipefail
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+set -euo pipefail
 
+<<<<<<< HEAD
 which awk >/dev/null || {
     echo >&2 "error: awk not found"
     exit 3
 }
+=======
+which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
+which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
+
+declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+>>>>>>> 4f4050b (fix: add extra check for curl and jq availabilty)
 
 function usage() {
     cat <<END >&2
@@ -53,7 +59,7 @@ done
     usage 1
 }
 
-declare -r AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
 
 curl --request DELETE \
     -H "Authorization: Bearer ${access_token}" \
