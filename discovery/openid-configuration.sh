@@ -1,17 +1,23 @@
+#!/bin/bash
+
 ##########################################################################################
 # Author: Auth0
 # Date: 2022-06-12
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-#!/bin/bash
-
 # https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata
 
 set -euo pipefail
 
-which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
-which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
+which curl >/dev/null || {
+    echo >&2 "error: curl not found"
+    exit 3
+}
+which jq >/dev/null || {
+    echo >&2 "error: jq not found"
+    exit 3
+}
 function usage() {
     cat <<END >&2
 USAGE: $0 [-e file] [-t tenant] [-d domain]

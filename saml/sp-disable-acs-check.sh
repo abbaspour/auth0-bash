@@ -1,10 +1,10 @@
+#!/bin/bash
+
 ##########################################################################################
 # Author: Auth0
 # Date: 2022-06-12
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
-
-#!/bin/bash
 
 # https://auth0.com/docs/configure/saml-configuration/saml-sso-integrations/sign-and-encrypt-saml-requests#use-custom-certificate-to-sign-requests
 

@@ -1,10 +1,10 @@
+#!/bin/bash
+
 ##########################################################################################
 # Author: Auth0
 # Date: 2022-06-12
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
-
-#!/bin/bash
 
 ###
 # have an `access_token` env variable with read:client and update:client scopes.

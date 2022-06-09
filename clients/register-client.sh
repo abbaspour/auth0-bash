@@ -1,10 +1,11 @@
+#!/bin/bash
+
 ##########################################################################################
 # Author: Auth0
 # Date: 2022-06-12
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-#!/bin/bash
 
 # make sure
 # 1. "OIDC Dynamic Application Registration" is enabled for your tenant. Visit Manage > Tenant Settings > Advanced

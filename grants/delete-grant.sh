@@ -1,10 +1,10 @@
+#!/bin/bash
+
 ##########################################################################################
 # Author: Auth0
 # Date: 2022-06-12
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
-
-#!/bin/bash
 
 set -euo pipefail
 
@@ -46,7 +46,7 @@ done
 }
 #[[ -z "${grantId}" ]] && { echo >&2 "ERROR: grant_id undefined."; usage 1; }
 
-declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
 if [[ -n "${grantId}" ]]; then
     curl -s --request DELETE \

@@ -1,10 +1,10 @@
+#!/bin/bash
+
 ##########################################################################################
 # Author: Auth0
 # Date: 2022-06-12
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
-
-#!/bin/bash
 
 # Same origin interactive login in UL classic mode
 # NOTE: this is for training/demo purposes. `/usernamepassword/login` is not a CORS endpoint.

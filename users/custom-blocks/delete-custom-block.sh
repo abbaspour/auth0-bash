@@ -1,10 +1,10 @@
+#!/bin/bash
+
 ##########################################################################################
 # Author: Auth0
 # Date: 2022-06-12
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
-
-#!/bin/bash
 
 set -euo pipefail
 
@@ -59,8 +59,11 @@ done
     exit 1
 }
 
-[[ -z ${access_token} ]] && { echo >&2 -e "ERROR: no 'access_token' defined. \n open -a safari https://manage.auth0.com/#/apis/ \n export access_token=\`pbpaste\`"; exit 1; }
-declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
+[[ -z ${access_token} ]] && {
+    echo >&2 -e "ERROR: no 'access_token' defined. \n open -a safari https://manage.auth0.com/#/apis/ \n export access_token=\`pbpaste\`"
+    exit 1
+}
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
 curl -X DELETE -H "Authorization: Bearer ${access_token}" -H 'content-type: application/json' \
     --url "${AUTH0_DOMAIN_URL}api/v2/users/${user_id}/custom-blocks/${reason_code}"
