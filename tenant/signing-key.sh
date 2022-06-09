@@ -24,6 +24,7 @@ USAGE: $0 [-e file] [-t tenant] [-d domain]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
+        -c             # Connection certificate
         -h|?           # usage
         -v             # verbose
 
@@ -35,12 +36,14 @@ END
 
 declare AUTH0_DOMAIN=''
 declare opt_verbose=0
+declare connection_cert=''
 
-while getopts "e:t:d:f:Dhv?" opt; do
+while getopts "e:t:d:chv?" opt; do
     case ${opt} in
     e) source ${OPTARG} ;;
     t) AUTH0_DOMAIN=$(echo ${OPTARG}.auth0.com | tr '@' '.') ;;
     d) AUTH0_DOMAIN=${OPTARG} ;;
+    c) connection_cert=1 ;;
     v) opt_verbose=1 ;; #set -x;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
@@ -52,4 +55,8 @@ done
     usage 1
 }
 
-curl -s https://${AUTH0_DOMAIN}/pem
+declare qs=''
+[[ ! -z "$connection_cert" ]] && qs="?cert=connection"
+echo "$qs"
+
+curl -s https://${AUTH0_DOMAIN}/pem${qs}
