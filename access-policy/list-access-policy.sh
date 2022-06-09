@@ -36,8 +36,6 @@ END
 
 declare uri=''
 
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
-
 while getopts "e:A:i:hv?" opt; do
     case ${opt} in
     e) source ${OPTARG} ;;

@@ -8,8 +8,14 @@
 
 set -euo pipefail
 
-which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
-which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
+which curl >/dev/null || {
+    echo >&2 "error: curl not found"
+    exit 3
+}
+which jq >/dev/null || {
+    echo >&2 "error: jq not found"
+    exit 3
+}
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 function usage() {
@@ -32,8 +38,6 @@ declare AUTH0_DOMAIN=''
 declare mfa_token=''
 
 declare opt_verbose=0
-
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
 while getopts "e:t:d:m:hv?" opt; do
     case ${opt} in

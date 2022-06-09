@@ -8,12 +8,16 @@
 
 set -euo pipefail
 
-which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
-which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
+which curl >/dev/null || {
+  echo >&2 "error: curl not found"
+  exit 3
+}
+which jq >/dev/null || {
+  echo >&2 "error: jq not found"
+  exit 3
+}
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
-
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
 function usage() {
   cat <<END >&2
@@ -49,7 +53,7 @@ done
   usage 1
 }
 
-declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
 curl -k -s -H "Authorization: Bearer ${access_token}" \
   --url "${AUTH0_DOMAIN_URL}api/v2/custom-domains${query}" | jq '.'

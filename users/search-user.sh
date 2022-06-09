@@ -10,8 +10,6 @@ set -euo pipefail
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
-
 function usage() {
     cat <<END >&2
 USAGE: $0 [-e env] [-a access_token] [-q query] [-2|-v|-h]

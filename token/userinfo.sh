@@ -27,8 +27,6 @@ declare access_token=''
 
 declare opt_verbose=0
 
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
-
 while getopts "e:t:d:a::hv?" opt; do
     case ${opt} in
     e) source ${OPTARG} ;;

@@ -8,8 +8,14 @@
 
 set -euo pipefail
 
-which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
-which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
+which curl >/dev/null || {
+    echo >&2 "error: curl not found"
+    exit 3
+}
+which jq >/dev/null || {
+    echo >&2 "error: jq not found"
+    exit 3
+}
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 ##
@@ -74,8 +80,6 @@ declare opt_flow=''
 declare opt_mgmnt=''
 declare opt_verbose=0
 declare opt_browser=''
-
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
 while getopts "e:t:d:c:a:r:R:f:u:p:s:b:mCohv?" opt; do
     case ${opt} in

@@ -40,8 +40,6 @@ declare opt_mgmnt=''
 declare audience_field=''
 declare scopes_field=''
 
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
-
 while getopts "e:t:d:c:a:s:mhv?" opt; do
     case ${opt} in
     e) source ${OPTARG} ;;

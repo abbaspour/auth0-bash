@@ -8,8 +8,14 @@
 
 set -euo pipefail
 
-which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
-which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
+which curl >/dev/null || {
+    echo >&2 "error: curl not found"
+    exit 3
+}
+which jq >/dev/null || {
+    echo >&2 "error: jq not found"
+    exit 3
+}
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 declare TWILIO_SID=''
@@ -35,8 +41,6 @@ eg,
 END
     exit $1
 }
-
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
 declare opt_verbose=0
 

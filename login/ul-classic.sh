@@ -97,8 +97,6 @@ declare USERNAME=''
 declare PASSWORD=''
 declare opt_mgmnt=''
 
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
-
 while getopts "e:t:d:c:a:u:x:r:o:U:s:mhv?" opt; do
     case ${opt} in
     e) source ${OPTARG} ;;

@@ -37,7 +37,7 @@ END
 
 declare client_id=''
 
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
+
 
 while getopts "e:a:i:hv?" opt; do
     case ${opt} in

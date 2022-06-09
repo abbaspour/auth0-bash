@@ -46,7 +46,7 @@ declare public_key_file=''
 declare client_authentication_methods=''
 declare callback_uris=''
 
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
+
 
 while getopts "e:a:n:t:i:p:c:3hv?" opt; do
   case ${opt} in

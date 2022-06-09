@@ -2,12 +2,16 @@
 
 set -euo pipefail
 
-which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
-which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
+which curl >/dev/null || {
+    echo >&2 "error: curl not found"
+    exit 3
+}
+which jq >/dev/null || {
+    echo >&2 "error: jq not found"
+    exit 3
+}
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
-
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
 function usage() {
     cat <<END >&2
@@ -30,31 +34,46 @@ declare rs_id=''
 declare pem_file=''
 declare kid=''
 
-while getopts "e:a:i:f:k:hv?" opt
-do
+while getopts "e:a:i:f:k:hv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        a) access_token=${OPTARG};;
-        i) rs_id=${OPTARG};;
-        f) pem_file=${OPTARG};;
-        k) kid=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    a) access_token=${OPTARG} ;;
+    i) rs_id=${OPTARG} ;;
+    f) pem_file=${OPTARG} ;;
+    k) kid=${OPTARG} ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
-[[ -z "${rs_id}" ]] && { echo >&2 "ERROR: rs_id undefined."; usage 1; }
-[[ -z "${kid}" ]] && { echo >&2 "ERROR: kid undefined."; usage 1; }
-[[ -z "${pem_file}" ]] && { echo >&2 "ERROR: pem_file undefined."; usage 1; }
-[[ -f "${pem_file}" ]] || { echo >&2 "ERROR: pem_file missing: ${pem_file}"; usage 1; }
+[[ -z "${access_token}" ]] && {
+    echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "
+    usage 1
+}
+[[ -z "${rs_id}" ]] && {
+    echo >&2 "ERROR: rs_id undefined."
+    usage 1
+}
+[[ -z "${kid}" ]] && {
+    echo >&2 "ERROR: kid undefined."
+    usage 1
+}
+[[ -z "${pem_file}" ]] && {
+    echo >&2 "ERROR: pem_file undefined."
+    usage 1
+}
+[[ -f "${pem_file}" ]] || {
+    echo >&2 "ERROR: pem_file missing: ${pem_file}"
+    usage 1
+}
 
-declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
-declare -r pem_single_line=`sed 's/$/\\\\n/' ${pem_file} | tr -d '\n'`
+declare -r pem_single_line=$(sed 's/$/\\\\n/' ${pem_file} | tr -d '\n')
 
-declare BODY=$(cat <<EOL
+declare BODY=$(
+    cat <<EOL
 {
  "verificationKeys" : [
     {

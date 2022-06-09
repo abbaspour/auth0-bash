@@ -42,7 +42,7 @@ declare user_id=''
 declare audience=''
 declare api_scopes=''
 declare asp_name=''
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
+
 while getopts "e:A:i:a:s:n:hv?" opt; do
     case ${opt} in
     e) source ${OPTARG} ;;

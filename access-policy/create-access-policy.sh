@@ -38,8 +38,6 @@ declare client_id=''
 declare audience=''
 declare api_scopes=''
 
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
-
 while getopts "e:A:c:a:s:hv?" opt; do
     case ${opt} in
     e) source ${OPTARG} ;;

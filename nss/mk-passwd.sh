@@ -3,7 +3,6 @@
 set -euo pipefail
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
 declare PASSWD_OUTPUT='passwd'
 declare SHADOW_OUTPUT='shadow'
@@ -51,35 +50,36 @@ declare opt_verbose=0
 declare passwd_file=${PASSWD_OUTPUT}
 declare shadow_file=${SHADOW_OUTPUT}
 
-while getopts "e:a:c:u:g:d:s:G:D:S:p:q:o:O:Uhv?" opt
-do
+while getopts "e:a:c:u:g:d:s:G:D:S:p:q:o:O:Uhv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        a) access_token=${OPTARG};;
-        c) CONNECTION_NAME=${OPTARG};;
-        u) FIELD_UID=${OPTARG};;
-        g) FIELD_GID=${OPTARG};;
-        d) FIELD_DIR=${OPTARG};;
-        s) FIELD_SHL=${OPTARG};;
-        G) VALUE_GID=${OPTARG};;
-        D) VALUE_DIR=${OPTARG};;
-        S) VALUE_SHL=${OPTARG};;
-        p) VALUE_HOME_PREFIX=${OPTARG};;
-        q) query=${OPTARG};;
-        o) passwd_file=${OPTARG};;
-        O) shadow_file=${OPTARG};;
-        U) FIELD_USERNAME='username';;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    a) access_token=${OPTARG} ;;
+    c) CONNECTION_NAME=${OPTARG} ;;
+    u) FIELD_UID=${OPTARG} ;;
+    g) FIELD_GID=${OPTARG} ;;
+    d) FIELD_DIR=${OPTARG} ;;
+    s) FIELD_SHL=${OPTARG} ;;
+    G) VALUE_GID=${OPTARG} ;;
+    D) VALUE_DIR=${OPTARG} ;;
+    S) VALUE_SHL=${OPTARG} ;;
+    p) VALUE_HOME_PREFIX=${OPTARG} ;;
+    q) query=${OPTARG} ;;
+    o) passwd_file=${OPTARG} ;;
+    O) shadow_file=${OPTARG} ;;
+    U) FIELD_USERNAME='username' ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-
 declare -r per_page=100
 
-[[ -z ${access_token+x} ]] && { echo >&2 -e "ERROR: no 'access_token' defined. \nopen -a safari https://manage.auth0.com/#/apis/ \nexport access_token=\`pbpaste\`"; exit 1; }
-declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
+[[ -z ${access_token+x} ]] && {
+    echo >&2 -e "ERROR: no 'access_token' defined. \nopen -a safari https://manage.auth0.com/#/apis/ \nexport access_token=\`pbpaste\`"
+    exit 1
+}
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
 declare fields="${FIELD_USERNAME},user_id,${FIELD_UID},${FIELD_GID},${FIELD_DIR},${FIELD_SHL},given_name"
 
@@ -104,8 +104,7 @@ while [[ $((per_page * page)) -lt ${total} ]]; do
         --data-urlencode "include_fields=true" \
         ${AUTH0_DOMAIN_URL}api/v2/users)
     total=$(echo ${output} | jq -r '.total')
-    page=$(( page + 1 ))
-    echo ${output} | jq -r ".users[] | select(.${FIELD_UID} != null and .${FIELD_GID} != null) | \"\(.${FIELD_USERNAME}):x:\(.${FIELD_UID}):\(.${FIELD_GID}):\(.name):\(.${FIELD_DIR}):\(.${FIELD_SHL})\"" >> ${passwd_file}
-    echo ${output} | jq -r ".users[] | select(.${FIELD_UID} != null and .${FIELD_GID} != null) | \"\(.${FIELD_USERNAME}):*:18052:0:99999:7:::\"" >> ${shadow_file}
+    page=$((page + 1))
+    echo ${output} | jq -r ".users[] | select(.${FIELD_UID} != null and .${FIELD_GID} != null) | \"\(.${FIELD_USERNAME}):x:\(.${FIELD_UID}):\(.${FIELD_GID}):\(.name):\(.${FIELD_DIR}):\(.${FIELD_SHL})\"" >>${passwd_file}
+    echo ${output} | jq -r ".users[] | select(.${FIELD_UID} != null and .${FIELD_GID} != null) | \"\(.${FIELD_USERNAME}):*:18052:0:99999:7:::\"" >>${shadow_file}
 done
-

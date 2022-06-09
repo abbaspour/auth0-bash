@@ -43,7 +43,7 @@ declare audience=''
 declare api_scopes=''
 declare use_management_api=0
 
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
+
 
 while getopts "e:A:i:a:s:mhv?" opt; do
     case ${opt} in

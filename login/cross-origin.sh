@@ -65,8 +65,6 @@ declare opt_verbose=0
 declare opt_state=''
 declare opt_nonce=''
 
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
-
 while getopts "e:t:d:c:a:u:p:r:o:U:s:S:n:mhv?" opt; do
     case ${opt} in
     e) source ${OPTARG} ;;

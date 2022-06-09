@@ -8,8 +8,14 @@
 
 set -euo pipefail
 
-which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
-which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
+which curl >/dev/null || {
+    echo >&2 "error: curl not found"
+    exit 3
+}
+which jq >/dev/null || {
+    echo >&2 "error: jq not found"
+    exit 3
+}
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 declare AUTH0_SCOPE='openid profile email'
@@ -48,8 +54,6 @@ declare password=''
 
 declare opt_mgmnt=''
 declare opt_verbose=0
-
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
 
 while getopts "e:t:u:p:d:c:x:a:r:s:mhv?" opt; do
     case ${opt} in

@@ -41,8 +41,6 @@ declare private_pem=''
 declare client_assertion=''
 declare opt_mgmnt=''
 
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
-
 while getopts "e:t:d:c:a:x:k:f:mhv?" opt; do
   case ${opt} in
   e) source "${OPTARG}" ;;

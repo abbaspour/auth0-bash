@@ -37,7 +37,7 @@ END
 
 declare grant_id=''
 
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
+
 
 while getopts "e:a:i:n:s:hv?" opt; do
     case ${opt} in
