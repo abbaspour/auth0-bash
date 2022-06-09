@@ -57,6 +57,11 @@ done
     echo >&2 -e "ERROR: no 'access_token' defined. \n open -a safari https://manage.auth0.com/#/apis/ \n export access_token=\`pbpaste\`"
     exit 1
 }
+
+declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
+declare -r EXPECTED_SCOPE="read:user_custom_blocks"
+[[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
+
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
 curl -s --get -H "Authorization: Bearer ${access_token}" -H 'content-type: application/json' \

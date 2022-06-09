@@ -18,17 +18,6 @@ which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
-
-
-<<<<<<< HEAD
-which awk >/dev/null || {
-    echo >&2 "error: awk not found"
-    exit 3
-}
-=======
-
->>>>>>> 4f4050b (fix: add extra check for curl and jq availabilty)
-
 function usage() {
     cat <<END >&2
 USAGE: $0 [-e env] [-t tenant] [-d domain] [-n name] [-r uri,uri] [-p|-v|-h]

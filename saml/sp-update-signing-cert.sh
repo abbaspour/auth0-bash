@@ -48,6 +48,12 @@ done
     echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "
     usage 1
 }
+
+declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
+declare -r EXPECTED_SCOPES=("read:connections" "update:connections") # Both scopes are required
+[[ " $AVAILABLE_SCOPES " == *" ${EXPECTED_SCOPES[0]} "* && " $AVAILABLE_SCOPES " == *" ${EXPECTED_SCOPES[1]} "*  ]] \
+    || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected (all of): '${EXPECTED_SCOPES[*]}', Available: '$AVAILABLE_SCOPES'"; exit 1; }
+
 [[ -z "${connection_id}" ]] && {
     echo >&2 "ERROR: connection_id undefined."
     usage 1

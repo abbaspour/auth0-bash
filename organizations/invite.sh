@@ -53,6 +53,11 @@ do
 done
 
 [[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
+
+declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
+declare -r EXPECTED_SCOPE="create:organization_invitations"
+[[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
+
 [[ -z "${organisation}" ]] && { echo >&2 "ERROR: organisation undefined."; usage 1; }
 [[ -z "${mail}" ]] && { echo >&2 "ERROR: mail undefined."; usage 1; }
 [[ -z "${client}" ]] && { echo >&2 "ERROR: client undefined."; usage 1; }

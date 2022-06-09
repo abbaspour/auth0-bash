@@ -54,6 +54,11 @@ done
     echo >&2 "ERROR: no 'user_id' defined"
     exit 1
 }
+
+declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
+declare -r EXPECTED_SCOPE="delete:user_custom_blocks"
+[[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
+
 [[ -z ${reason_code} ]] && {
     echo >&2 "ERROR: no 'reason_code' defined"
     exit 1
