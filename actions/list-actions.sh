@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -8,8 +8,8 @@
 
 set -eo pipefail
 
-which curl >/dev/null || { echo >&2 "error: curl not found"; exit 3; }
-which jq >/dev/null || { echo >&2 "error: jq not found"; exit 3; }
+command -v curl >/dev/null || { echo >&2 "error: curl not found"; exit 3; }
+command -v jq >/dev/null || { echo >&2 "error: jq not found"; exit 3; }
 
 function usage() {
     cat <<END >&2
@@ -43,7 +43,7 @@ while getopts "e:a:T:n:d:i:hv?" opt; do
     n) action_name=${OPTARG} ;;
     d) deployed=${OPTARG} ;;
     i) installed=${OPTARG} ;;
-    v) opt_verbose=1 ;; #set -x;;
+    v) set -x;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
     esac
