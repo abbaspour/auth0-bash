@@ -40,9 +40,7 @@ while getopts "u:p:lhv?" opt; do
     esac
 done
 
-[[ -z "${username}" ]] && {
-    echo >&2 "ERROR: username undefined"
-    usage 1
-}
+[[ -z "${username}" ]] && { echo >&2 "ERROR: username undefined";  usage 1; }
+
 
 curl -s "https://api.github.com/users/${username}/repos?page=${page}&per_page=100" | grep -e 'git_url*' | cut -d \" -f 4 | ${cmd}

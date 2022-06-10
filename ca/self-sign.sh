@@ -6,16 +6,10 @@
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-set -euo pipefail
+set -eo pipefail
 
-which curl >/dev/null || {
-    echo >&2 "error: curl not found"
-    exit 3
-}
-which jq >/dev/null || {
-    echo >&2 "error: jq not found"
-    exit 3
-}
+which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 function usage() {
     cat <<END >&2
 USAGE: $0 [-n domain]
@@ -41,10 +35,8 @@ while getopts "n:hv?" opt; do
     esac
 done
 
-[[ -z "${pair_name}" ]] && {
-    echo >&2 "ERROR: pair_name undefined."
-    usage 1
-}
+[[ -z "${pair_name}" ]] && { echo >&2 "ERROR: pair_name undefined.";  usage 1; }
+
 
 declare -r private_key="${pair_name}-private.pem"
 declare -r cert_key="${pair_name}-cert.pem"

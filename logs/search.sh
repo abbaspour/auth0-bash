@@ -6,7 +6,7 @@
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-set -euo pipefail
+set -eo pipefail
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 

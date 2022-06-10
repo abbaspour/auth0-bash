@@ -6,16 +6,10 @@
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-set -euo pipefail
+set -eo pipefail
 
-which curl >/dev/null || {
-    echo >&2 "error: curl not found"
-    exit 3
-}
-which jq >/dev/null || {
-    echo >&2 "error: jq not found"
-    exit 3
-}
+which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 declare AUTH0_SCOPE='openid profile email'
@@ -66,26 +60,15 @@ while getopts "e:t:d:c:x:m:a:i:hv?" opt; do
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && {
-    echo >&2 "ERROR: AUTH0_DOMAIN undefined"
-    usage 1
-}
-[[ -z "${AUTH0_CLIENT_ID}" ]] && {
-    echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"
-    usage 1
-}
-[[ -z "${mfa_token}" ]] && {
-    echo >&2 "ERROR: mfa_token undefined"
-    usage 1
-}
-[[ -z "${authenticator_type}" ]] && {
-    echo >&2 "ERROR: authenticator_type undefined"
-    usage 1
-}
-[[ -z "${authenticator_id}" ]] && {
-    echo >&2 "ERROR: authenticator_id undefined"
-    usage 1
-}
+[[ -z "${AUTH0_DOMAIN}" ]] && {  echo >&2 "ERROR: AUTH0_DOMAIN undefined";  usage 1;  }
+[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined";  usage 1; }
+
+[[ -z "${mfa_token}" ]] && { echo >&2 "ERROR: mfa_token undefined";  usage 1; }
+
+[[ -z "${authenticator_type}" ]] && { echo >&2 "ERROR: authenticator_type undefined";  usage 1; }
+
+[[ -z "${authenticator_id}" ]] && { echo >&2 "ERROR: authenticator_id undefined";  usage 1; }
+
 
 declare secret=''
 [[ -n "${AUTH0_CLIENT_SECRET}" ]] && secret="\"client_secret\": \"${AUTH0_CLIENT_SECRET}\","
@@ -105,6 +88,5 @@ EOL
 declare response_json=$(curl -s --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/mfa/challenge)
 
 if [ "${authenticator_type}" == "oob" ]; then
-    oob_code=$(echo "${response_json}" | jq -r '.oob_code')
-    echo "export oob_code=\"${oob_code}\""
+    oob_code=$(echo "${response_json}" | jq -r '.oob_code') echo "export oob_code=\"${oob_code}\""
 fi

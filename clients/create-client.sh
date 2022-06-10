@@ -7,7 +7,7 @@
 ##########################################################################################
 
 
-set -euo pipefail
+set -eo pipefail
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 function usage() {

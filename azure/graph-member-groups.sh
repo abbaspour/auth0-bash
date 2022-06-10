@@ -8,8 +8,7 @@
 
 declare uid='USERNAME@ORG.onmicrosoft.com'
 
-[[ -z "${access_token}" ]] && {
-    echo >&2 "ERROR: no onmicrosoft access_token present. export it."
+[[ -z "${access_token}" ]] && { echo >&2 "ERROR: no onmicrosoft access_token present. export it."
     exit 1
 }
 

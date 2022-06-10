@@ -7,7 +7,7 @@
 ##########################################################################################
 
 
-set -euo pipefail
+set -eo pipefail
 
 which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
 which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
@@ -45,10 +45,8 @@ while getopts "e:a:i:m:hv?" opt; do
     esac
 done
 
-[[ -z "${access_token}" ]] && {
-    echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "
-    usage 1
-}
+[[ -z "${access_token}" ]] && {   echo >&2 "ERROR: access_token undefined. export access_token='PASTE' ";  usage 1; }
+
 
 declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
 declare -r EXPECTED_SCOPES=("update:clients" "update:client_keys") # Either of these scopes would do
@@ -56,14 +54,10 @@ declare -r EXPECTED_SCOPES=("update:clients" "update:client_keys") # Either of t
     || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected (any of): '${EXPECTED_SCOPES[*]}', Available: '$AVAILABLE_SCOPES'"; exit 1; }
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
-[[ -z "${client_id}" ]] && {
-    echo >&2 "ERROR: client_id undefined."
-    usage 1
-}
-[[ -z "${metadata}" ]] && {
-    echo >&2 "ERROR: metadata undefined."
-    usage 1
-}
+[[ -z "${client_id}" ]] && {  echo >&2 "ERROR: client_id undefined." ;  usage 1; }
+
+[[ -z "${metadata}" ]] && { echo >&2 "ERROR: metadata undefined.";  usage 1; }
+
 
 scopes=''
 for s in $(echo $metadata | tr ',' ' '); do

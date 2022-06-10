@@ -6,16 +6,10 @@
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-set -euo pipefail
+set -eo pipefail
 
-which curl >/dev/null || {
-    echo >&2 "error: curl not found"
-    exit 3
-}
-which jq >/dev/null || {
-    echo >&2 "error: jq not found"
-    exit 3
-}
+which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 declare alg='RS256'
 
 function usage() {
@@ -58,20 +52,14 @@ done
 
 #[[ -z "${aud}" ]] && { echo >&2 "ERROR: audience undefined."; usage 1; }
 #[[ -z "${iss}" ]] && { echo >&2 "ERROR: iss undefined."; usage 1; }
-[[ -z "${kid}" ]] && {
-    echo >&2 "ERROR: kid undefined."
-    usage 1
-}
+[[ -z "${kid}" ]] && { echo >&2 "ERROR: kid undefined.";  usage 1; }
+
 #[[ -z "${pem_file}" ]] && { echo >&2 "ERROR: pem_file undefined."; usage 1; }
 #[[ -f "${pem_file}" ]] || { echo >&2 "ERROR: pem_file missing: ${pem_file}"; usage 1; }
-[[ -z "${json_file}" ]] && {
-    echo >&2 "ERROR: json_file undefined"
-    usage 1
-}
-[[ ! -f "${json_file}" ]] && {
-    echo >&2 "json_file: unable to read file: ${json_file}"
-    usage 1
-}
+[[ -z "${json_file}" ]] && { echo >&2 "ERROR: json_file undefined";  usage 1; }
+
+[[ ! -f "${json_file}" ]] && { echo >&2 "json_file: unable to read file: ${json_file}";  usage 1; }
+
 
 # header
 declare -r header=$(printf '{"typ":"JWT","alg":"%s","jti":"%s"}' "${alg}" "${kid}" | openssl base64 -e -A | tr '+' '-' | tr '/' '_' | sed -E s/=+$//)

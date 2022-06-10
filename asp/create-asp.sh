@@ -7,7 +7,7 @@
 ##########################################################################################
 
 
-set -euo pipefail
+set -eo pipefail
 
 which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
 which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
@@ -51,22 +51,12 @@ while getopts "e:A:i:a:s:n:hv?" opt; do
     esac
 done
 
-[[ -z "${access_token}" ]] && {
-    echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "
-    usage 1
-}
-[[ -z "${user_id}" ]] && {
-    echo >&2 "ERROR: user_id undefined."
-    usage 1
-}
-[[ -z "${audience}" ]] && {
-    echo >&2 "ERROR: audience undefined."
-    usage 1
-}
-[[ -z "${asp_name}" ]] && {
-    echo >&2 "ERROR: asp_name undefined."
-    usage 1
-}
+[[ -z "${access_token}" ]] && {   echo >&2 "ERROR: access_token undefined. export access_token='PASTE' ";  usage 1; }
+
+[[ -z "${user_id}" ]] && {  echo >&2 "ERROR: user_id undefined.";  usage 1; }
+
+[[ -z "${audience}" ]] && { echo >&2 "ERROR: audience undefined."; usage 1; }
+[[ -z "${asp_name}" ]] && { echo >&2 "ERROR: asp_name undefined."; usage 1; }
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 

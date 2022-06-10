@@ -6,7 +6,7 @@
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-set -euo pipefail
+set -eo pipefail
 
 function usage() {
     cat <<END >&2
@@ -47,31 +47,21 @@ while getopts "e:a:p:l:s:i:t:hv?" opt; do
     esac
 done
 
-[[ -z "${access_token}" ]] && {
-    echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "
-    usage 1
-}
+[[ -z "${access_token}" ]] && {   echo >&2 "ERROR: access_token undefined. export access_token='PASTE' ";  usage 1; }
+
 
 declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
 declare -r EXPECTED_SCOPE="update:prompts"
 [[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
 
-[[ -z "${prompt}" ]] && {
-    echo >&2 "ERROR: prompt undefined."
-    usage 1
-}
-[[ -z "${screen}" ]] && {
-    echo >&2 "ERROR: screen undefined."
-    usage 1
-}
-[[ -z "${text_id}" ]] && {
-    echo >&2 "ERROR: text_id undefined."
-    usage 1
-}
-[[ -z "${text}" ]] && {
-    echo >&2 "ERROR: text undefined."
-    usage 1
-}
+[[ -z "${prompt}" ]] && { echo >&2 "ERROR: prompt undefined.";  usage 1; }
+
+[[ -z "${screen}" ]] && { echo >&2 "ERROR: screen undefined.";  usage 1; }
+
+[[ -z "${text_id}" ]] && { echo >&2 "ERROR: text_id undefined.";  usage 1; }
+
+[[ -z "${text}" ]] && { echo >&2 "ERROR: text undefined.";  usage 1; }
+
 
 readonly AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
 

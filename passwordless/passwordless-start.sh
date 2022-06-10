@@ -6,16 +6,10 @@
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-set -euo pipefail
+set -eo pipefail
 
-which curl >/dev/null || {
-    echo >&2 "error: curl not found"
-    exit 3
-}
-which jq >/dev/null || {
-    echo >&2 "error: jq not found"
-    exit 3
-}
+which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 declare AUTH0_SCOPE='openid email'
@@ -84,18 +78,11 @@ while getopts "e:t:d:c:x:a:r:R:u:p:s:U:l:mCPohv?" opt; do
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && {
-    echo >&2 "ERROR: AUTH0_DOMAIN undefined"
-    usage 1
-}
-[[ -z "${AUTH0_CLIENT_ID}" ]] && {
-    echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"
-    usage 1
-}
-[[ -z "${AUTH0_CONNECTION}" ]] && {
-    echo >&2 "ERROR: AUTH0_CONNECTION undefined. select 'sms' or 'email'"
-    usage 1
-}
+[[ -z "${AUTH0_DOMAIN}" ]] && {  echo >&2 "ERROR: AUTH0_DOMAIN undefined";  usage 1;  }
+[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined";  usage 1; }
+
+[[ -z "${AUTH0_CONNECTION}" ]] && { echo >&2 "ERROR: AUTH0_CONNECTION undefined. select 'sms' or 'email'";  usage 1; }
+
 
 declare recipient=''
 
@@ -114,8 +101,7 @@ email)
     }
     recipient="\"email\":\"${email}\","
     ;;
-*)
-    echo >&2 "ERROR: unknown connection: ${AUTH0_CONNECTION}"
+*) echo >&2 "ERROR: unknown connection: ${AUTH0_CONNECTION}"
     usage 1
     ;;
 esac

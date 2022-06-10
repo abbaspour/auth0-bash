@@ -8,16 +8,10 @@
 
 # https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata
 
-set -euo pipefail
+set -eo pipefail
 
-which curl >/dev/null || {
-    echo >&2 "error: curl not found"
-    exit 3
-}
-which jq >/dev/null || {
-    echo >&2 "error: jq not found"
-    exit 3
-}
+which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 function usage() {
     cat <<END >&2
 USAGE: $0 [-e file] [-t tenant] [-d domain]
@@ -47,9 +41,6 @@ while getopts "e:t:d:hv?" opt; do
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && {
-    echo >&2 "ERROR: AUTH0_DOMAIN undefined"
-    usage 1
-}
+[[ -z "${AUTH0_DOMAIN}" ]] && {  echo >&2 "ERROR: AUTH0_DOMAIN undefined";  usage 1;  }
 
 curl -s https://${AUTH0_DOMAIN}/.well-known/openid-configuration | jq '.'

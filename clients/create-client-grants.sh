@@ -7,7 +7,7 @@
 ##########################################################################################
 
 
-set -euo pipefail
+set -eo pipefail
 
 which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
 which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
@@ -53,10 +53,8 @@ while getopts "e:A:i:a:s:mhv?" opt; do
     esac
 done
 
-[[ -z "${access_token}" ]] && {
-    echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "
-    usage 1
-}
+[[ -z "${access_token}" ]] && {   echo >&2 "ERROR: access_token undefined. export access_token='PASTE' ";  usage 1; }
+
 
 declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
 declare -r EXPECTED_SCOPE="create:client_grants"
@@ -65,10 +63,8 @@ declare -r EXPECTED_SCOPE="create:client_grants"
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
 [[ ! -z "${use_management_api}" ]] && audience=${AUTH0_DOMAIN_URL}api/v2/
-[[ -z "${client_id}" ]] && {
-    echo >&2 "ERROR: client_id undefined."
-    usage 1
-}
+[[ -z "${client_id}" ]] && {  echo >&2 "ERROR: client_id undefined." ;  usage 1; }
+
 
 for s in $(echo $api_scopes | tr ',' ' '); do
     scopes+="\"${s}\","

@@ -6,7 +6,7 @@
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-set -euo pipefail
+set -eo pipefail
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
@@ -69,21 +69,16 @@ while getopts "e:f:c:a:r:o:u:s:mhv?" opt; do
     esac
 done
 
-[[ -z ${AUTH0_CLIENT_ID+x} ]] && {
-    echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"
-    usage 1
-}
+[[ -z ${AUTH0_CLIENT_ID+x} ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined";  usage 1; }
 
-[ -f ${COOKIE_FILE} ] || {
-    echo "no cookie.txt found. run cross-origin.sh first."
+
+[ -f ${COOKIE_FILE} ] || { echo "no cookie.txt found. run cross-origin.sh first."
     exit
 }
 
 declare AUTH0_DOMAIN=$(grep "^#HttpOnly_" ${COOKIE_FILE} | grep auth0 | awk -F"[\s\t_]" '{print $2}')
-[[ -z ${AUTH0_DOMAIN+x} ]] && {
-    echo >&2 "ERROR: AUTH0_DOMAIN undefined"
-    usage 1
-}
+[[ -z ${AUTH0_DOMAIN+x} ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined";  usage 1; }
+
 
 declare -r AUTH0_CLIENT='{"name":"auth0.js","version":"9.0.2"}'
 declare -r AUTH0_CLIENT_B64=$(echo -n $AUTH0_CLIENT | base64)

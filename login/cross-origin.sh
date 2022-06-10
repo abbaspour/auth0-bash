@@ -6,7 +6,7 @@
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-set -euo pipefail
+set -eo pipefail
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
@@ -87,22 +87,13 @@ while getopts "e:t:d:c:a:u:p:r:o:U:s:S:n:mhv?" opt; do
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && {
-    echo >&2 "ERROR: AUTH0_DOMAIN undefined"
-    usage 1
-}
-[[ -z "${AUTH0_CLIENT_ID}" ]] && {
-    echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"
-    usage 1
-}
-[[ -z "${USERNAME}" ]] && {
-    echo >&2 "ERROR: USERNAME undefined"
-    usage 1
-}
-[[ -z "${PASSWORD}" ]] && {
-    echo >&2 "ERROR: PASSWORD undefined"
-    usage 1
-}
+[[ -z "${AUTH0_DOMAIN}" ]] && {  echo >&2 "ERROR: AUTH0_DOMAIN undefined";  usage 1;  }
+[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined";  usage 1; }
+
+[[ -z "${USERNAME}" ]] && { echo >&2 "ERROR: USERNAME undefined";  usage 1; }
+
+[[ -z "${PASSWORD}" ]] && { echo >&2 "ERROR: PASSWORD undefined";  usage 1; }
+
 
 [[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"
 
@@ -129,8 +120,7 @@ echo "CO Response: ${co_response}"
 declare login_ticket=$(echo $co_response | jq -cr .login_ticket)
 echo login_ticket=${login_ticket}
 
-[[ ${login_ticket} == "null" ]] && {
-    echo >&2 "login_ticket collection failed"
+[[ ${login_ticket} == "null" ]] && { echo >&2 "login_ticket collection failed"
     exit 3
 }
 
@@ -148,16 +138,13 @@ declare location=$(curl -v -b cookie.txt $authorize_url | awk 'IGNORECASE = 1;/^
 
 echo "Redirect location: ${location}"
 
-[[ ${location} =~ ^/u/ ]] && {
-    echo >&2 "WARNING: MFA enabled. CO not possible without user interaction"
+[[ ${location} =~ ^/u/ ]] && { echo >&2 "WARNING: MFA enabled. CO not possible without user interaction"
     exit 3
 }
-[[ ${location} =~ ^/mf ]] && {
-    echo >&2 "WARNING: MFA enabled. CO not possible without user interaction"
+[[ ${location} =~ ^/mf ]] && { echo >&2 "WARNING: MFA enabled. CO not possible without user interaction"
     exit 3
 }
-[[ ${location} =~ ^/decision ]] && {
-    echo >&2 "WARNING: Consent required. CO not possible without user interaction. Try normal ./authorize.sh first."
+[[ ${location} =~ ^/decision ]] && { echo >&2 "WARNING: Consent required. CO not possible without user interaction. Try normal ./authorize.sh first."
     exit 3
 }
 

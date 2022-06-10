@@ -11,7 +11,7 @@
 # 1. "OIDC Dynamic Application Registration" is enabled for your tenant. Visit Manage > Tenant Settings > Advanced
 # 2. desired connection is domain level. PATCH connection to set `is_domain_connection` to true or use update-connection.sh
 
-set -euo pipefail
+set -eo pipefail
 
 which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
 which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
@@ -55,14 +55,10 @@ while getopts "e:t:d:n:r:phv?" opt; do
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && {
-    echo >&2 "ERROR: AUTH0_DOMAIN undefined."
-    usage 1
-}
-[[ -z "${client_name}" ]] && {
-    echo >&2 "ERROR: client_name undefined."
-    usage 1
-}
+[[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined.";  usage 1; }
+
+[[ -z "${client_name}" ]] && { echo >&2 "ERROR: client_name undefined.";  usage 1; }
+
 
 declare -r redirect_uris=$(echo ${input_redirect_uris} | sed 's/,/","/g')
 

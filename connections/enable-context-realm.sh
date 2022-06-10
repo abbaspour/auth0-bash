@@ -10,7 +10,7 @@
 # function login(email, password, context, callback) {
 #    // context.realm
 # }
-set -euo pipefail
+set -eo pipefail
 
 function usage() {
     cat <<END >&2

@@ -6,16 +6,10 @@
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-set -euo pipefail
+set -eo pipefail
 
-which curl >/dev/null || {
-    echo >&2 "error: curl not found"
-    exit 3
-}
-which jq >/dev/null || {
-    echo >&2 "error: jq not found"
-    exit 3
-}
+which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
@@ -61,17 +55,12 @@ declare -r EXPECTED_SCOPE="update:connections"
 
 [[ -z "${connection_id}" ]] && { echo >&2 "ERROR: connection_id undefined."; usage 1; }
 if [[ ${mk_domain} -ne 0 ]]; then
-    json_file=$(mktemp)
-    echo '{"is_domain_connection": true}' >${json_file}
+    json_file=$(mktemp) echo '{"is_domain_connection": true}' >${json_file}
 fi
-[[ -z "${json_file}" ]] && {
-    echo >&2 "ERROR: json_file undefined."
-    usage 1
-}
-[[ -f "${json_file}" ]] || {
-    echo >&2 "ERROR: json_file missing: ${json_file}"
-    usage 1
-}
+[[ -z "${json_file}" ]] && { echo >&2 "ERROR: json_file undefined.";  usage 1; }
+
+[[ -f "${json_file}" ]] || { echo >&2 "ERROR: json_file missing: ${json_file}";  usage 1; }
+
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 

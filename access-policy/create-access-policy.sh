@@ -6,16 +6,10 @@
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-set -euo pipefail
+set -eo pipefail
 
-which curl >/dev/null || {
-    echo >&2 "error: curl not found"
-    exit 3
-}
-which jq >/dev/null || {
-    echo >&2 "error: jq not found"
-    exit 3
-}
+which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 
 function usage() {
     cat <<END >&2
@@ -51,23 +45,14 @@ while getopts "e:A:c:a:s:hv?" opt; do
     esac
 done
 
-[[ -z "${access_token}" ]] && {
-    echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "
-    usage 1
-}
+[[ -z "${access_token}" ]] && {   echo >&2 "ERROR: access_token undefined. export access_token='PASTE' ";  usage 1; }
+
+
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
-[[ -z "${client_id}" ]] && {
-    echo >&2 "ERROR: client_id undefined."
-    usage 1
-}
-[[ -z "${audience}" ]] && {
-    echo >&2 "ERROR: audience undefined."
-    usage 1
-}
-[[ -z "${api_scopes}" ]] && {
-    echo >&2 "ERROR: api_scopes undefined."
-    usage 1
-}
+[[ -z "${client_id}" ]] && {  echo >&2 "ERROR: client_id undefined." ;  usage 1; }
+
+[[ -z "${audience}" ]] && { echo >&2 "ERROR: audience undefined.";  usage 1; }
+[[ -z "${api_scopes}" ]] && { echo >&2 "ERROR: api_scopes undefined."; usage 1; }
 
 for s in $(echo ${api_scopes} | tr ',' ' '); do
     scopes+="\"${s}\","

@@ -6,7 +6,7 @@
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-set -euo pipefail
+set -eo pipefail
 
 function usage() {
     cat <<END >&2
@@ -50,17 +50,14 @@ while getopts "e:a:i:r:hv?" opt; do
     esac
 done
 
-[[ -z ${user_id} ]] && {
-    echo >&2 "ERROR: no 'user_id' defined"
+[[ -z ${user_id} ]] && { echo >&2 "ERROR: no 'user_id' defined"
     exit 1
 }
-[[ -z ${reason_code} ]] && {
-    echo >&2 "ERROR: no 'reason_code' defined"
+[[ -z ${reason_code} ]] && { echo >&2 "ERROR: no 'reason_code' defined"
     exit 1
 }
 
-[[ -z ${access_token} ]] && {
-    echo >&2 -e "ERROR: no 'access_token' defined. \n open -a safari https://manage.auth0.com/#/apis/ \n export access_token=\`pbpaste\`"
+[[ -z ${access_token} ]] && { echo >&2 -e "ERROR: no 'access_token' defined. \n open -a safari https://manage.auth0.com/#/apis/ \n export access_token=\`pbpaste\`"
     exit 1
 }
 

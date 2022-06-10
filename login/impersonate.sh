@@ -51,22 +51,13 @@ while getopts "e:t:d:c:i:u:hv?" opt; do
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && {
-    echo >&2 "ERROR: AUTH0_DOMAIN undefined"
-    usage 1
-}
-[[ -z "${AUTH0_CLIENT_ID}" ]] && {
-    echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"
-    usage 1
-}
-[[ -z "${user_id}" ]] && {
-    echo >&2 "ERROR: user_id undefined"
-    usage 1
-}
-[[ -z "${impersonator_id}" ]] && {
-    echo >&2 "ERROR: impersonator_id undefined"
-    usage 1
-}
+[[ -z "${AUTH0_DOMAIN}" ]] && {  echo >&2 "ERROR: AUTH0_DOMAIN undefined";  usage 1;  }
+[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined";  usage 1; }
+
+[[ -z "${user_id}" ]] && { echo >&2 "ERROR: user_id undefined";   usage 1; }
+
+[[ -z "${impersonator_id}" ]] && { echo >&2 "ERROR: impersonator_id undefined";  usage 1; }
+
 
 declare BODY=$(
     cat <<EOL

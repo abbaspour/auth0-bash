@@ -6,7 +6,7 @@
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-set -euo pipefail
+set -eo pipefail
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
@@ -58,8 +58,7 @@ if [[ -z "${user_id}" ]]; then
     }
 fi
 
-[[ -z ${access_token+x} ]] && {
-    echo >&2 -e "ERROR: no 'access_token' defined. \nopen -a safari https://manage.auth0.com/#/apis/ \nexport access_token=\`pbpaste\`"
+[[ -z ${access_token+x} ]] && { echo >&2 -e "ERROR: no 'access_token' defined. \nopen -a safari https://manage.auth0.com/#/apis/ \nexport access_token=\`pbpaste\`"
     exit 1
 }
 

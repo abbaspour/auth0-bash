@@ -6,7 +6,7 @@
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-set -euo pipefail
+set -eo pipefail
 
 declare -i iterations=10000
 declare -i keylen=20
@@ -45,10 +45,8 @@ while getopts "p:s:i:l:a:hv?" opt; do
     esac
 done
 
-[[ -z "${password}" ]] && {
-    echo >&2 "ERROR: password undefined"
-    usage 1
-}
+[[ -z "${password}" ]] && { echo >&2 "ERROR: password undefined";  usage 1; }
+
 
 declare -r key=$(
     cat <<EOL | node

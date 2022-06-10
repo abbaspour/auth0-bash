@@ -9,32 +9,26 @@
 # Same origin interactive login in UL classic mode
 # NOTE: this is for training/demo purposes. `/usernamepassword/login` is not a CORS endpoint.
 
-set -euo pipefail
+set -eo pipefail
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
-command -v ack >/dev/null || {
-    echo >&2 "ERROR: ack not found"
+command -v ack >/dev/null || { echo >&2 "ERROR: ack not found"
     exit 3
 }
-command -v grep >/dev/null || {
-    echo >&2 "ERROR: grep not found"
+command -v grep >/dev/null || { echo >&2 "ERROR: grep not found"
     exit 3
 }
-command -v curl >/dev/null || {
-    echo >&2 "ERROR: curl not found"
+command -v curl >/dev/null || { echo >&2 "ERROR: curl not found"
     exit 3
 }
-command -v perl >/dev/null || {
-    echo >&2 "ERROR: perl not found"
+command -v perl >/dev/null || { echo >&2 "ERROR: perl not found"
     exit 3
 }
-command -v base64 >/dev/null || {
-    echo >&2 "ERROR: base64 not found"
+command -v base64 >/dev/null || { echo >&2 "ERROR: base64 not found"
     exit 3
 }
-command -v awk >/dev/null || {
-    echo >&2 "ERROR: awk not found"
+command -v awk >/dev/null || { echo >&2 "ERROR: awk not found"
     exit 3
 }
 
@@ -50,12 +44,10 @@ function urlencode() {
     done
 }
 
-function urldecode() {
-    echo -n $1 | perl -pe 's/\+/ /g; s/%([0-9a-f]{2})/chr(hex($1))/eig'
+function urldecode() { echo -n $1 | perl -pe 's/\+/ /g; s/%([0-9a-f]{2})/chr(hex($1))/eig'
 }
 
-function htmldecode() {
-    echo -n $1 | sed 's/&#34;/"/g'
+function htmldecode() { echo -n $1 | sed 's/&#34;/"/g'
 }
 
 declare AUTH0_REDIRECT_URI='https://jwt.io' # add this to "Allowed Callback URLs" of your application
@@ -117,22 +109,13 @@ while getopts "e:t:d:c:a:u:x:r:o:U:s:mhv?" opt; do
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && {
-    echo >&2 "ERROR: AUTH0_DOMAIN undefined"
-    usage 1
-}
-[[ -z "${AUTH0_CLIENT_ID}" ]] && {
-    echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"
-    usage 1
-}
-[[ -z "${USERNAME}" ]] && {
-    echo >&2 "ERROR: USERNAME undefined"
-    usage 1
-}
-[[ -z "${PASSWORD}" ]] && {
-    echo >&2 "ERROR: PASSWORD undefined"
-    usage 1
-}
+[[ -z "${AUTH0_DOMAIN}" ]] && {  echo >&2 "ERROR: AUTH0_DOMAIN undefined";  usage 1;  }
+[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined";  usage 1; }
+
+[[ -z "${USERNAME}" ]] && { echo >&2 "ERROR: USERNAME undefined";  usage 1; }
+
+[[ -z "${PASSWORD}" ]] && { echo >&2 "ERROR: PASSWORD undefined";  usage 1; }
+
 
 rm -f cookie.txt
 

@@ -39,13 +39,8 @@ while getopts "e:t:d:a::hv?" opt; do
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && {
-    echo >&2 "ERROR: AUTH0_DOMAIN undefined"
-    usage 1
-}
-[[ -z "${access_token}" ]] && {
-    echo >&2 "ERROR: access_token undefined"
-    usage 1
-}
+[[ -z "${AUTH0_DOMAIN}" ]] && {  echo >&2 "ERROR: AUTH0_DOMAIN undefined";  usage 1;  }
+[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined";  usage 1; }
+
 
 curl -s -H "Authorization: Bearer ${access_token}" https://${AUTH0_DOMAIN}/userinfo | jq '.'

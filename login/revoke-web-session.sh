@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -eo pipefail
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
@@ -45,15 +45,11 @@ while getopts "e:a:i:hv?" opt; do
     esac
 done
 
-[[ -z "${user_id}" ]] && {
-    echo >&2 "ERROR: no 'user_id' defined"
-    usage 1
-}
+[[ -z "${user_id}" ]] && { echo >&2 "ERROR: no 'user_id' defined";  usage 1; }
 
-[[ -z "${access_token}" ]] && {
-    echo >&2 -e "ERROR: no 'access_token' defined. \nopen -a safari https://manage.auth0.com/#/apis/ \nexport access_token=\`pbpaste\`"
-    usage 1
-}
+
+[[ -z "${access_token}" ]] && { echo >&2 -e "ERROR: no 'access_token' defined. \nopen -a safari https://manage.auth0.com/#/apis/ \nexport access_token=\`pbpaste\`";  usage 1; }
+
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 

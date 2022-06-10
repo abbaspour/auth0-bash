@@ -6,7 +6,7 @@
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-set -euo pipefail
+set -eo pipefail
 
 function usage() {
     cat <<END >&2
@@ -41,14 +41,10 @@ while getopts "e:t:d:c:hv?" opt; do
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && {
-    echo >&2 "ERROR: AUTH0_DOMAIN undefined."
-    usage 1
-}
-[[ -z "${AUTH0_CONNECTION}" ]] && {
-    echo >&2 "ERROR: AUTH0_CONNECTION undefined."
-    usage 1
-}
+[[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined.";  usage 1; }
+
+[[ -z "${AUTH0_CONNECTION}" ]] && { echo >&2 "ERROR: AUTH0_CONNECTION undefined.";  usage 1; }
+
 
 curl -s --request GET \
     -o sp-${AUTH0_DOMAIN}-${AUTH0_CONNECTION}-metadata.xml \

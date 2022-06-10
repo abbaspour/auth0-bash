@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -eo pipefail
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
@@ -75,8 +75,7 @@ done
 
 declare -r per_page=100
 
-[[ -z ${access_token+x} ]] && {
-    echo >&2 -e "ERROR: no 'access_token' defined. \nopen -a safari https://manage.auth0.com/#/apis/ \nexport access_token=\`pbpaste\`"
+[[ -z ${access_token+x} ]] && { echo >&2 -e "ERROR: no 'access_token' defined. \nopen -a safari https://manage.auth0.com/#/apis/ \nexport access_token=\`pbpaste\`"
     exit 1
 }
 
@@ -109,7 +108,5 @@ while [[ $((per_page * page)) -lt ${total} ]]; do
         --data-urlencode "include_fields=true" \
         ${AUTH0_DOMAIN_URL}api/v2/users)
     total=$(echo ${output} | jq -r '.total')
-    page=$((page + 1))
-    echo ${output} | jq -r ".users[] | select(.${FIELD_UID} != null and .${FIELD_GID} != null) | \"\(.${FIELD_USERNAME}):x:\(.${FIELD_UID}):\(.${FIELD_GID}):\(.name):\(.${FIELD_DIR}):\(.${FIELD_SHL})\"" >>${passwd_file}
-    echo ${output} | jq -r ".users[] | select(.${FIELD_UID} != null and .${FIELD_GID} != null) | \"\(.${FIELD_USERNAME}):*:18052:0:99999:7:::\"" >>${shadow_file}
+    page=$((page + 1)) echo ${output} | jq -r ".users[] | select(.${FIELD_UID} != null and .${FIELD_GID} != null) | \"\(.${FIELD_USERNAME}):x:\(.${FIELD_UID}):\(.${FIELD_GID}):\(.name):\(.${FIELD_DIR}):\(.${FIELD_SHL})\"" >>${passwd_file} echo ${output} | jq -r ".users[] | select(.${FIELD_UID} != null and .${FIELD_GID} != null) | \"\(.${FIELD_USERNAME}):*:18052:0:99999:7:::\"" >>${shadow_file}
 done

@@ -6,16 +6,10 @@
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-set -euo pipefail
+set -eo pipefail
 
-which curl >/dev/null || {
-    echo >&2 "error: curl not found"
-    exit 3
-}
-which jq >/dev/null || {
-    echo >&2 "error: jq not found"
-    exit 3
-}
+which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 function usage() {
@@ -63,22 +57,13 @@ while getopts "e:t:d:a:s:S:C:n:hv?" opt; do
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && {
-    echo >&2 "ERROR: AUTH0_DOMAIN undefined"
-    usage 1
-}
-[[ -z "${AUTH0_AUDIENCE}" ]] && {
-    echo >&2 "ERROR: AUTH0_AUDIENCE undefined"
-    usage 1
-}
-[[ -z "${state}" ]] && {
-    echo >&2 "ERROR: state undefined"
-    usage 1
-}
-[[ -z "${cookie}" ]] && {
-    echo >&2 "ERROR: cookie undefined"
-    usage 1
-}
+[[ -z "${AUTH0_DOMAIN}" ]] && {  echo >&2 "ERROR: AUTH0_DOMAIN undefined";  usage 1;  }
+[[ -z "${AUTH0_AUDIENCE}" ]] && { echo >&2 "ERROR: AUTH0_AUDIENCE undefined";  usage 1; }
+
+[[ -z "${state}" ]] && { echo >&2 "ERROR: state undefined";  usage 1; }
+
+[[ -z "${cookie}" ]] && { echo >&2 "ERROR: cookie undefined";  usage 1; }
+
 
 declare scopes_str=''
 for s in ${AUTH0_SCOPE}; do

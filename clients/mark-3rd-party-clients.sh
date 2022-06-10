@@ -7,7 +7,7 @@
 ##########################################################################################
 
 
-set -euo pipefail
+set -eo pipefail
 
 which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
 which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
@@ -41,10 +41,8 @@ while getopts "e:a:i:hv?" opt; do
     esac
 done
 
-[[ -z "${client_id}" ]] && {
-    echo >&2 "ERROR: client_id undefined."
-    usage 1
-}
+[[ -z "${client_id}" ]] && {  echo >&2 "ERROR: client_id undefined." ;  usage 1; }
+
 
 [[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
 

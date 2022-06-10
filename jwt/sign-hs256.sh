@@ -40,14 +40,10 @@ while getopts "f:s:a:hv?" opt; do
     esac
 done
 
-[[ -z "${file}" ]] && {
-    echo >&2 "ERROR: file undefined"
-    usage 1
-}
-[[ ! -f "${file}" ]] && {
-    echo >&2 "ERROR: unable to read file: ${file}"
-    usage 1
-}
+[[ -z "${file}" ]] && { echo >&2 "ERROR: file undefined";  usage 1; }
+
+[[ ! -f "${file}" ]] && { echo >&2 "ERROR: unable to read file: ${file}";  usage 1; }
+
 
 # header
 declare -r header=$(printf '{"alg": "%s", "typ": "JWT"}' "${algorithm}" | openssl base64 -e -A | tr '+' '-' | tr '/' '_' | sed -E s/=+$//)

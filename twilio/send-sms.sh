@@ -6,16 +6,10 @@
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-set -euo pipefail
+set -eo pipefail
 
-which curl >/dev/null || {
-    echo >&2 "error: curl not found"
-    exit 3
-}
-which jq >/dev/null || {
-    echo >&2 "error: jq not found"
-    exit 3
-}
+which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 declare TWILIO_SID=''
@@ -58,26 +52,16 @@ while getopts "e:f:t:m:s:x:hv?" opt; do
     esac
 done
 
-[[ -z "${TWILIO_SID}" ]] && {
-    echo >&2 "ERROR: TWILIO_SID undefined"
-    usage 1
-}
-[[ -z "${TWILIO_AUTH_TOKEN}" ]] && {
-    echo >&2 "ERROR: TWILIO_AUTH_TOKEN undefined"
-    usage 1
-}
-[[ -z "${TWILIO_FROM}" ]] && {
-    echo >&2 "ERROR: TWILIO_FROM undefined"
-    usage 1
-}
-[[ -z "${TWILIO_TO}" ]] && {
-    echo >&2 "ERROR: TWILIO_TO undefined"
-    usage 1
-}
-[[ -z "${MESSAGE}" ]] && {
-    echo >&2 "ERROR: MESSAGE undefined"
-    usage 1
-}
+[[ -z "${TWILIO_SID}" ]] && { echo >&2 "ERROR: TWILIO_SID undefined";  usage 1; }
+
+[[ -z "${TWILIO_AUTH_TOKEN}" ]] && { echo >&2 "ERROR: TWILIO_AUTH_TOKEN undefined";  usage 1; }
+
+[[ -z "${TWILIO_FROM}" ]] && { echo >&2 "ERROR: TWILIO_FROM undefined";  usage 1; }
+
+[[ -z "${TWILIO_TO}" ]] && { echo >&2 "ERROR: TWILIO_TO undefined";  usage 1; }
+
+[[ -z "${MESSAGE}" ]] && { echo >&2 "ERROR: MESSAGE undefined";  usage 1; }
+
 
 curl -X POST https://api.twilio.com/2010-04-01/Accounts/${TWILIO_SID}/Messages.json \
     --data-urlencode "Body=${MESSAGE}" \

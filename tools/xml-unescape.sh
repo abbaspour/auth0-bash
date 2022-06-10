@@ -15,8 +15,7 @@ function HTMLtoText() {
     LineOut="${LineOut//&quot;/'"'}"
     LineOut="${LineOut//&#39;/"'"}"
     LineOut="${LineOut//&ldquo;/'"'}" # TODO: ASCII/ISO for opening quote
-    LineOut="${LineOut//&rdquo;/'"'}" # TODO: ASCII/ISO for closing quote
-    echo $LineOut
+    LineOut="${LineOut//&rdquo;/'"'}" # TODO: ASCII/ISO for closing quote echo $LineOut
 }
 
 HTMLtoText "$*"

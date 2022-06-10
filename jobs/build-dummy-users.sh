@@ -6,7 +6,7 @@
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-set -euo pipefail
+set -eo pipefail
 
 which curl >/dev/null || {
   echo >&2 "error: curl not found"
@@ -135,8 +135,7 @@ EOL
 EOL
     )
     ;;
-  *)
-    echo >&2 "Unsupported algorithm: $algorithm"
+  *) echo >&2 "Unsupported algorithm: $algorithm"
     usage 1
     ;;
   esac

@@ -6,16 +6,10 @@
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-set -euo pipefail
+set -eo pipefail
 
-which curl >/dev/null || {
-    echo >&2 "error: curl not found"
-    exit 3
-}
-which jq >/dev/null || {
-    echo >&2 "error: jq not found"
-    exit 3
-}
+which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 function usage() {
@@ -46,17 +40,12 @@ while getopts "e:f:hv?" opt; do
     esac
 done
 
-[[ -z "${contextFile}" ]] && {
-    echo >&2 "ERROR: Context file undefined"
-    usage 1
-}
-[[ -z "${liquidFile}" ]] && {
-    echo >&2 "ERROR: Liquid file undefined"
-    usage 1
-}
+[[ -z "${contextFile}" ]] && { echo >&2 "ERROR: Context file undefined";  usage 1; }
 
-[[ -d "${DIR}/node_modules/liquidjs/" ]] || {
-    echo >&2 "ERROR: missing module. Run: 'npm i liquidjs'"
+[[ -z "${liquidFile}" ]] && { echo >&2 "ERROR: Liquid file undefined";  usage 1; }
+
+
+[[ -d "${DIR}/node_modules/liquidjs/" ]] || { echo >&2 "ERROR: missing module. Run: 'npm i liquidjs'"
     exit 2
 }
 

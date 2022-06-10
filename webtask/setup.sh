@@ -6,21 +6,14 @@
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-set -euo pipefail
+set -eo pipefail
 
-which curl >/dev/null || {
-    echo >&2 "error: curl not found"
-    exit 3
-}
-which jq >/dev/null || {
-    echo >&2 "error: jq not found"
-    exit 3
-}
+which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
-which wt >/dev/null || {
-    echo >&2 "wt-cli not installed. run: npm install -g wt-cli"
+which wt >/dev/null || { echo >&2 "wt-cli not installed. run: npm install -g wt-cli"
     exit 1
 }
 
@@ -59,10 +52,8 @@ while getopts "e:t:D48hv?" opt; do
     esac
 done
 
-[[ -z "${tenant}" ]] && {
-    echo >&2 "ERROR: tenant undefined"
-    usage 1
-}
+[[ -z "${tenant}" ]] && { echo >&2 "ERROR: tenant undefined";  usage 1; }
+
 
 declare -r region=$(echo ${tenant} | awk -F@ '{print $2}')
 declare -r container=$(echo ${tenant} | awk -F@ '{print $1}')

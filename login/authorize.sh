@@ -6,16 +6,10 @@
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-set -euo pipefail
+set -eo pipefail
 
-which curl >/dev/null || {
-    echo >&2 "error: curl not found"
-    exit 3
-}
-which jq >/dev/null || {
-    echo >&2 "error: jq not found"
-    exit 3
-}
+which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
 ##
@@ -83,18 +77,15 @@ random32() {
     for i in {0..32}; do echo -n $((RANDOM % 10)); done
 }
 
-base64URLEncode() {
-    echo -n "$1" | base64 -w0 | tr '+' '-' | tr '/' '_' | tr -d '='
+base64URLEncode() { echo -n "$1" | base64 -w0 | tr '+' '-' | tr '/' '_' | tr -d '='
 }
 
 gen_code_verifier() {
-    readonly rand=$(random32)
-    echo $(base64URLEncode ${rand})
+    readonly rand=$(random32) echo $(base64URLEncode ${rand})
 }
 
 gen_code_challenge() {
-    readonly cc=$(echo -n "$1" | openssl dgst -binary -sha256)
-    echo $(base64URLEncode "$cc")
+    readonly cc=$(echo -n "$1" | openssl dgst -binary -sha256) echo $(base64URLEncode "$cc")
 }
 
 declare AUTH0_DOMAIN=''
@@ -148,14 +139,9 @@ while getopts "e:t:d:c:a:r:R:f:u:p:s:b:M:S:n:H:O:i:l:E:mCoPhv?" opt; do
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && {
-    echo >&2 "ERROR: AUTH0_DOMAIN undefined"
-    usage 1
-}
-[[ -z "${AUTH0_CLIENT_ID}" ]] && {
-    echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"
-    usage 1
-}
+[[ -z "${AUTH0_DOMAIN}" ]] && {  echo >&2 "ERROR: AUTH0_DOMAIN undefined";  usage 1;  }
+[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined";  usage 1; }
+
 
 [[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"
 
@@ -166,13 +152,11 @@ implicit) response_param="response_type=$(urlencode "${AUTH0_RESPONSE_TYPE}")" ;
 *code) response_param='response_type=code' ;;
 pkce | hybrid)
     code_verifier=$(gen_code_verifier)
-    code_challenge=$(gen_code_challenge "${code_verifier}")
-    echo "code_verifier=${code_verifier}"
+    code_challenge=$(gen_code_challenge "${code_verifier}") echo "code_verifier=${code_verifier}"
     response_param="code_challenge_method=S256&code_challenge=${code_challenge}"
     if [[ ${opt_flow} == 'pkce' ]]; then response_param+='&response_type=code'; else response_param+='&response_type=code%20token%20id_token'; fi
     ;;
-*)
-    echo >&2 "ERROR: unknown flow: ${opt_flow}"
+*) echo >&2 "ERROR: unknown flow: ${opt_flow}"
     usage 1
     ;;
 esac
@@ -191,9 +175,7 @@ declare authorize_url="${AUTH0_DOMAIN}/${authorization_endpoint}?client_id=${AUT
 [[ -n "${org_id}" ]] && authorize_url+="&organization=$(urlencode "${org_id}")"
 [[ -n "${ui_locales}" ]] && authorize_url+="&ui_locales=${ui_locales}"
 
-if [[ ${opt_pp} -eq 0 ]]; then
-    echo "${authorize_url}"
-else
+if [[ ${opt_pp} -eq 0 ]]; then echo "${authorize_url}" echo
     echo "${authorize_url}" | sed -E 's/&/ &\
       /g'
 fi
