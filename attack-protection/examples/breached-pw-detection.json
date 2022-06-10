@@ -1,0 +1,12 @@
+{
+  "enabled": true,
+  "shields": [
+    "admin_notification",
+    "user_notification",
+    "block"
+  ],
+  "admin_notification_frequency": [
+    "immediately"
+  ],
+  "method": "standard"
+}
