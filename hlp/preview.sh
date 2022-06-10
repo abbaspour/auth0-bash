@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -8,9 +8,9 @@
 
 set -eo pipefail
 
-which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
-which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 ##
 # prerequisite:
@@ -30,7 +30,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r conn
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
         -c client_id   # Auth0 client ID
-        -a audiance    # Audience
+        -a audience    # Audience
         -r realm       # Connection
         -R types       # comma separated response types (default is "${AUTH0_RESPONSE_TYPE}")
         -f flow        # OAuth2 flow type (implicit,code,pkce)

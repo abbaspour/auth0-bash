@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -8,11 +8,11 @@
 
 set -eo pipefail
 
-which curl >/dev/null || {
+command -v curl >/dev/null || {
   echo >&2 "error: curl not found"
   exit 3
 }
-which jq >/dev/null || {
+command -v jq >/dev/null || {
   echo >&2 "error: jq not found"
   exit 3
 }
@@ -106,10 +106,7 @@ EOL
     )
     ;;
   argon2)
-    which >/dev/null argon2 || {
-      echo >&2 "argon2 cli not installed"
-      usage 1
-    }
+    command -v argon2 >/dev/null  || { echo >&2 "argon2 cli not installed"; usage 3; }
     declare -r password_hash=$(echo -n "${password}" | argon2 ${salt_prefix} -e)
     custom_password_hash_field=$(
       cat <<EOL

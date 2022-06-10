@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -8,8 +8,8 @@
 
 set -eo pipefail
 
-which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
-which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 
 function usage() {
     cat <<END >&2
@@ -39,7 +39,7 @@ while getopts "e:A:c:a:s:hv?" opt; do
     c) client_id=${OPTARG} ;;
     a) audience=${OPTARG} ;;
     s) api_scopes=${OPTARG} ;;
-    v) opt_verbose=1 ;; #set -x;;
+    v) set -x;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
     esac
@@ -54,13 +54,12 @@ declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | 
 [[ -z "${audience}" ]] && { echo >&2 "ERROR: audience undefined.";  usage 1; }
 [[ -z "${api_scopes}" ]] && { echo >&2 "ERROR: api_scopes undefined."; usage 1; }
 
-for s in $(echo ${api_scopes} | tr ',' ' '); do
+for s in $(echo "${api_scopes}" | tr ',' ' '); do
     scopes+="\"${s}\","
 done
 scopes=${scopes%?}
 
-declare BODY=$(
-    cat <<EOL
+declare BODY=$(cat <<EOL
 {
   "client_id": "${client_id}",
   "audience": "${audience}",
@@ -73,4 +72,4 @@ curl -k --request POST \
     -H "Authorization: Bearer ${access_token}" \
     --data "${BODY}" \
     --header 'content-type: application/json' \
-    --url ${AUTH0_DOMAIN_URL}api/v2/access-policies
+    --url "${AUTH0_DOMAIN_URL}api/v2/access-policies"

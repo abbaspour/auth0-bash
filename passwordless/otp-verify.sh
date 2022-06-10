@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -12,9 +12,9 @@
 
 set -eo pipefail
 
-which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
-which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 declare AUTH0_SCOPE='openid email'
 
@@ -43,10 +43,14 @@ END
 
 declare AUTH0_DOMAIN=''
 declare AUTH0_CLIENT_ID=''
+declare AUTH0_CLIENT_SECRET=''
 declare AUTH0_CONNECTION=''
 
 declare username=''
 declare otp_code=''
+declare opt_mgmnt=''
+
+[[ -f "${DIR}/.env" ]] && . "${DIR}/.env"
 
 while getopts "e:t:d:c:a:x:u:p:s:o:mhv?" opt; do
     case ${opt} in
@@ -56,18 +60,12 @@ while getopts "e:t:d:c:a:x:u:p:s:o:mhv?" opt; do
     c) AUTH0_CLIENT_ID=${OPTARG} ;;
     x) AUTH0_CLIENT_SECRET=${OPTARG} ;;
     a) AUTH0_AUDIENCE=${OPTARG} ;;
-    u)
-        username=${OPTARG}
-        AUTH0_CONNECTION='email'
-        ;;
-    p)
-        username=${OPTARG}
-        AUTH0_CONNECTION='sms'
-        ;;
+    u) username=${OPTARG}; AUTH0_CONNECTION='email' ;;
+    p) username=${OPTARG}; AUTH0_CONNECTION='sms' ;;
     o) otp_code=${OPTARG} ;;
-    s) AUTH0_SCOPE=$(echo ${OPTARG} | tr ',' ' ') ;;
+    s) AUTH0_SCOPE=$(echo "${OPTARG}" | tr ',' ' ') ;;
     m) opt_mgmnt=1 ;;
-    v) opt_verbose=1 ;; #set -x;;
+    v) set -x;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
     esac

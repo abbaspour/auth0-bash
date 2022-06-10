@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -8,10 +8,10 @@
 
 set -eo pipefail
 
-which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
-which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 declare factor=''
 declare value=''
@@ -55,8 +55,7 @@ declare -r EXPECTED_SCOPE="update:guardian_factors"
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
-declare BODY=$(
-    cat <<EOL
+declare BODY=$( cat <<EOL
 {
   "enabled": ${value}
 }
@@ -67,4 +66,4 @@ curl -v -H "Authorization: Bearer ${access_token}" \
     --request PUT \
     --data "${BODY}" \
     --header 'content-type: application/json' \
-    --url ${AUTH0_DOMAIN_URL}api/v2/guardian/factors/${factor}
+    --url "${AUTH0_DOMAIN_URL}api/v2/guardian/factors/${factor}"

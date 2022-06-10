@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -8,7 +8,7 @@
 
 set -ueo pipefail
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
     cat <<END >&2
@@ -23,7 +23,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-i user_id] [-i user_id] [-p protocl
         -v                # verbose
 
 eg,
-     $0 -t amin01@au -c aIioQEeY7nJdX78vcQWDBcAqTABgKnZl -i 'auth0|user' -u 'auth0|manager' 
+     $0 -t amin01@au -c aIioQEeY7nJdX78vcQWDBcAqTABgKnZl -i 'auth0|user' -u 'auth0|manager'
 END
     exit $1
 }
@@ -59,12 +59,11 @@ done
 [[ -z "${impersonator_id}" ]] && { echo >&2 "ERROR: impersonator_id undefined";  usage 1; }
 
 
-declare BODY=$(
-    cat <<EOL
+declare BODY=$( cat <<EOL
 {
   protocol: "${protocol}",
   impersonator_id: "${impersonator_id}",
-  client_id: "${client_id}",
+  client_id: "${AUTH0_CLIENT_ID}",
   additionalParameters: [
     "response_type": "code",
     "state": "STATE"
@@ -75,4 +74,4 @@ EOL
 
 curl -s --header 'content-type: application/json' \
     --header "Authorization: Bearer ${access_token}" \
-    -d "${BODY}" https://${AUTH0_DOMAIN}/users/{user_id}/impersonate
+    -d "${BODY}" "https://${AUTH0_DOMAIN}/users/{user_id}/impersonate"

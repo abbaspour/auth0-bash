@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -8,7 +8,7 @@
 
 set -eo pipefail
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 urlencode() {
     local length="${#1}"
@@ -97,8 +97,7 @@ done
 
 [[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"
 
-declare BODY=$(
-    cat <<EOL
+declare BODY=$( cat <<EOL
 {
     "client_id":"${AUTH0_CLIENT_ID}",
     "username":"${USERNAME}",

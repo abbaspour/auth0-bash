@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -13,7 +13,7 @@ function usage() {
 USAGE: $0 [-u username] [-l] [-v|-h]
         -u username    # username
         -l             # just list
-        -p page        # page (default 1) 
+        -p page        # page (default 1)
         -h|?           # usage
         -v             # verbose
 

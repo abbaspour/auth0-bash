@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -8,9 +8,9 @@
 
 set -eo pipefail
 
-which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
-which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 declare AUTH0_SCOPE='openid profile email'
 declare AUTH0_CONNECTION='Username-Password-Authentication'
@@ -73,8 +73,7 @@ done
 declare secret=''
 [[ -n "${AUTH0_CLIENT_SECRET}" ]] && secret="\"client_secret\": \"${AUTH0_CLIENT_SECRET}\","
 
-declare BODY=$(
-    cat <<EOL
+declare BODY=$( cat <<EOL
 {
     "client_id": "${AUTH0_CLIENT_ID}",
     ${secret}

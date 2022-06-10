@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -8,7 +8,7 @@
 
 set -ueo pipefail
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
     cat <<END >&2
@@ -57,8 +57,7 @@ done
 [[ -z "${email}" ]] && { echo >&2 "ERROR: email undefined";  usage 1; }
 
 
-declare BODY=$(
-    cat <<EOL
+declare BODY=$( cat <<EOL
 {
     "client_id": "${AUTH0_CLIENT_ID}",
     "email": "${email}",

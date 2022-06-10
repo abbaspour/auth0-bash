@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -18,7 +18,7 @@ USAGE: $0 [-e env] [-a access_token] [-u user_id] [-v|-h]
         -v             # verbose
 
 eg,
-     $0 -u 'auth0|5b15eef91c08db5762548fd1' 
+     $0 -u 'auth0|5b15eef91c08db5762548fd1'
 END
     exit $1
 }

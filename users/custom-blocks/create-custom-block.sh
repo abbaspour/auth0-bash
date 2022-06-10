@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -69,8 +69,7 @@ declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | 
 
 declare -r created_at=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
 
-declare BODY=$(
-    cat <<EOL
+declare BODY=$( cat <<EOL
 {
   "reason_code": "${reason_code}"
 }

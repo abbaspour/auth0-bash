@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -8,9 +8,9 @@
 
 set -eo pipefail
 
-which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
-which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 declare AUTH0_SCOPE='openid profile email'
 declare AUTH0_CONNECTION='Username-Password-Authentication'
@@ -24,7 +24,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-i
         -c client_id          # Auth0 client ID
         -x secret             # Auth0 client secret
         -i subject_token      # Subject base64 access_token(default)/id_token
-        -a audiance           # Audience
+        -a audience           # Audience
         -s scopes             # comma separated list of scopes (default is "${AUTH0_SCOPE}")
         -I                    # mark subject_token is id_token
         -h|?                  # usage
@@ -75,8 +75,7 @@ done
 declare secret=''
 [[ -n "${AUTH0_CLIENT_SECRET}" ]] && secret="\"client_secret\": \"${AUTH0_CLIENT_SECRET}\""
 
-declare BODY=$(
-    cat <<EOL
+declare BODY=$( cat <<EOL
 {
             "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
             "subject_token" : "${subject_token}",

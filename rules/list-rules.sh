@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -8,10 +8,10 @@
 
 set -eo pipefail
 
-which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
-which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 declare rule_stage='login_success'
 
@@ -20,13 +20,13 @@ function usage() {
 USAGE: $0 [-e env] [-a access_token] [-v|-h]
         -e file     # .env file location (default cwd)
         -a token    # access_token. default from environment variable
-        -s stage    # filter by stage: login_success, login_failure, pre_authorize (defaults to "${rule_stage}") 
+        -s stage    # filter by stage: login_success, login_failure, pre_authorize (defaults to "${rule_stage}")
         -p          # pretty print
         -h|?        # usage
         -v          # verbose
 
 eg,
-     $0 
+     $0
 END
     exit $1
 }

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -8,7 +8,7 @@
 
 
 set -eo pipefail
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
   cat <<END >&2
@@ -107,8 +107,7 @@ fi
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
 
-declare BODY=$(
-  cat <<EOL
+declare BODY=$( cat <<EOL
 {
   ${client_id_field}
   "name": "${client_name}",

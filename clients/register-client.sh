@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -13,10 +13,10 @@
 
 set -eo pipefail
 
-which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
-which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
+command -v curl >/dev/null || { echo >&2 "error: curl not found"; exit 3; }
+command -v jq >/dev/null || { echo >&2 "error: jq not found"; exit 3; }
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
     cat <<END >&2
@@ -62,8 +62,7 @@ done
 
 declare -r redirect_uris=$(echo ${input_redirect_uris} | sed 's/,/","/g')
 
-declare BODY=$(
-    cat <<EOL
+declare BODY=$( cat <<EOL
 {
   "client_name": "${client_name}",
   "redirect_uris": ["${redirect_uris}"],

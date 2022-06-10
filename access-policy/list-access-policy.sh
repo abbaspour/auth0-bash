@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -8,8 +8,8 @@
 
 set -eo pipefail
 
-which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
-which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 
 function usage() {
     cat <<END >&2
@@ -35,7 +35,7 @@ while getopts "e:A:i:hv?" opt; do
     e) source ${OPTARG} ;;
     A) access_token=${OPTARG} ;;
     i) uri="/${OPTARG}" ;;
-    v) opt_verbose=1 ;; #set -x;;
+    v) set -x;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
     esac
@@ -47,4 +47,4 @@ declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | 
 
 curl -k -s --request GET \
     -H "Authorization: Bearer ${access_token}" \
-    --url ${AUTH0_DOMAIN_URL}api/v2/access-policies${uri} | jq .
+    --url "${AUTH0_DOMAIN_URL}api/v2/access-policies${uri}" | jq .

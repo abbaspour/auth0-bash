@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -8,9 +8,9 @@
 
 set -eo pipefail
 
-which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
-which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
     cat <<END >&2
@@ -22,7 +22,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-a audience] [-s scopes] [-S state] 
         -s scopes      # scopes to consent to
         -S state       # state
         -C cookie      # auth0 cookie from /authorize page
-        -n             # no consent, i.e. decline 
+        -n             # no consent, i.e. decline
         -h|?           # usage
         -v             # verbose
 

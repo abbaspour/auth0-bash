@@ -2,7 +2,7 @@
 
 set -eo pipefail
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 declare PASSWD_OUTPUT='passwd'
 declare SHADOW_OUTPUT='shadow'

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -8,10 +8,10 @@
 
 set -eo pipefail
 
-which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
-which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
     cat <<END >&2
@@ -23,7 +23,7 @@ USAGE: $0 [-e env] [-a access_token] [-n name] [-v|-h]
         -v              # verbose
 
 eg,
-     $0 -n "my-tenant" 
+     $0 -n "my-tenant"
 END
     exit $1
 }
@@ -53,8 +53,7 @@ declare -r EXPECTED_SCOPE="create:tenants"
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
-declare BODY=$(
-    cat <<EOL
+declare BODY=$( cat <<EOL
 {
   "name": "${tenant_name}"
 }

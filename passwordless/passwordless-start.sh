@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -8,8 +8,7 @@
 
 set -eo pipefail
 
-which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
-which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
 readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 declare AUTH0_SCOPE='openid email'
@@ -31,7 +30,6 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x secret] [-r email|
         -U redirect    # redirect_uri
         -l language    # preferred language. default is ${language}
         -m             # Management API audience
-        -P             # Preview mode
         -h|?           # usage
         -v             # verbose
 
@@ -43,6 +41,8 @@ END
 
 declare AUTH0_DOMAIN=''
 declare AUTH0_CLIENT_ID=''
+declare AUTH0_CLIENT_SECRET=''
+declare AUTH0_AUDIENCE=''
 declare AUTH0_CONNECTION=''
 declare redirect_uri='https://jwt.io'
 
@@ -50,6 +50,7 @@ declare email=''
 declare phone_number=''
 declare send='code'
 declare language='en'
+declare opt_mgmnt=''
 
 [[ -f ${DIR}/.env ]] && . "${DIR}/.env"
 
@@ -68,9 +69,6 @@ while getopts "e:t:d:c:x:a:r:R:u:p:s:U:l:mCPohv?" opt; do
     l) language=${OPTARG} ;;
     s) AUTH0_SCOPE=$(echo "${OPTARG}" | tr ',' ' ') ;;
     U) redirect_uri=${OPTARG} ;;
-    C) opt_clipboard=1 ;;
-    o) opt_open=1 ;;
-    P) opt_preview=1 ;;
     m) opt_mgmnt=1 ;;
     v) opt_verbose=1 ;; #set -x;;
     h | ?) usage 0 ;;

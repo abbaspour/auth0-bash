@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -8,7 +8,7 @@
 
 set -eo pipefail
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 urlencode() {
     local length="${#1}"
@@ -43,7 +43,7 @@ USAGE: $0 [-e env] [-f file] [-c client_id] [-r connection] [-o origin] [-u call
         -v             # verbose
 
 eg,
-     $0 -c y4KJ1oOdLyx5lwILRInTbCCx221VCduh -m 
+     $0 -c y4KJ1oOdLyx5lwILRInTbCCx221VCduh -m
 END
     exit $1
 }

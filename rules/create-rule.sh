@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -8,10 +8,10 @@
 
 set -eo pipefail
 
-which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
-which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 declare rule_stage='login_success'
 declare rule_order=1
@@ -29,7 +29,7 @@ USAGE: $0 [-e env] [-a access_token] [-f file] [-n name] [-o order] [-s stage] [
         -v          # verbose
 
 eg,
-     $0 -n test -f test.js -o 10 
+     $0 -n test -f test.js -o 10
 END
     exit $1
 }
@@ -70,8 +70,7 @@ declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | 
 
 declare script_single_line=$(sed 's/$/\\\\n/' ${script_file} | tr -d '\n')
 
-declare BODY=$(
-    cat <<EOL
+declare BODY=$( cat <<EOL
 {
   "name": "${rule_name}",
   "script": "${script_single_line}",

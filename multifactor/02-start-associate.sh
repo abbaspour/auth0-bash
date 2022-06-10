@@ -2,8 +2,9 @@
 
 set -eo pipefail
 
-which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
-which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }
+command -v curl >/dev/null || { echo >&2 "error: curl not found"; exit 3; }
+command -v jq >/dev/null || { echo >&2 "error: jq not found"; exit 3; }
+
 readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
@@ -67,7 +68,7 @@ if [ "${authenticator_type}" == "otp" ]; then
         qrencode -o qr.png "${barcode_uri}"
         open qr.png
     fi
-else 
+else
     oob_code=$(echo "${response_json}" | jq -r '.oob_code') echo "export oob_code=\"${oob_code}\""
 fi
 

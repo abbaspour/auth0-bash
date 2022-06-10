@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -9,8 +9,10 @@
 
 set -eo pipefail
 
-which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
-which jq > /dev/null || { echo >&2 "error: jq not found"; exit 3; }declare -r DIR=$(dirname "${BASH_SOURCE[0]}")
+command -v curl >/dev/null || { echo >&2 "error: curl not found"; exit 3; }
+command -v jq >/dev/null || { echo >&2 "error: jq not found"; exit 3; }
+
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 
 
@@ -36,7 +38,7 @@ while getopts "e:a:i:hv?" opt; do
     e) source ${OPTARG} ;;
     a) access_token=${OPTARG} ;;
     i) connection_id=${OPTARG} ;;
-    v) opt_verbose=1 ;; #set -x;;
+    v) set -x;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
     esac

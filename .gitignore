@@ -8,6 +8,5 @@ cookie.txt
 .idea
 yarn.lock
 package-lock.json
-export-management-at.sh
 qr.png
 login/apps.txt

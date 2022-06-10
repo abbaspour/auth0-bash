@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -8,8 +8,8 @@
 
 set -eo pipefail
 
-which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
-which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 
 function usage() {
     cat <<END >&2
@@ -17,7 +17,7 @@ USAGE: $0 [-e env] [-a access_token] [-p primary] [-s secondary] [-v|-h]
         -e file        # .env file location (default cwd)
         -a token       # Access Token
         -i user_id     # primary user_id
-        -p provider    # second user's provider 
+        -p provider    # second user's provider
         -s user_id     # secondary user_id
         -h|?           # usage
         -v             # verbose

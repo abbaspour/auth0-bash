@@ -2,7 +2,7 @@
 
 set -eo pipefail
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
     cat <<END >&2
@@ -14,7 +14,7 @@ USAGE: $0 [-e env] [-a access_token] [-i user_id] [-v|-h]
         -v          # verbose
 
 eg,
-     $0 -i 'auth0|b0dec5bdba02248abd51388' 
+     $0 -i 'auth0|b0dec5bdba02248abd51388'
 END
     exit $1
 }

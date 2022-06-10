@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -8,11 +8,11 @@
 
 set -eo pipefail
 
-which curl >/dev/null || {
+command -v curl >/dev/null || {
   echo >&2 "error: curl not found"
   exit 3
 }
-which jq >/dev/null || {
+command -v jq >/dev/null || {
   echo >&2 "error: jq not found"
   exit 3
 }
@@ -67,8 +67,7 @@ declare -r EXPECTED_SCOPE="update:branding"
 
 declare -r AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
 
-declare BODY=$(
-  cat <<EOL
+declare BODY=$( cat <<EOL
 {
   "colors": {
     "primary": "${primary}",

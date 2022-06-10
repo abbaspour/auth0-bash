@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -8,7 +8,7 @@
 
 set -eo pipefail
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 declare AUTH0_CLIENT='{"name":"auth0.js","version":"9.0.2"}'
 declare AUTH0_CLIENT_B64=$(echo -n ${AUTH0_CLIENT} | base64)
@@ -87,8 +87,7 @@ done
 [[ -z "${PASSWORD}" ]] && { echo >&2 "ERROR: PASSWORD undefined.";  usage 1; }
 
 
-declare BODY=$(
-    cat <<EOL
+declare BODY=$( cat <<EOL
 {
     "client_id":"${AUTH0_CLIENT_ID}",
     "username":"${USERNAME}",

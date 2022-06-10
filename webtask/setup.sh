@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##########################################################################################
 # Author: Auth0
@@ -8,14 +8,11 @@
 
 set -eo pipefail
 
-which curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
-which jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+command -v wt >/dev/null || { echo >&2 "wt-cli not installed. run: npm install -g wt-cli"; exit 3; }
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
-
-which wt >/dev/null || { echo >&2 "wt-cli not installed. run: npm install -g wt-cli"
-    exit 1
-}
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
     cat <<END >&2
