@@ -54,12 +54,11 @@ done
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
 declare -r email=$(curl -s --get -H "Authorization: Bearer ${access_token}" -H 'content-type: application/json' \
-    ${AUTH0_DOMAIN_URL}api/v2/users/${user_id} | jq -r .email)
+    "${AUTH0_DOMAIN_URL}api/v2/users/${user_id}" | jq -r .email)
 
 echo "Email: ${email}"
 
-declare DATA=$(
-    cat <<EOF
+declare DATA=$(cat <<EOF
 {
     "email":"${email}"
 }
@@ -70,4 +69,4 @@ curl -X PATCH \
     -H "Authorization: Bearer ${access_token}" \
     -H 'content-type: application/json' \
     -d "${DATA}" \
-    ${AUTH0_DOMAIN_URL}api/v2/users/${user_id}
+    "${AUTH0_DOMAIN_URL}api/v2/users/${user_id}"

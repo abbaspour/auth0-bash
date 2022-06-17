@@ -68,8 +68,7 @@ declare -r EXPECTED_SCOPE="update:users"
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
-declare DATA=$(
-    cat <<EOF
+declare DATA=$(cat <<EOF
 {
     "user_metadata":{ "plan": "gold4" }
 }
@@ -80,4 +79,4 @@ curl -s -X PATCH \
     -H "Authorization: Bearer ${access_token}" \
     -H 'content-type: application/json' \
     -d "${DATA}" \
-    ${AUTH0_DOMAIN_URL}api/v2/users/${user_id} | jq .
+    "${AUTH0_DOMAIN_URL}api/v2/users/${user_id}" | jq .

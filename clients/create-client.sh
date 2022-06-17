@@ -56,23 +56,14 @@ while getopts "e:a:n:t:i:p:c:3hv?" opt; do
   esac
 done
 
-[[ -z "${access_token}" ]] && {
-  echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "
-  usage 1
-}
+[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
 
 declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
 declare -r EXPECTED_SCOPE="create:clients"
 [[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
 
-[[ -z "${client_name}" ]] && {
-  echo >&2 "ERROR: client_name undefined."
-  usage 1
-}
-[[ -z "${client_type}" ]] && {
-  echo >&2 "ERROR: client_type undefined."
-  usage 1
-}
+[[ -z "${client_name}" ]] && { echo >&2 "ERROR: client_name undefined."; usage 1; }
+[[ -z "${client_type}" ]] && { echo >&2 "ERROR: client_type undefined."; usage 1; }
 
 if [[ -n "${public_key_file}" && -f "${public_key_file}" ]]; then
   readonly credential_name=$(basename "${public_key_file}" .pem)

@@ -58,14 +58,8 @@ while getopts "e:t:d:c:a:x:k:f:mhv?" opt; do
   esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && {
-  echo >&2 "ERROR: AUTH0_DOMAIN undefined"
-  usage 1
-}
-[[ -z "${AUTH0_CLIENT_ID}" ]] && {
-  echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"
-  usage 1
-}
+[[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
+[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
 
 [[ -n "${AUTH0_CLIENT_SECRET}" ]] && secret="\"client_secret\":\"${AUTH0_CLIENT_SECRET}\","
 [[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"

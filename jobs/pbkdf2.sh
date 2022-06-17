@@ -8,6 +8,8 @@
 
 set -eo pipefail
 
+command -v node >/dev/null || { echo >&2 "error: node not found";  exit 3; }
+
 declare -i iterations=10000
 declare -i keylen=20
 declare algorithm='sha256'
@@ -19,7 +21,7 @@ USAGE: $0 [-e file] [-f file] [-v|-h]
         -s salt        # salt (base64). defaults to a random value
         -i iter        # iterations (defaults to $iterations)
         -l keylen      # output key length (defaults to $keylen)
-        -a algorithm   # hashing algorithm such as sha1, sha256, md, etc (defaults to $algorithm)
+        -a algorithm   # digest algorithm such as sha1, sha256, md, etc (defaults to $algorithm)
         -h|?           # usage
         -v             # verbose
 
@@ -48,8 +50,7 @@ done
 [[ -z "${password}" ]] && { echo >&2 "ERROR: password undefined";  usage 1; }
 
 
-declare -r key=$(
-    cat <<EOL | node
+declare -r key=$(cat <<EOL | node
 const crypto = require('crypto');
 const key = crypto.pbkdf2Sync("${password}", Buffer.from("${salt}", 'base64'), ${iterations}, ${keylen}, "${algorithm}");
 console.log(key.toString('base64'));

@@ -56,18 +56,12 @@ declare -r EXPECTED_SCOPE="update:resource_servers"
 [[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
 
 [[ -z "${api_id}" ]] && { echo >&2 "ERROR: api_id undefined.";  usage 1; }
-
-[[ -z ${filed+x} ]] && { echo >&2 "ERROR: no 'filed' defined"
-    exit 1
-}
-[[ -z ${value+x} ]] && { echo >&2 "ERROR: no 'value' defined"
-    exit 1
-}
+[[ -z ${filed+x} ]] && { echo >&2 "ERROR: no 'filed' defined"; exit 1; }
+[[ -z ${value+x} ]] && { echo >&2 "ERROR: no 'value' defined"; exit 1; }
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
-declare DATA=$(
-    cat <<EOF
+declare DATA=$(cat <<EOF
 {
     "${filed}":${value}
 }

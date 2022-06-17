@@ -56,10 +56,7 @@ while getopts "e:a:p:b:i:l:f:hv?" opt; do
   esac
 done
 
-[[ -z "${access_token}" ]] && {
-  echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "
-  usage 1
-}
+[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
 
 declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
 declare -r EXPECTED_SCOPE="update:branding"
@@ -86,4 +83,4 @@ curl --request PATCH \
   -H "Authorization: Bearer ${access_token}" \
   --data "${BODY}" \
   --header 'content-type: application/json' \
-  --url ${AUTH0_DOMAIN_URL}api/v2/branding
+  --url "${AUTH0_DOMAIN_URL}api/v2/branding"

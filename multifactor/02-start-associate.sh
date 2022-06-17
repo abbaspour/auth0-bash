@@ -63,12 +63,15 @@ readonly response_json=$(curl -s -H "Authorization: Bearer ${mfa_token}" --heade
 
 if [ "${authenticator_type}" == "otp" ]; then
     secret=$(echo "${response_json}" | jq -r '.secret')
-    barcode_uri=$(echo "${response_json}" | jq -r '.barcode_uri') echo "secret=\"${secret}\"" echo "barcode_uri=\"${secret}\""
+    barcode_uri=$(echo "${response_json}" | jq -r '.barcode_uri')
+    echo "secret=\"${secret}\""
+    echo "barcode_uri=\"${secret}\""
     if [[ $(which qrencode) ]]; then
         qrencode -o qr.png "${barcode_uri}"
         open qr.png
     fi
 else
-    oob_code=$(echo "${response_json}" | jq -r '.oob_code') echo "export oob_code=\"${oob_code}\""
+    oob_code=$(echo "${response_json}" | jq -r '.oob_code')
+    echo "export oob_code=\"${oob_code}\""
 fi
 

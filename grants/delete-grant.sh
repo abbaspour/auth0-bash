@@ -58,6 +58,7 @@ elif [[ -n "${user_id}" ]]; then
     curl -s --request DELETE \
         -H "Authorization: Bearer ${access_token}" \
         --url "${AUTH0_DOMAIN_URL}api/v2/grants?user_id=${user_id}"
-else echo >&2 "ERROR: grant_id or user_id required."
+else
+    echo >&2 "ERROR: grant_id or user_id required."
     usage 1
 fi

@@ -13,24 +13,12 @@ set -eo pipefail
 
 readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
-command -v ack >/dev/null || { echo >&2 "ERROR: ack not found"
-    exit 3
-}
-command -v grep >/dev/null || { echo >&2 "ERROR: grep not found"
-    exit 3
-}
-command -v curl >/dev/null || { echo >&2 "ERROR: curl not found"
-    exit 3
-}
-command -v perl >/dev/null || { echo >&2 "ERROR: perl not found"
-    exit 3
-}
-command -v base64 >/dev/null || { echo >&2 "ERROR: base64 not found"
-    exit 3
-}
-command -v awk >/dev/null || { echo >&2 "ERROR: awk not found"
-    exit 3
-}
+command -v ack >/dev/null || { echo >&2 "ERROR: ack not found"; exit 3; }
+command -v grep >/dev/null || { echo >&2 "ERROR: grep not found"; exit 3; }
+command -v curl >/dev/null || { echo >&2 "ERROR: curl not found"; exit 3; }
+command -v perl >/dev/null || { echo >&2 "ERROR: perl not found"; exit 3; }
+command -v base64 >/dev/null || { echo >&2 "ERROR: base64 not found"; exit 3; }
+command -v awk >/dev/null || { echo >&2 "ERROR: awk not found"; exit 3; }
 
 function urlencode() {
     local length="${#1}"
@@ -44,10 +32,12 @@ function urlencode() {
     done
 }
 
-function urldecode() { echo -n $1 | perl -pe 's/\+/ /g; s/%([0-9a-f]{2})/chr(hex($1))/eig'
+function urldecode() {
+  echo -n $1 | perl -pe 's/\+/ /g; s/%([0-9a-f]{2})/chr(hex($1))/eig'
 }
 
-function htmldecode() { echo -n $1 | sed 's/&#34;/"/g'
+function htmldecode() {
+  echo -n $1 | sed 's/&#34;/"/g'
 }
 
 declare AUTH0_REDIRECT_URI='https://jwt.io' # add this to "Allowed Callback URLs" of your application

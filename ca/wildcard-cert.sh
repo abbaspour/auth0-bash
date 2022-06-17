@@ -36,10 +36,7 @@ while getopts "d:hv?" opt; do
   esac
 done
 
-[[ -z "${DOMAIN}" ]] && {
-  echo >&2 "ERROR: DOMAIN undefined."
-  usage 1
-}
+[[ -z "${DOMAIN}" ]] && { echo >&2 "ERROR: DOMAIN undefined."; usage 1; }
 
 declare -r private_key="${DOMAIN}-private.pem"
 declare -r public_key="${DOMAIN}-public.pem"

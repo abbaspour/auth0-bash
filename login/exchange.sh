@@ -48,6 +48,8 @@ declare kid=''
 declare private_pem=''
 declare token_endpoint='/oauth/token'
 
+[[ -f "${DIR}/.env" ]] && . "${DIR}/.env"
+
 while getopts "e:t:d:c:u:a:x:p:D:U:k:f:bhv?" opt; do
   case ${opt} in
   e) source "${OPTARG}" ;;
@@ -73,22 +75,10 @@ while getopts "e:t:d:c:u:a:x:p:D:U:k:f:bhv?" opt; do
   esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && {
-  echo >&2 "ERROR: AUTH0_DOMAIN undefined"
-  usage 1
-}
-[[ -z "${AUTH0_CLIENT_ID}" ]] && {
-  echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"
-  usage 1
-}
-[[ -z "${AUTH0_REDIRECT_URI}" ]] && {
-  echo >&2 "ERROR: AUTH0_REDIRECT_URI undefined"
-  usage 1
-}
-[[ -z "${authorization_code}" ]] && {
-  echo >&2 "ERROR: authorization_code undefined"
-  usage 1
-}
+[[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
+[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
+[[ -z "${AUTH0_REDIRECT_URI}" ]] && { echo >&2 "ERROR: AUTH0_REDIRECT_URI undefined"; usage 1; }
+[[ -z "${authorization_code}" ]] && { echo >&2 "ERROR: authorization_code undefined"; usage 1; }
 
 declare secret=''
 declare authorization_header=''

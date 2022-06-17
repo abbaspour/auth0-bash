@@ -50,19 +50,11 @@ while getopts "e:a:i:f:s:hv?" opt; do
     esac
 done
 
-[[ -z ${user_id} ]] && { echo >&2 "ERROR: no 'user_id' defined"
-    exit 1
-}
-[[ -z ${filed} ]] && { echo >&2 "ERROR: no 'filed' defined"
-    exit 1
-}
-[[ -z ${value} ]] && { echo >&2 "ERROR: no 'value' defined"
-    exit 1
-}
+[[ -z ${user_id} ]] && { echo >&2 "ERROR: no 'user_id' defined"; exit 1; }
+[[ -z ${filed} ]] && { echo >&2 "ERROR: no 'filed' defined"; exit 1; }
+[[ -z ${value} ]] && { echo >&2 "ERROR: no 'value' defined"; exit 1; }
 
-[[ -z ${access_token+x} ]] && { echo >&2 -e "ERROR: no 'access_token' defined. \nopen -a safari https://manage.auth0.com/#/apis/ \nexport access_token=\`pbpaste\`"
-    exit 1
-}
+[[ -z ${access_token+x} ]] && { echo >&2 -e "ERROR: no 'access_token' defined. \nopen -a safari https://manage.auth0.com/#/apis/ \nexport access_token=\`pbpaste\`"; exit 1; }
 
 declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
 declare -r EXPECTED_SCOPE="update:users"
@@ -70,8 +62,7 @@ declare -r EXPECTED_SCOPE="update:users"
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
-declare DATA=$(
-    cat <<EOF
+declare DATA=$(cat <<EOF
 {
     "${filed}":"${value}"
 }
@@ -82,4 +73,4 @@ curl -X PATCH \
     -H "Authorization: Bearer ${access_token}" \
     -H 'content-type: application/json' \
     -d "${DATA}" \
-    ${AUTH0_DOMAIN_URL}api/v2/users/${user_id}
+    "${AUTH0_DOMAIN_URL}api/v2/users/${user_id}"

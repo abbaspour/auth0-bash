@@ -102,8 +102,7 @@ esac
 
 [[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/" # audience is unsupported in OTP (23/08/18)
 
-declare data=$(
-    cat <<EOL
+declare data=$(cat <<EOL
 {
     "connection": "${AUTH0_CONNECTION}",
     ${recipient}

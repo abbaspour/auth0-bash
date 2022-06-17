@@ -86,8 +86,7 @@ done
 declare secret=''
 [[ -n "${AUTH0_CLIENT_SECRET}" ]] && secret="\"client_secret\":\"${AUTH0_CLIENT_SECRET}\","
 
-declare data=$(
-    cat <<EOL
+declare data=$(cat <<EOL
 {
     "grant_type" : "http://auth0.com/oauth/grant-type/passwordless/otp",
     "client_id": "${AUTH0_CLIENT_ID}", ${secret}

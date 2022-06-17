@@ -71,6 +71,7 @@ for r in `seq 1 ${no_records}`; do
     [[ ${random_salt} -eq 1 ]] && salt=$(random_string 4)
     declare salt_b64=$(echo -n "${salt}" | openssl enc -A -base64)
     declare salted_password="$salt$password"
-    declare password_hash=$(echo -n "${salted_password}" | openssl dgst -binary -${algorithm} | openssl enc -A -base64) echo "${customer_id},${account_no},${email},${password},${algorithm},${salt_b64},${password_hash}"
+    declare password_hash=$(echo -n "${salted_password}" | openssl dgst -binary -${algorithm} | openssl enc -A -base64)
+    echo "${customer_id},${account_no},${email},${password},${algorithm},${salt_b64},${password_hash}"
   done
 done

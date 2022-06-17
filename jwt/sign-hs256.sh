@@ -54,10 +54,7 @@ declare -r body=$(cat "${file}" | openssl base64 -e -A | tr '+' '-' | tr '/' '_'
 # signature
 declare signature=''
 if [[ "${algorithm}" != "none" ]]; then
-    [[ -z "${secret}" ]] && {
-        echo >&2 "ERROR: secret undefined"
-        usage 1
-    }
+    [[ -z "${secret}" ]] && { echo >&2 "ERROR: secret undefined"; usage 1; }
     signature=$(echo -n "${header}.${body}" | openssl dgst -binary -sha256 -hmac "${secret}" | openssl base64 -e -A | tr '+' '-' | tr '/' '_' | sed -E s/=+$//)
     signature=".${signature}"
 fi

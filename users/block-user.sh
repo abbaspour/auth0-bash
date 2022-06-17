@@ -58,8 +58,7 @@ declare -r EXPECTED_SCOPE="update:users"
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
-declare DATA=$(
-    cat <<EOF
+declare DATA=$(cat <<EOF
 {
     "blocked":true
 }
@@ -70,4 +69,4 @@ curl -X PATCH \
     -H "Authorization: Bearer ${access_token}" \
     -H 'content-type: application/json' \
     -d "${DATA}" \
-    ${AUTH0_DOMAIN_URL}api/v2/users/${user_id}
+    "${AUTH0_DOMAIN_URL}api/v2/users/${user_id}"

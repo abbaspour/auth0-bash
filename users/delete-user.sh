@@ -49,13 +49,8 @@ while getopts "e:a:i:hv?" opt; do
     esac
 done
 
-[[ -z ${user_id} ]] && { echo >&2 "ERROR: no 'user_id' defined"
-    exit 1
-}
-
-[[ -z ${access_token} ]] && { echo >&2 -e "ERROR: no 'access_token' defined. \nopen -a safari https://manage.auth0.com/#/apis/ \nexport access_token=\`pbpaste\`"
-    exit 1
-}
+[[ -z ${user_id} ]] && { echo >&2 "ERROR: no 'user_id' defined"; exit 1; }
+[[ -z ${access_token} ]] && { echo >&2 -e "ERROR: no 'access_token' defined. \nopen -a safari https://manage.auth0.com/#/apis/ \nexport access_token=\`pbpaste\`"; exit 1; }
 
 declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
 declare -r EXPECTED_SCOPE="delete:users"

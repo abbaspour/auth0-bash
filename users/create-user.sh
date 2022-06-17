@@ -65,10 +65,7 @@ while getopts "e:a:u:m:M:p:c:i:U:A:Vshv?" opt; do
   esac
 done
 
-[[ -z ${access_token+x} ]] && {
-  echo >&2 -e "ERROR: no 'access_token' defined. \nopen -a safari https://manage.auth0.com/#/apis/ \nexport access_token=\`pbpaste\`"
-  exit 1
-}
+[[ -z ${access_token+x} ]] && { echo >&2 -e "ERROR: no 'access_token' defined. \nopen -a safari https://manage.auth0.com/#/apis/ \nexport access_token=\`pbpaste\`"; exit 1; }
 
 declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
 declare -r EXPECTED_SCOPE="create:users"

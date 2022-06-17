@@ -87,5 +87,6 @@ EOL
 declare response_json=$(curl -s --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/mfa/challenge)
 
 if [ "${authenticator_type}" == "oob" ]; then
-    oob_code=$(echo "${response_json}" | jq -r '.oob_code') echo "export oob_code=\"${oob_code}\""
+    oob_code=$(echo "${response_json}" | jq -r '.oob_code')
+    echo "export oob_code=\"${oob_code}\""
 fi
