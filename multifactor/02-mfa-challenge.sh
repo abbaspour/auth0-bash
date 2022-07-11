@@ -30,7 +30,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-m
         -v             # verbose
 
 eg,
-     $0 -t amin01@au -m XXXX -a otp
+     $0 -t amin01@au -m "\${mfa_token}" -a otp
 END
     exit $1
 }
@@ -40,13 +40,12 @@ declare AUTH0_CLIENT_ID=''
 declare AUTH0_CLIENT_SECRET=''
 declare authenticator_type=''
 declare authenticator_id=''
-declare mfa_token=''
 
 declare opt_verbose=0
 
 while getopts "e:t:d:c:x:m:a:i:hv?" opt; do
     case ${opt} in
-    e) source ${OPTARG} ;;
+    e) source "${OPTARG}" ;;
     t) AUTH0_DOMAIN=$(echo ${OPTARG}.auth0.com | tr '@' '.') ;;
     d) AUTH0_DOMAIN=${OPTARG} ;;
     c) AUTH0_CLIENT_ID=${OPTARG} ;;
@@ -54,7 +53,7 @@ while getopts "e:t:d:c:x:m:a:i:hv?" opt; do
     m) mfa_token=${OPTARG} ;;
     a) authenticator_type=${OPTARG} ;;
     i) authenticator_id=${OPTARG} ;;
-    v) opt_verbose=1 ;; #set -x;;
+    v) set -x;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
     esac

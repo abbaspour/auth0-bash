@@ -31,7 +31,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-m
         -v             # verbose
 
 eg,
-     $0 -t amin01@au -m XXXX -a otp
+     $0 -t amin01@au -m "\${mfa_token}" -o "\${oob_code}" -a otp
 END
     exit $1
 }
@@ -40,9 +40,7 @@ declare AUTH0_DOMAIN=''
 declare AUTH0_CLIENT_ID=''
 declare AUTH0_CLIENT_SECRET=''
 declare authenticator_type=''
-declare oob_code=''
 declare binding_code=''
-declare mfa_token=''
 
 declare opt_verbose=0
 

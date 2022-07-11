@@ -23,23 +23,22 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-m mfa_token]
         -v             # verbose
 
 eg,
-     $0 -t amin01@au -m XXXX
+     $0 -t amin01@au -m "\${mfa_token}"
 END
     exit $1
 }
 
 declare AUTH0_DOMAIN=''
-declare mfa_token=''
 
 declare opt_verbose=0
 
 while getopts "e:t:d:m:hv?" opt; do
     case ${opt} in
-    e) source ${OPTARG} ;;
-    t) AUTH0_DOMAIN=$(echo ${OPTARG}.auth0.com | tr '@' '.') ;;
+    e) source "${OPTARG}" ;;
+    t) AUTH0_DOMAIN=$(echo "${OPTARG}.auth0.com" | tr '@' '.') ;;
     d) AUTH0_DOMAIN=${OPTARG} ;;
     m) mfa_token=${OPTARG} ;;
-    v) opt_verbose=1 ;; #set -x;;
+    v) set -x;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
     esac
