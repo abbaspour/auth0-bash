@@ -86,7 +86,7 @@ if [ "${authenticator_type}" == "otp" ]; then
 EOL
     )
 elif [ "${authenticator_type}" == "oob" ]; then
-    BODY=$( cat <<EOL
+    BODY=$(cat <<EOL
 {
     "grant_type": "http://auth0.com/oauth/grant-type/mfa-oob",
     "client_id": "${AUTH0_CLIENT_ID}",

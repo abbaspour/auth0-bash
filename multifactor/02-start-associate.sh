@@ -30,7 +30,7 @@ declare AUTH0_DOMAIN=''
 declare authenticator_type=''
 declare channel_details=''
 
-[[ -f ${DIR}/.env ]] && . "${DIR}"/.env
+[[ -f "${DIR}/.env" ]] && . "${DIR}"/.env
 
 while getopts "e:t:d:m:a:n:ghv?" opt
 do

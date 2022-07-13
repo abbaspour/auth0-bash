@@ -118,7 +118,7 @@ EOL
   echo "client_assertion: ${client_assertion}"
 fi
 
-declare BODY=$( cat <<EOL
+declare BODY=$(cat <<EOL
 {
             "grant_type": "http://auth0.com/oauth/grant-type/password-realm",
             "realm" : "${AUTH0_CONNECTION}",

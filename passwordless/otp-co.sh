@@ -87,7 +87,7 @@ done
 [[ -z "${PASSWORD}" ]] && { echo >&2 "ERROR: PASSWORD undefined.";  usage 1; }
 
 
-declare BODY=$( cat <<EOL
+declare BODY=$(cat <<EOL
 {
     "client_id":"${AUTH0_CLIENT_ID}",
     "username":"${USERNAME}",

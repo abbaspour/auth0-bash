@@ -10,6 +10,7 @@ set -eo pipefail
 
 command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
 command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+
 function usage() {
     cat <<END >&2
 USAGE: $0 [-n domain]
@@ -47,6 +48,7 @@ cat >openssl.cnf <<-EOF
   distinguished_name = req_distinguished_name
   x509_extensions = v3_req
   prompt = no
+  default_bits            = 2048
   [req_distinguished_name]
   CN = ${pair_name}
   [v3_req]

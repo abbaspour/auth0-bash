@@ -52,11 +52,11 @@ declare send='code'
 declare language='en'
 declare opt_mgmnt=''
 
-[[ -f ${DIR}/.env ]] && . "${DIR}/.env"
+[[ -f "${DIR}/.env" ]] && . "${DIR}/.env"
 
 while getopts "e:t:d:c:x:a:r:R:u:p:s:U:l:mCPohv?" opt; do
     case ${opt} in
-    e) source ${OPTARG} ;;
+    e) source "${OPTARG}" ;;
     t) AUTH0_DOMAIN=$(echo "${OPTARG}.auth0.com" | tr '@' '.') ;;
     d) AUTH0_DOMAIN=${OPTARG} ;;
     c) AUTH0_CLIENT_ID=${OPTARG} ;;

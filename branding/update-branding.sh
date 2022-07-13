@@ -64,7 +64,7 @@ declare -r EXPECTED_SCOPE="update:branding"
 
 declare -r AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
 
-declare BODY=$( cat <<EOL
+declare BODY=$(cat <<EOL
 {
   "colors": {
     "primary": "${primary}",

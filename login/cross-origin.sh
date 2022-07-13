@@ -97,7 +97,7 @@ done
 
 [[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"
 
-declare BODY=$( cat <<EOL
+declare BODY=$(cat <<EOL
 {
     "client_id":"${AUTH0_CLIENT_ID}",
     "username":"${USERNAME}",

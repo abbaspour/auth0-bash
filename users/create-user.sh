@@ -109,7 +109,7 @@ user_metadata_str='' #${user_metadata_str:1}
 
 #${verify_email_field}
 
-declare BODY=$( cat <<EOL
+declare BODY=$(cat <<EOL
 {
   "connection": "${AUTH0_CONNECTION}",
   ${user_id_field}

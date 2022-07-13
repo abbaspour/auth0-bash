@@ -62,7 +62,7 @@ done
 
 declare -r redirect_uris=$(echo ${input_redirect_uris} | sed 's/,/","/g')
 
-declare BODY=$( cat <<EOL
+declare BODY=$(cat <<EOL
 {
   "client_name": "${client_name}",
   "redirect_uris": ["${redirect_uris}"],

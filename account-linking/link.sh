@@ -57,8 +57,7 @@ declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | 
 
 declare -r provider=$(echo ${secondary_userId} | awk -F\| '{print $1}')
 
-declare -r BODY=$(
-    cat <<EOL
+declare -r BODY=$(cat <<EOL
 {
   "provider": "${provider}",
   "user_id": "${secondary_userId}"

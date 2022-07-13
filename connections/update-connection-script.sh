@@ -62,7 +62,7 @@ declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | 
 
 declare -r script_single_line=$(sed 's/$/\\\\n/' ${js_file} | tr -d '\n')
 
-declare BODY=$( cat <<EOL
+declare BODY=$(cat <<EOL
 {
  "options" : {
   "scripts": {

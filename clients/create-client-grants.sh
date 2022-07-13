@@ -71,7 +71,7 @@ for s in $(echo $api_scopes | tr ',' ' '); do
 done
 scopes=${scopes%?}
 
-declare BODY=$( cat <<EOL
+declare BODY=$(cat <<EOL
 {
   "client_id": "${client_id}",
   "audience": "${audience}",

@@ -75,7 +75,7 @@ done
 declare secret=''
 [[ -n "${AUTH0_CLIENT_SECRET}" ]] && secret="\"client_secret\": \"${AUTH0_CLIENT_SECRET}\""
 
-declare BODY=$( cat <<EOL
+declare BODY=$(cat <<EOL
 {
             "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
             "subject_token" : "${subject_token}",

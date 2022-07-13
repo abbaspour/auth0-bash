@@ -65,8 +65,7 @@ declare -r EXPECTED_SCOPE="update:prompts"
 
 readonly AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
 
-readonly BODY=$(
-    cat <<EOL
+readonly BODY=$(cat <<EOL
 {
   "${screen}": {
     "${text_id}": "${text}"

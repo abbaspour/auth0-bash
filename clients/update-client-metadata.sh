@@ -65,7 +65,7 @@ for s in $(echo $metadata | tr ',' ' '); do
 done
 scopes=${scopes%?}
 
-declare BODY=$( cat <<EOL
+declare BODY=$(cat <<EOL
 {
   "client_metadata": { ${scopes} }
 }

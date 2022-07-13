@@ -63,7 +63,7 @@ declare secret=''
 declare scope=''
 [[ -n "${AUTH0_SCOPE}" ]] && secret="\"scope\":\"${AUTH0_SCOPE}\","
 
-declare BODY=$( cat <<EOL
+declare BODY=$(cat <<EOL
 {
     "client_id":"${AUTH0_CLIENT_ID}",
     ${secret}

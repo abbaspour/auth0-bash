@@ -135,8 +135,7 @@ readonly authParams=$(echo "${authParams_b64}" | base64 -di 2>/dev/null)
 readonly _csrf=$(echo "${authParams}" | jq -cr '._csrf')
 readonly state=$(echo "${authParams}" | jq -cr '.state')
 
-readonly BODY=$(
-    cat <<EOL
+readonly BODY=$(cat <<EOL
 {
     "client_id": "${AUTH0_CLIENT_ID}",
     "redirect_uri": "${AUTH0_REDIRECT_URI}",

@@ -52,8 +52,7 @@ done
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
-declare -r BODY=$(
-    cat <<EOL
+declare -r BODY=$(cat <<EOL
 {
   "link_with": "${id_token}"
 }

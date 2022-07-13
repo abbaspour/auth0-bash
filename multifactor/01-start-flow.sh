@@ -80,7 +80,7 @@ done
 declare secret=''
 [[ -n "${AUTH0_CLIENT_SECRET}" ]] && secret="\"client_secret\": \"${AUTH0_CLIENT_SECRET}\","
 
-declare BODY=$( cat <<EOL
+declare BODY=$(cat <<EOL
 {
             "grant_type": "http://auth0.com/oauth/grant-type/password-realm",
             "realm" : "${AUTH0_CONNECTION}",

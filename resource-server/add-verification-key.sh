@@ -61,7 +61,7 @@ declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | 
 
 declare -r pem_single_line=$(sed 's/$/\\\\n/' ${pem_file} | tr -d '\n')
 
-declare BODY=$( cat <<EOL
+declare BODY=$(cat <<EOL
 {
  "verificationKeys" : [
     {

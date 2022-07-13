@@ -38,7 +38,7 @@ declare email=''
 declare username_field=''
 declare password=''
 
-[[ -f ${DIR}/.env ]] && . "${DIR}"/.env
+[[ -f "${DIR}/.env" ]] && . "${DIR}"/.env
 
 while getopts "t:d:c:r:e:u:p:hv?" opt
 do

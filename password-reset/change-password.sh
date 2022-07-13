@@ -57,7 +57,7 @@ done
 [[ -z "${email}" ]] && { echo >&2 "ERROR: email undefined";  usage 1; }
 
 
-declare BODY=$( cat <<EOL
+declare BODY=$(cat <<EOL
 {
     "client_id": "${AUTH0_CLIENT_ID}",
     "email": "${email}",

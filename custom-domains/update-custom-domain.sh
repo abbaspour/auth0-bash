@@ -62,7 +62,7 @@ declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | 
 
 [[ -n "${custom_client_ip_header_text}" && -n "${tls_policy_text}" ]] && delimiter=', '
 
-declare BODY=$( cat <<EOL
+declare BODY=$(cat <<EOL
 {
   ${custom_client_ip_header_text}
   ${delimiter}

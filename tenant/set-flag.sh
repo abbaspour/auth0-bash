@@ -58,7 +58,7 @@ declare -r EXPECTED_SCOPE="update:tenant_settings"
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
-declare BODY=$( cat <<EOL
+declare BODY=$(cat <<EOL
 {
   "flags": { "${flag}":${value} }
 }

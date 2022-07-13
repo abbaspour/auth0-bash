@@ -64,7 +64,7 @@ done
 
 [[ -n "${opt_mgmnt}" ]] && audience_field=",\"audience\":\"https://${AUTH0_DOMAIN}/api/v2/\""
 
-declare BODY=$( cat <<EOL
+declare BODY=$(cat <<EOL
 {
     "client_id":"${AUTH0_CLIENT_ID}"
     ${audience_field}

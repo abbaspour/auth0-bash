@@ -51,7 +51,7 @@ declare -r EXPECTED_SCOPE="create:guardian_enrollment_tickets"
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
-declare BODY=$( cat <<EOL
+declare BODY=$(cat <<EOL
 {
     "user_id": "${user_id}",
     "send_mail": false

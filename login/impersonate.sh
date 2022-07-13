@@ -59,7 +59,7 @@ done
 [[ -z "${impersonator_id}" ]] && { echo >&2 "ERROR: impersonator_id undefined";  usage 1; }
 
 
-declare BODY=$( cat <<EOL
+declare BODY=$(cat <<EOL
 {
   protocol: "${protocol}",
   impersonator_id: "${impersonator_id}",

@@ -63,11 +63,7 @@ while getopts "e:t:d:c:u:a:x:p:D:U:k:f:bhv?" opt; do
   U) token_endpoint=${OPTARG} ;;
   k) kid=${OPTARG} ;;
   f) private_pem=${OPTARG} ;;
-  D)
-    code_type='device_code'
-    grant_type='urn:ietf:params:oauth:grant-type:device_code'
-    authorization_code=${OPTARG}
-    ;;
+  D) code_type='device_code'; grant_type='urn:ietf:params:oauth:grant-type:device_code'; authorization_code=${OPTARG} ;;
   b) http_basic=1 ;;
   v) set -x ;;
   h | ?) usage 0 ;;
@@ -102,8 +98,7 @@ else
   readonly client_assertion=''
 fi
 
-declare -r BODY=$(
-  cat <<EOL
+declare -r BODY=$(cat <<EOL
 {
     "client_id":"${AUTH0_CLIENT_ID}",
     ${secret}
