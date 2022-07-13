@@ -1,6 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -euo pipefail
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
+set -eo pipefail
+
+command -v node >/dev/null || { echo >&2 "error: node not found";  exit 3; }
 
 declare -i iterations=10000
 declare -i keylen=20
@@ -13,7 +21,7 @@ USAGE: $0 [-e file] [-f file] [-v|-h]
         -s salt        # salt (base64). defaults to a random value
         -i iter        # iterations (defaults to $iterations)
         -l keylen      # output key length (defaults to $keylen)
-        -a algorithm   # hashing algorithm such as sha1, sha256, md, etc (defaults to $algorithm)
+        -a algorithm   # digest algorithm such as sha1, sha256, md, etc (defaults to $algorithm)
         -h|?           # usage
         -v             # verbose
 
@@ -26,21 +34,21 @@ END
 declare password=''
 declare salt=$(openssl rand -base64 12)
 
-while getopts "p:s:i:l:a:hv?" opt
-do
+while getopts "p:s:i:l:a:hv?" opt; do
     case ${opt} in
-        p) password=${OPTARG};;
-        s) salt=${OPTARG};;
-        i) iterations=${OPTARG};;
-        l) keylen=${OPTARG};;
-        a) algorithm=${OPTARG};;
-        v) set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    p) password=${OPTARG} ;;
+    s) salt=${OPTARG} ;;
+    i) iterations=${OPTARG} ;;
+    l) keylen=${OPTARG} ;;
+    a) algorithm=${OPTARG} ;;
+    v) set -x ;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${password}" ]] && { echo >&2 "ERROR: password undefined"; usage 1; }
+[[ -z "${password}" ]] && { echo >&2 "ERROR: password undefined";  usage 1; }
+
 
 declare -r key=$(cat <<EOL | node
 const crypto = require('crypto');

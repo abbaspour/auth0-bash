@@ -1,9 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -euo pipefail
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
+set -eo pipefail
+
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
     cat <<END >&2
@@ -23,27 +28,30 @@ END
 
 declare query=''
 
-while getopts "e:a:q:hv?" opt
-do
+while getopts "e:a:q:hv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        a) access_token=${OPTARG};;
-        q) query=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    a) access_token=${OPTARG} ;;
+    q) query=${OPTARG} ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
 
-[[ -z ${access_token+x} ]] && { echo >&2 -e "ERROR: no 'access_token' defined. \nopen -a safari https://manage.auth0.com/#/apis/ \nexport access_token=\`pbpaste\`"; exit 1; }
-declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
+[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
+
+declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
+declare -r EXPECTED_SCOPE="read:logs"
+[[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
+
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
 
 declare param_query=''
 [[ -n ${query} ]] && param_query="q=(${query})"
 
-
 curl -s --get -H "Authorization: Bearer ${access_token}" \
- -H 'content-type: application/json' \
- --data-urlencode "${param_query}" \
-  ${AUTH0_DOMAIN_URL}api/v2/logs 
+    -H 'content-type: application/json' \
+    --data-urlencode "${param_query}" \
+    ${AUTH0_DOMAIN_URL}api/v2/logs

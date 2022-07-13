@@ -1,7 +1,17 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
 
 set -eo pipefail
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 declare user_id=''
 
@@ -20,26 +30,31 @@ END
     exit $1
 }
 
-while getopts "e:a:i:hv?" opt
-do
+while getopts "e:a:i:hv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        a) access_token=${OPTARG};;
-        i) user_id=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    a) access_token=${OPTARG} ;;
+    i) user_id=${OPTARG} ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
 [[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
+
+declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
+declare -r EXPECTED_SCOPES=("read:users" "delete:guardian_enrollments") # Both scopes are required
+[[ " $AVAILABLE_SCOPES " == *" ${EXPECTED_SCOPES[0]} "* && " $AVAILABLE_SCOPES " == *" ${EXPECTED_SCOPES[1]} "*  ]] \
+    || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected (all of): '${EXPECTED_SCOPES[*]}', Available: '$AVAILABLE_SCOPES'"; exit 1; }
+
 [[ -z "${user_id}" ]] && { echo >&2 "ERROR: user_id undefined."; usage 1; }
 
-declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
 curl -s -H "Authorization: Bearer ${access_token}" \
     --request GET \
     --url "${AUTH0_DOMAIN_URL}api/v2/users/${user_id}/authenticators" | jq -r '.[].id' | xargs -L1 -I% \
-curl -s -H "Authorization: Bearer ${access_token}" \
+    curl -s -H "Authorization: Bearer ${access_token}" \
     --request DELETE \
-    --url "${AUTH0_DOMAIN_URL}api/v2/guardian/enrollments/%" 
+    --url "${AUTH0_DOMAIN_URL}api/v2/guardian/enrollments/%"

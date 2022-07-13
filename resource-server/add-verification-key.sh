@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 set -eo pipefail
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
-which awk > /dev/null || { echo >&2 "error: awk not found"; exit 3; }
-which base64 > /dev/null || { echo >&2 "error: base64 not found"; exit 3; }
-which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
     cat <<END >&2
@@ -28,29 +28,38 @@ declare rs_id=''
 declare pem_file=''
 declare kid=''
 
-while getopts "e:a:i:f:k:hv?" opt
-do
+while getopts "e:a:i:f:k:hv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        a) access_token=${OPTARG};;
-        i) rs_id=${OPTARG};;
-        f) pem_file=${OPTARG};;
-        k) kid=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    a) access_token=${OPTARG} ;;
+    i) rs_id=${OPTARG} ;;
+    f) pem_file=${OPTARG} ;;
+    k) kid=${OPTARG} ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
-[[ -z "${rs_id}" ]] && { echo >&2 "ERROR: rs_id undefined."; usage 1; }
-[[ -z "${kid}" ]] && { echo >&2 "ERROR: kid undefined."; usage 1; }
-[[ -z "${pem_file}" ]] && { echo >&2 "ERROR: pem_file undefined."; usage 1; }
-[[ -f "${pem_file}" ]] || { echo >&2 "ERROR: pem_file missing: ${pem_file}"; usage 1; }
+[[ -z "${access_token}" ]] && {   echo >&2 "ERROR: access_token undefined. export access_token='PASTE' ";  usage 1; }
 
-declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
 
-declare -r pem_single_line=`sed 's/$/\\\\n/' ${pem_file} | tr -d '\n'`
+declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
+declare -r EXPECTED_SCOPE="update:resource_servers"
+[[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
+
+[[ -z "${rs_id}" ]] && { echo >&2 "ERROR: rs_id undefined.";  usage 1; }
+
+[[ -z "${kid}" ]] && { echo >&2 "ERROR: kid undefined.";  usage 1; }
+
+[[ -z "${pem_file}" ]] && { echo >&2 "ERROR: pem_file undefined.";  usage 1; }
+
+[[ -f "${pem_file}" ]] || { echo >&2 "ERROR: pem_file missing: ${pem_file}";  usage 1; }
+
+
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
+
+declare -r pem_single_line=$(sed 's/$/\\\\n/' ${pem_file} | tr -d '\n')
 
 declare BODY=$(cat <<EOL
 {

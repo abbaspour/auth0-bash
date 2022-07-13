@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -eo pipefail
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
     cat <<END >&2
@@ -24,12 +23,12 @@ END
 
 urlencode() {
     local length="${#1}"
-    for (( i = 0; i < length; i++ )); do
+    for ((i = 0; i < length; i++)); do
         local c="${1:i:1}"
         case $c in
-            [a-zA-Z0-9.~_-]) printf "$c" ;;
-            *) printf '%s' "$c" | xxd -p -c1 |
-                   while read c; do printf '%%%s' "$c"; done ;;
+        [a-zA-Z0-9.~_-]) printf "$c" ;;
+        *) printf '%s' "$c" | xxd -p -c1 |
+            while read c; do printf '%%%s' "$c"; done ;;
         esac
     done
 }
@@ -38,17 +37,16 @@ declare user_id=''
 declare filed=''
 declare value=''
 
-while getopts "e:a:i:f:s:hv?" opt
-do
+while getopts "e:a:i:f:s:hv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        a) access_token=${OPTARG};;
-        i) user_id=`urlencode ${OPTARG}`;;
-        f) filed=${OPTARG};;
-        s) value=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    a) access_token=${OPTARG} ;;
+    i) user_id=$(urlencode ${OPTARG}) ;;
+    f) filed=${OPTARG} ;;
+    s) value=${OPTARG} ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
@@ -57,7 +55,12 @@ done
 [[ -z ${value} ]] && { echo >&2 "ERROR: no 'value' defined"; exit 1; }
 
 [[ -z ${access_token+x} ]] && { echo >&2 -e "ERROR: no 'access_token' defined. \nopen -a safari https://manage.auth0.com/#/apis/ \nexport access_token=\`pbpaste\`"; exit 1; }
-declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
+
+declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
+declare -r EXPECTED_SCOPE="update:users"
+[[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
+
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
 declare DATA=$(cat <<EOF
 {
@@ -67,9 +70,7 @@ EOF
 )
 
 curl -X PATCH \
-  -H "Authorization: Bearer ${access_token}" \
-  -H 'content-type: application/json' \
-  -d "${DATA}" \
-  ${AUTH0_DOMAIN_URL}api/v2/users/${user_id}
-
-
+    -H "Authorization: Bearer ${access_token}" \
+    -H 'content-type: application/json' \
+    -d "${DATA}" \
+    "${AUTH0_DOMAIN_URL}api/v2/users/${user_id}"

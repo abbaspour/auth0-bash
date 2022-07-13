@@ -1,6 +1,16 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 
 set -eo pipefail
+
+command -v curl >/dev/null || { echo >&2 "error: curl not found"; exit 3; }
+command -v jq >/dev/null || { echo >&2 "error: jq not found"; exit 3; }
 
 function usage() {
     cat <<END >&2
@@ -8,7 +18,7 @@ USAGE: $0 [-t tenant] [-d domain] [-c client_id] [-r realm] [-e email] [-u usern
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
         -c client_id   # Auth0 client ID
-        -r conneection # Connection ID
+        -r connection  # Connection name
         -e email       # email
         -u username    # username (optional)
         -p password    # password
@@ -28,18 +38,19 @@ declare email=''
 declare username_field=''
 declare password=''
 
+[[ -f "${DIR}/.env" ]] && . "${DIR}"/.env
 
 while getopts "t:d:c:r:e:u:p:hv?" opt
 do
     case ${opt} in
-        t) AUTH0_DOMAIN=`echo ${OPTARG}.auth0.com | tr '@' '.'`;;
+        t) AUTH0_DOMAIN=$(echo "${OPTARG}.auth0.com" | tr '@' '.');;
         d) AUTH0_DOMAIN=${OPTARG};;
         c) AUTH0_CLIENT_ID=${OPTARG};;
         r) CONNECTION=${OPTARG};;
         e) email=${OPTARG};;
         u) username_field="\"username\": \"${OPTARG}\",";;
         p) password=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
+        v) set -x;;
         h|?) usage 0;;
         *) usage 1;;
     esac
@@ -58,12 +69,19 @@ declare DATA=$(cat <<EOF
     "email": "${email}",
     "password": "${password}",
     "connection": "${CONNECTION}",
-    ${username_field}
-    "user_metadata":{ }
+    "given_name": "Diego",
+    "family_name": "Koga",
+    "name" : "Diego Koga",
+      ${username_field}
+    "user_metadata":{
+      "given_name" : "Charles",
+      "family_name" : "Kane"
+    }
 }
-EOF)
+EOF
+)
 
 curl --request POST \
-  --url https://${AUTH0_DOMAIN}/dbconnections/signup \
+  --url "https://${AUTH0_DOMAIN}/dbconnections/signup" \
   --header 'content-type: application/json' \
   --data "${DATA}"

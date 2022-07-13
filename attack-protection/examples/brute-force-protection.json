@@ -1,0 +1,12 @@
+{
+  "enabled": true,
+  "shields": [
+    "user_notification",
+    "block"
+  ],
+  "mode": "count_per_identifier_and_ip",
+  "allowlist": [
+    "1.1.1.1"
+  ],
+  "max_attempts": 10
+}

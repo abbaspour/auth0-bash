@@ -1,12 +1,26 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
 
 set -eo pipefail
 
+command -v curl >/dev/null || {
+  echo >&2 "error: curl not found"
+  exit 3
+}
+command -v jq >/dev/null || {
+  echo >&2 "error: jq not found"
+  exit 3
+}
 declare -i bc_rounds=10
 declare domain='contoso.com'
 
 function usage() {
-    cat <<END >&2
+  cat <<END >&2
 USAGE: $0 [-c number]
         -c number   # number of dummy users
         -p prefix   # prefix
@@ -22,7 +36,7 @@ USAGE: $0 [-c number]
 eg,
      $0 -c 10
 END
-    exit $1
+  exit $1
 }
 
 declare count=1
@@ -36,23 +50,30 @@ declare salt_position=''
 declare salt_enc_prefix=''
 declare salt_enc_suffix=''
 
-while getopts "e:a:c:p:d:x:r:a:s:S:Vhv?" opt
-do
-    case ${opt} in
-        e) source ${OPTARG};;
-        a) algorithm=${OPTARG};;
-        c) count=${OPTARG};;
-        p) prefix=${OPTARG};;
-        x) password=${OPTARG};;
-        d) domain=${OPTARG};;
-        r) round=${OPTARG};;
-        s) salt_prefix=${OPTARG};salt_position='prefix';salt_enc_prefix=$(echo -n "${OPTARG}" | openssl enc -A -base64);;
-        S) salt_suffix=${OPTARG};salt_position='suffix';salt_enc_suffix=$(echo -n "${OPTARG}" | openssl enc -A -base64);;
-        V) is_email_verified='true';;
-        v) set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
-    esac
+while getopts "e:a:c:p:d:x:r:a:s:S:Vhv?" opt; do
+  case ${opt} in
+  e) source ${OPTARG} ;;
+  a) algorithm=${OPTARG} ;;
+  c) count=${OPTARG} ;;
+  p) prefix=${OPTARG} ;;
+  x) password=${OPTARG} ;;
+  d) domain=${OPTARG} ;;
+  r) round=${OPTARG} ;;
+  s)
+    salt_prefix=${OPTARG}
+    salt_position='prefix'
+    salt_enc_prefix=$(echo -n "${OPTARG}" | openssl enc -A -base64)
+    ;;
+  S)
+    salt_suffix=${OPTARG}
+    salt_position='suffix'
+    salt_enc_suffix=$(echo -n "${OPTARG}" | openssl enc -A -base64)
+    ;;
+  V) is_email_verified='true' ;;
+  v) set -x ;;
+  h | ?) usage 0 ;;
+  *) usage 1 ;;
+  esac
 done
 
 declare password_field=''
@@ -61,12 +82,14 @@ declare custom_password_hash_field=''
 if [[ ! -z "${password}" ]]; then
   declare -r salted_password="${salt_prefix}${password}${salt_suffix}"
   case ${algorithm} in
-    bcrypt)
-      readonly password_hash=$(htpasswd -bnBC ${bc_rounds} "" ${salted_password} | tr -d ':\n' | sed 's/$2y/$2b/')
-      password_field=",\"password_hash\":\"${password_hash}\"";;
-    md5|sha1|sha256|sha512)
-      readonly password_hash=$(echo -n "${salted_password}" | openssl dgst -binary -${algorithm} | openssl enc -A -base64)
-      custom_password_hash_field=$(cat <<EOL
+  bcrypt)
+    readonly password_hash=$(htpasswd -bnBC ${bc_rounds} "" ${salted_password} | tr -d ':\n' | sed 's/$2y/$2b/')
+    password_field=",\"password_hash\":\"${password_hash}\""
+    ;;
+  md5 | sha1 | sha256 | sha512)
+    readonly password_hash=$(echo -n "${salted_password}" | openssl dgst -binary -${algorithm} | openssl enc -A -base64)
+    custom_password_hash_field=$(
+      cat <<EOL
 , "custom_password_hash": {
     "algorithm": "${algorithm}",
     "hash": {
@@ -80,21 +103,25 @@ if [[ ! -z "${password}" ]]; then
     }
  }
 EOL
-);;
-    argon2)
-      which >/dev/null argon2 || { echo >&2 "argon2 cli not installed"; usage 1; }
-      declare -r password_hash=$(echo -n "${password}" | argon2 ${salt_prefix} -e)
-      custom_password_hash_field=$(cat <<EOL
+    )
+    ;;
+  argon2)
+    command -v argon2 >/dev/null  || { echo >&2 "argon2 cli not installed"; usage 3; }
+    declare -r password_hash=$(echo -n "${password}" | argon2 ${salt_prefix} -e)
+    custom_password_hash_field=$(
+      cat <<EOL
 , "custom_password_hash": {
     "algorithm": "${algorithm}",
     "hash": "${password_hash}"
  }
 EOL
-);;
-    pbkdf2*)
-      declare -r hashing_alg=$(echo "${algorithm}" | awk -F- '{print $2}')
-      declare -r password_hash=$(./pbkdf2.sh -p "${password}" -a ${hashing_alg} -s "${salt_prefix}")
- custom_password_hash_field=$(cat <<EOL
+    )
+    ;;
+  pbkdf2*)
+    declare -r hashing_alg=$(echo "${algorithm}" | awk -F- '{print $2}')
+    declare -r password_hash=$(./pbkdf2.sh -p "${password}" -a ${hashing_alg} -s "${salt_prefix}")
+    custom_password_hash_field=$(
+      cat <<EOL
 , "custom_password_hash": {
     "algorithm": "pbkdf2",
     "hash": {
@@ -103,15 +130,17 @@ EOL
     }
  }
 EOL
-);;
-    *)
-      echo >&2 "Unsupported algorithm: $algorithm"; usage 1;;
+    )
+    ;;
+  *) echo >&2 "Unsupported algorithm: $algorithm"
+    usage 1
+    ;;
   esac
 fi
 
 function singleUser() {
-    local no=$1
-    cat <<EOL
+  local no=$1
+  cat <<EOL
 { "email":"user${prefix}.${no}@${domain}","email_verified":${is_email_verified}${password_field}${custom_password_hash_field} }
 EOL
 }
@@ -128,8 +157,8 @@ echo '['
 echo "" $(singleUser 1)
 
 for i in $(seq 2 ${count}); do
-    echo -n ','
-    echo $(singleUser ${i})
+  echo -n ','
+  echo $(singleUser ${i})
 done
 
 echo ']'

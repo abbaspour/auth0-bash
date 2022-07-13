@@ -1,4 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
 
 function usage() {
     cat <<END >&2
@@ -16,28 +22,25 @@ END
     exit $1
 }
 
-
 declare AUTH0_DOMAIN=''
 declare access_token=''
 
 declare opt_verbose=0
 
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
-
-while getopts "e:t:d:a::hv?" opt
-do
+while getopts "e:t:d:a::hv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        t) AUTH0_DOMAIN=`echo ${OPTARG}.auth0.com | tr '@' '.'`;;
-        d) AUTH0_DOMAIN=${OPTARG};;
-        a) access_token=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    t) AUTH0_DOMAIN=$(echo ${OPTARG}.auth0.com | tr '@' '.') ;;
+    d) AUTH0_DOMAIN=${OPTARG} ;;
+    a) access_token=${OPTARG} ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
-[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined"; usage 1; }
+[[ -z "${AUTH0_DOMAIN}" ]] && {  echo >&2 "ERROR: AUTH0_DOMAIN undefined";  usage 1;  }
+[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined";  usage 1; }
+
 
 curl -s -H "Authorization: Bearer ${access_token}" https://${AUTH0_DOMAIN}/userinfo | jq '.'

@@ -1,8 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
 
 set -ueo pipefail
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
     cat <<END >&2
@@ -34,27 +40,27 @@ declare opt_mgmnt=''
 declare audience_field=''
 declare scopes_field=''
 
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
-
-while getopts "e:t:d:c:a:s:mhv?" opt
-do
+while getopts "e:t:d:c:a:s:mhv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        t) AUTH0_DOMAIN=`echo ${OPTARG}.auth0.com | tr '@' '.'`;;
-        d) AUTH0_DOMAIN=${OPTARG};;
-        c) AUTH0_CLIENT_ID=${OPTARG};;
-        s) scopes=`echo ${OPTARG} | tr , ' '`; scopes_field=",\"scope\":\"${scopes}\"";;
-        a) audience_field=",\"audience\":\"${OPTARG}\"";;
-        m) opt_mgmnt=1;;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    t) AUTH0_DOMAIN=$(echo ${OPTARG}.auth0.com | tr '@' '.') ;;
+    d) AUTH0_DOMAIN=${OPTARG} ;;
+    c) AUTH0_CLIENT_ID=${OPTARG} ;;
+    s)
+        scopes=$(echo ${OPTARG} | tr , ' ')
+        scopes_field=",\"scope\":\"${scopes}\""
+        ;;
+    a) audience_field=",\"audience\":\"${OPTARG}\"" ;;
+    m) opt_mgmnt=1 ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
+[[ -z "${AUTH0_DOMAIN}" ]] && {  echo >&2 "ERROR: AUTH0_DOMAIN undefined";  usage 1;  }
+[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined";  usage 1; }
 
-[[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
-[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
 
 [[ -n "${opt_mgmnt}" ]] && audience_field=",\"audience\":\"https://${AUTH0_DOMAIN}/api/v2/\""
 

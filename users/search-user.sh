@@ -1,9 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -euo pipefail
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
+set -eo pipefail
+
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
     cat <<END >&2
@@ -26,21 +31,27 @@ declare query=''
 declare search_engine='v3'
 declare opt_verbose=0
 
-while getopts "e:a:q:2hv?" opt
-do
+while getopts "e:a:q:2hv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        a) access_token=${OPTARG};;
-        q) query=${OPTARG};;
-        2) search_engine='v2';;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    a) access_token=${OPTARG} ;;
+    q) query=${OPTARG} ;;
+    2) search_engine='v2' ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z ${access_token+x} ]] && { echo >&2 -e "ERROR: no 'access_token' defined. \nopen -a safari https://manage.auth0.com/#/apis/ \nexport access_token=\`pbpaste\`"; exit 1; }
-declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
+[[ -z ${access_token+x} ]] && { echo >&2 -e "ERROR: no 'access_token' defined. \nopen -a safari https://manage.auth0.com/#/apis/ \nexport access_token=\`pbpaste\`"
+    exit 1
+}
+
+declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
+declare -r EXPECTED_SCOPE="read:users"
+[[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
+
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
 declare param_query=''
 [[ -n ${query} ]] && param_query="q=(${query})"
@@ -48,11 +59,10 @@ declare param_query=''
 declare param_version="search_engine=${search_engine}"
 
 curl -k -s --get -H "Authorization: Bearer ${access_token}" \
- -H 'content-type: application/json' \
- --data-urlencode "${param_query}" \
- --data-urlencode "${param_version}" \
-  ${AUTH0_DOMAIN_URL}api/v2/users #| awk -F: '/^x-ratelimit-reset/{print $2}' | xargs -L 1 -I% date -d @%
-
+    -H 'content-type: application/json' \
+    --data-urlencode "${param_query}" \
+    --data-urlencode "${param_version}" \
+    ${AUTH0_DOMAIN_URL}api/v2/users #| awk -F: '/^x-ratelimit-reset/{print $2}' | xargs -L 1 -I% date -d @%
 
 #tenant=amin01.au
 #

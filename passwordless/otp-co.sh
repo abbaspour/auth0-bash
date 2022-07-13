@@ -1,20 +1,26 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -euo pipefail
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+set -eo pipefail
+
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 declare AUTH0_CLIENT='{"name":"auth0.js","version":"9.0.2"}'
 declare AUTH0_CLIENT_B64=$(echo -n ${AUTH0_CLIENT} | base64)
 
 urlencode() {
     local length="${#1}"
-    for (( i = 0; i < length; i++ )); do
+    for ((i = 0; i < length; i++)); do
         local c="${1:i:1}"
         case ${c} in
-            [a-zA-Z0-9.~_-]) printf "$c" ;;
-            *) printf '%s' "$c" | xxd -p -c1 |
-                   while read c; do printf '%%%s' "$c"; done ;;
+        [a-zA-Z0-9.~_-]) printf "$c" ;;
+        *) printf '%s' "$c" | xxd -p -c1 |
+            while read c; do printf '%%%s' "$c"; done ;;
         esac
     done
 }
@@ -51,34 +57,35 @@ declare PASSWORD=''
 declare opt_mgmnt=''
 declare opt_verbose=0
 
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
-
-while getopts "e:t:d:c:a:u:p:r:o:u:s:mhv?" opt
-do
+while getopts "e:t:d:c:a:u:p:r:o:u:s:mhv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        t) AUTH0_DOMAIN=`echo ${OPTARG}.auth0.com | tr '@' '.'`;;
-        d) AUTH0_DOMAIN=${OPTARG};;
-        c) AUTH0_CLIENT_ID=${OPTARG};;
-        a) AUTH0_AUDIENCE=${OPTARG};;
-        u) USERNAME=${OPTARG};;
-        p) PASSWORD=${OPTARG};;
-        r) AUTH0_CONNECTION=${OPTARG};;
-        u) AUTH0_REDIRECT_URI=${OPTARG};;
-        s) AUTH0_SCOPE=`echo ${OPTARG} | tr ',' ' '`;;
-        m) opt_mgmnt=1;;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    t) AUTH0_DOMAIN=$(echo ${OPTARG}.auth0.com | tr '@' '.') ;;
+    d) AUTH0_DOMAIN=${OPTARG} ;;
+    c) AUTH0_CLIENT_ID=${OPTARG} ;;
+    a) AUTH0_AUDIENCE=${OPTARG} ;;
+    u) USERNAME=${OPTARG} ;;
+    p) PASSWORD=${OPTARG} ;;
+    r) AUTH0_CONNECTION=${OPTARG} ;;
+    u) AUTH0_REDIRECT_URI=${OPTARG} ;;
+    s) AUTH0_SCOPE=$(echo ${OPTARG} | tr ',' ' ') ;;
+    m) opt_mgmnt=1 ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
-[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
-[[ -z "${AUTH0_CONNECTION}" ]] && { echo >&2 "ERROR: AUTH0_CONNECTION undefined. select 'sms' or 'email'"; usage 1; }
+[[ -z "${AUTH0_DOMAIN}" ]] && {  echo >&2 "ERROR: AUTH0_DOMAIN undefined";  usage 1;  }
+[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined";  usage 1; }
 
-[[ -z "${USERNAME}" ]] && { echo >&2 "ERROR: USERNAME undefined." ; usage 1; }
-[[ -z "${PASSWORD}" ]] && { echo >&2 "ERROR: PASSWORD undefined." ; usage 1; }
+[[ -z "${AUTH0_CONNECTION}" ]] && { echo >&2 "ERROR: AUTH0_CONNECTION undefined. select 'sms' or 'email'";  usage 1; }
+
+
+[[ -z "${USERNAME}" ]] && { echo >&2 "ERROR: USERNAME undefined.";  usage 1; }
+
+[[ -z "${PASSWORD}" ]] && { echo >&2 "ERROR: PASSWORD undefined.";  usage 1; }
+
 
 declare BODY=$(cat <<EOL
 {
@@ -103,7 +110,7 @@ echo "CO Response: ${co_response}"
 declare login_ticket=$(echo ${co_response} | jq -cr .login_ticket)
 echo "login_ticket=${login_ticket}"
 
-declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&response_type=`urlencode "token id_token"`&redirect_uri=`urlencode ${ORIGIN}`&scope=`urlencode "${AUTH0_SCOPE}"`&login_ticket=${login_ticket}&state=mystate&nonce=mynonce&auth0Client=${AUTH0_CLIENT_B64}&audience=`urlencode ${AUTH0_AUDIENCE}`"
+declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&response_type=$(urlencode "token id_token")&redirect_uri=$(urlencode ${ORIGIN})&scope=$(urlencode "${AUTH0_SCOPE}")&login_ticket=${login_ticket}&state=mystate&nonce=mynonce&auth0Client=${AUTH0_CLIENT_B64}&audience=$(urlencode ${AUTH0_AUDIENCE})"
 
 echo "authorize_url: ${authorize_url}"
 

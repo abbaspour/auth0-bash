@@ -1,7 +1,13 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-function HTMLtoText () {
-    LineOut=$1  # Parm 1= Input line
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
+function HTMLtoText() {
+    LineOut=$1 # Parm 1= Input line
     LineOut="${LineOut//&nbsp;/ }"
     LineOut="${LineOut//&amp;/&}"
     LineOut="${LineOut//&lt;/<}"
@@ -9,9 +15,7 @@ function HTMLtoText () {
     LineOut="${LineOut//&quot;/'"'}"
     LineOut="${LineOut//&#39;/"'"}"
     LineOut="${LineOut//&ldquo;/'"'}" # TODO: ASCII/ISO for opening quote
-    LineOut="${LineOut//&rdquo;/'"'}" # TODO: ASCII/ISO for closing quote
-    echo $LineOut 
-} 
+    LineOut="${LineOut//&rdquo;/'"'}" # TODO: ASCII/ISO for closing quote echo $LineOut
+}
 
 HTMLtoText "$*"
-

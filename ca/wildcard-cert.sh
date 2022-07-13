@@ -1,9 +1,18 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
 
 set -eo pipefail
 
+command -v curl >/dev/null || { echo >&2 "error: curl not found"; exit 3; }
+command -v jq >/dev/null || { echo >&2 "error: jq not found"; exit 3; }
+
 function usage() {
-    cat <<END >&2
+  cat <<END >&2
 USAGE: $0 [-d domain]
         -d domain   # domain
         -h|?        # usage
@@ -12,20 +21,19 @@ USAGE: $0 [-d domain]
 eg,
      $0 -d mydomain.local
 END
-    exit $1
+  exit $1
 }
 
 declare DOMAIN=''
 declare opt_verbose=0
 
-while getopts "d:hv?" opt
-do
-    case ${opt} in
-        d) DOMAIN=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
-    esac
+while getopts "d:hv?" opt; do
+  case ${opt} in
+  d) DOMAIN=${OPTARG} ;;
+  v) opt_verbose=1 ;; #set -x;;
+  h | ?) usage 0 ;;
+  *) usage 1 ;;
+  esac
 done
 
 [[ -z "${DOMAIN}" ]] && { echo >&2 "ERROR: DOMAIN undefined."; usage 1; }
@@ -33,10 +41,9 @@ done
 declare -r private_key="${DOMAIN}-private.pem"
 declare -r public_key="${DOMAIN}-public.pem"
 
-
 echo " Generating wildcart certificate: *.$DOMAIN"
 
-cat > openssl.cnf <<-EOF
+cat >openssl.cnf <<-EOF
   [req]
   distinguished_name = req_distinguished_name
   x509_extensions = v3_req

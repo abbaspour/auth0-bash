@@ -1,9 +1,16 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
 
 set -eo pipefail
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
-
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 declare AUTH0_SCOPE='openid profile email'
 declare AUTH0_CONNECTION='Username-Password-Authentication'
@@ -18,7 +25,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-u
         -d domain      # Auth0 domain
         -c client_id   # Auth0 client ID
         -x secret      # Auth0 client secret
-        -a audiance    # Audience
+        -a audience    # Audience
         -r realm       # Connection (default is "${AUTH0_CONNECTION}")
         -s scopes      # comma separated list of scopes (default is "${AUTH0_SCOPE}")
         -m             # Management API audience
@@ -42,31 +49,30 @@ declare password=''
 declare opt_mgmnt=''
 declare opt_verbose=0
 
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
-
-while getopts "e:t:u:p:d:c:x:a:r:s:mhv?" opt
-do
+while getopts "e:t:u:p:d:c:x:a:r:s:mhv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        t) AUTH0_DOMAIN=`echo ${OPTARG}.auth0.com | tr '@' '.'`;;
-        u) username=${OPTARG};;
-        p) password=${OPTARG};;
-        d) AUTH0_DOMAIN=${OPTARG};;
-        c) AUTH0_CLIENT_ID=${OPTARG};;
-        x) AUTH0_CLIENT_SECRET=${OPTARG};;
-        a) AUTH0_AUDIENCE=${OPTARG};;
-        r) AUTH0_CONNECTION=${OPTARG};;
-        s) AUTH0_SCOPE=`echo ${OPTARG} | tr ',' ' '`;;
-        m) opt_mgmnt=1;;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    t) AUTH0_DOMAIN=$(echo ${OPTARG}.auth0.com | tr '@' '.') ;;
+    u) username=${OPTARG} ;;
+    p) password=${OPTARG} ;;
+    d) AUTH0_DOMAIN=${OPTARG} ;;
+    c) AUTH0_CLIENT_ID=${OPTARG} ;;
+    x) AUTH0_CLIENT_SECRET=${OPTARG} ;;
+    a) AUTH0_AUDIENCE=${OPTARG} ;;
+    r) AUTH0_CONNECTION=${OPTARG} ;;
+    s) AUTH0_SCOPE=$(echo ${OPTARG} | tr ',' ' ') ;;
+    m) opt_mgmnt=1 ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
-[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
-[[ -z "${username}" ]] && { echo >&2 "ERROR: username undefined"; usage 1; }
+[[ -z "${AUTH0_DOMAIN}" ]] && {  echo >&2 "ERROR: AUTH0_DOMAIN undefined";  usage 1;  }
+[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined";  usage 1; }
+
+[[ -z "${username}" ]] && { echo >&2 "ERROR: username undefined";  usage 1; }
+
 
 [[ -z "${AUTH0_AUDIENCE}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/userinfo"
 [[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"
@@ -88,9 +94,6 @@ declare BODY=$(cat <<EOL
 EOL
 )
 
-export mfa_token=`curl -s --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/oauth/token | jq -r '.mfa_token'`
-
+export mfa_token=$(curl -s --header 'content-type: application/json' -d "${BODY}" https://${AUTH0_DOMAIN}/oauth/token | jq -r '.mfa_token')
 
 echo "export mfa_token=\"${mfa_token}\""
-
-

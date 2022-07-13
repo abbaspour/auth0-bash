@@ -1,12 +1,17 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -euo pipefail
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
 
-which awk > /dev/null || { echo >&2 "error: awk not found"; exit 3; }
+
+set -eo pipefail
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
-    cat <<END >&2
+  cat <<END >&2
 USAGE: $0 [-e env] [-a access_token] [-n name] [-t type] [-i client_id] [-p PEM] [-c callbacks] [-v|-h]
         -e file         # .env file location (default cwd)
         -a token        # access_token. default from environment variable
@@ -22,7 +27,7 @@ USAGE: $0 [-e env] [-a access_token] [-n name] [-t type] [-i client_id] [-p PEM]
 eg,
      $0 -n "My App" -t non_interactive
 END
-    exit $1
+  exit $1
 }
 
 declare client_id_field=''
@@ -33,31 +38,38 @@ declare public_key_file=''
 declare client_authentication_methods=''
 declare callback_uris=''
 
-while getopts "e:a:n:t:i:p:c:3hv?" opt
-do
-    case ${opt} in
-        e) source ${OPTARG};;
-        a) access_token=${OPTARG};;
-        n) client_name=${OPTARG};;
-        t) client_type=${OPTARG};;
-        i) client_id_field="\"client_id\": \"${OPTARG}\", ";;
-        3) is_first_party=false;;
-        p) public_key_file=${OPTARG};;
-        c) callback_uris=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
-    esac
+
+
+while getopts "e:a:n:t:i:p:c:3hv?" opt; do
+  case ${opt} in
+  e) source ${OPTARG} ;;
+  a) access_token=${OPTARG} ;;
+  n) client_name=${OPTARG} ;;
+  t) client_type=${OPTARG} ;;
+  i) client_id_field="\"client_id\": \"${OPTARG}\", " ;;
+  3) is_first_party=false ;;
+  p) public_key_file=${OPTARG} ;;
+  c) callback_uris=${OPTARG} ;;
+  v) opt_verbose=1 ;; #set -x;;
+  h | ?) usage 0 ;;
+  *) usage 1 ;;
+  esac
 done
 
 [[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
+
+declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
+declare -r EXPECTED_SCOPE="create:clients"
+[[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
+
 [[ -z "${client_name}" ]] && { echo >&2 "ERROR: client_name undefined."; usage 1; }
 [[ -z "${client_type}" ]] && { echo >&2 "ERROR: client_type undefined."; usage 1; }
 
 if [[ -n "${public_key_file}" && -f "${public_key_file}" ]]; then
   readonly credential_name=$(basename "${public_key_file}" .pem)
   readonly credential_public_key=$(awk 'NF {sub(/\r/, ""); printf "%s\\n",$0;}' "${public_key_file}")
-  client_authentication_methods=$(cat <<EOL
+  client_authentication_methods=$(
+    cat <<EOL
   , "client_authentication_methods" : {
     "private_key_jwt" : {
      "credentials": [
@@ -70,21 +82,21 @@ if [[ -n "${public_key_file}" && -f "${public_key_file}" ]]; then
     }
   }
 EOL
-)
+  )
 fi
 
 if [[ -n "${callback_uris}" ]]; then
   uris=$(echo "${callback_uris}" | sed -e 's/,/", "/g')
-  callbacks=$(cat << EOL
+  callbacks=$(
+    cat <<EOL
     , "callbacks": [
       "${uris}"
     ]
 EOL
-)
+  )
 fi
 
-declare -r AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
-
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
 
 declare BODY=$(cat <<EOL
 {
@@ -99,8 +111,7 @@ EOL
 )
 
 curl -s -k --request POST \
-    -H "Authorization: Bearer ${access_token}" \
-    --data "${BODY}" \
-    --header 'content-type: application/json' \
-    --url "${AUTH0_DOMAIN_URL}api/v2/clients" | jq .
-
+  -H "Authorization: Bearer ${access_token}" \
+  --data "${BODY}" \
+  --header 'content-type: application/json' \
+  --url "${AUTH0_DOMAIN_URL}api/v2/clients" | jq .

@@ -2,9 +2,9 @@
 
 set -eo pipefail
 
-which awk > /dev/null || { echo >&2 "error: awk not found"; exit 3; }
-which base64 > /dev/null || { echo >&2 "error: base64 not found"; exit 3; }
-which curl > /dev/null || { echo >&2 "error: curl not found"; exit 3; }
+command -v curl >/dev/null || { echo >&2 "error: curl not found"; exit 3; }
+command -v jq >/dev/null || { echo >&2 "error: jq not found"; exit 3; }
+
 
 function usage() {
     cat <<END >&2

@@ -1,12 +1,19 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
 
 ## note:
 # this script is using legacy endpoint `/passwordless/verify`.
 
 set -eo pipefail
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
-
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 declare AUTH0_SCOPE='openid'
 
@@ -43,43 +50,57 @@ declare phone_number=''
 declare verification_code=''
 declare send='code'
 
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
-
-while getopts "e:t:d:c:a:r:R:u:p:s:o:mhv?" opt
-do
+while getopts "e:t:d:c:a:r:R:u:p:s:o:mhv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        t) AUTH0_DOMAIN=`echo ${OPTARG}.auth0.com | tr '@' '.'`;;
-        d) AUTH0_DOMAIN=${OPTARG};;
-        c) AUTH0_CLIENT_ID=${OPTARG};;
-        a) AUTH0_AUDIENCE=${OPTARG};;
-        r) AUTH0_CONNECTION=${OPTARG};;
-        R) send=${OPTARG};;
-        u) email=${OPTARG};;
-        p) phone_number=${OPTARG};;
-        s) AUTH0_SCOPE=`echo ${OPTARG} | tr ',' ' '`;;
-        o) verification_code=${OPTARG};;
-        m) opt_mgmnt=1;;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    t) AUTH0_DOMAIN=$(echo ${OPTARG}.auth0.com | tr '@' '.') ;;
+    d) AUTH0_DOMAIN=${OPTARG} ;;
+    c) AUTH0_CLIENT_ID=${OPTARG} ;;
+    a) AUTH0_AUDIENCE=${OPTARG} ;;
+    r) AUTH0_CONNECTION=${OPTARG} ;;
+    R) send=${OPTARG} ;;
+    u) email=${OPTARG} ;;
+    p) phone_number=${OPTARG} ;;
+    s) AUTH0_SCOPE=$(echo ${OPTARG} | tr ',' ' ') ;;
+    o) verification_code=${OPTARG} ;;
+    m) opt_mgmnt=1 ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
-[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
-[[ -z "${AUTH0_CONNECTION}" ]] && { echo >&2 "ERROR: AUTH0_CONNECTION undefined. select 'sms' or 'email'"; usage 1; }
-[[ -z "${verification_code}" ]] && { echo >&2 "ERROR: OTP verification_code undefined."; usage 1; }
+[[ -z "${AUTH0_DOMAIN}" ]] && {  echo >&2 "ERROR: AUTH0_DOMAIN undefined";  usage 1;  }
+[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined";  usage 1; }
+
+[[ -z "${AUTH0_CONNECTION}" ]] && { echo >&2 "ERROR: AUTH0_CONNECTION undefined. select 'sms' or 'email'";  usage 1; }
+
+[[ -z "${verification_code}" ]] && { echo >&2 "ERROR: OTP verification_code undefined.";  usage 1; }
+
 
 declare recipient=''
 
 case "${AUTH0_CONNECTION}" in
-    sms) [[ -z "${phone_number}" ]] && { echo >&2 "ERROR: phone_number undefined"; usage 1; }; recipient="\"phone_number\":\"${phone_number}\",";;
-    email) [[ -z "${email}" ]] && { echo >&2 "ERROR: email undefined"; usage 1; }; recipient="\"email\":\"${email}\",";;
-    *)  echo >&2 "ERROR: unknown connection: ${AUTH0_CONNECTION}"; usage 1;;
+sms)
+    [[ -z "${phone_number}" ]] && {
+        echo >&2 "ERROR: phone_number undefined"
+        usage 1
+    }
+    recipient="\"phone_number\":\"${phone_number}\","
+    ;;
+email)
+    [[ -z "${email}" ]] && {
+        echo >&2 "ERROR: email undefined"
+        usage 1
+    }
+    recipient="\"email\":\"${email}\","
+    ;;
+*) echo >&2 "ERROR: unknown connection: ${AUTH0_CONNECTION}"
+    usage 1
+    ;;
 esac
 
-[[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"         # audience is unsupported in OTP (23/08/18)
+[[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/" # audience is unsupported in OTP (23/08/18)
 
 declare data=$(cat <<EOL
 {
@@ -92,7 +113,6 @@ EOL
 )
 
 curl --request POST \
-  --url "https://${AUTH0_DOMAIN}/passwordless/verify" \
-  --header 'content-type: application/json' \
-  --data "${data}"
-
+    --url "https://${AUTH0_DOMAIN}/passwordless/verify" \
+    --header 'content-type: application/json' \
+    --data "${data}"

@@ -1,6 +1,12 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -euo pipefail
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
+set -eo pipefail
 
 . .env
 
@@ -12,7 +18,7 @@ declare BODY=$(cat <<EOL
     "client_id":"${AUTH0_CLIENT_ID}",
     "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
     "id_token":"${id_token}",
-    "target":"${AUTH0_CLIENT_ID}", 
+    "target":"${AUTH0_CLIENT_ID}",
     "scope": "openid",
     "api_type":"aws"
 }
@@ -21,5 +27,3 @@ EOL
 
 curl -v -H "Content-Type: application/json" \
     -d "${BODY}" https://${AUTH0_DOMAIN}/delegation
-
-

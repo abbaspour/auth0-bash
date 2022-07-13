@@ -5,7 +5,7 @@ set -ueo pipefail
 readonly DIR
 DIR=$(dirname "${BASH_SOURCE[0]}")
 
-[[ -f ${DIR}/.env ]] && . "${DIR}"/.env
+[[ -f "${DIR}/.env" ]] && . "${DIR}"/.env
 
 function usage() {
     cat <<END >&2

@@ -1,7 +1,17 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
 
 set -eo pipefail
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
+
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
     cat <<END >&2
@@ -24,30 +34,35 @@ declare json_file=''
 declare connection_id=''
 declare mk_domain=0
 
-while getopts "e:a:i:f:dhv?" opt
-do
+while getopts "e:a:i:f:dhv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        a) access_token=${OPTARG};;
-        i) connection_id=${OPTARG};;
-        f) json_file=${OPTARG};;
-        d) mk_domain=1;;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    a) access_token=${OPTARG} ;;
+    i) connection_id=${OPTARG} ;;
+    f) json_file=${OPTARG} ;;
+    d) mk_domain=1 ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
 [[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
+
+declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
+declare -r EXPECTED_SCOPE="update:connections"
+[[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
+
 [[ -z "${connection_id}" ]] && { echo >&2 "ERROR: connection_id undefined."; usage 1; }
 if [[ ${mk_domain} -ne 0 ]]; then
-    json_file=`mktemp`
-    echo '{"is_domain_connection": true}' > ${json_file}
+    json_file=$(mktemp) echo '{"is_domain_connection": true}' >${json_file}
 fi
-[[ -z "${json_file}" ]] && { echo >&2 "ERROR: json_file undefined."; usage 1; }
-[[ -f "${json_file}" ]] || { echo >&2 "ERROR: json_file missing: ${json_file}"; usage 1; }
+[[ -z "${json_file}" ]] && { echo >&2 "ERROR: json_file undefined.";  usage 1; }
 
-declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
+[[ -f "${json_file}" ]] || { echo >&2 "ERROR: json_file missing: ${json_file}";  usage 1; }
+
+
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
 curl --request PATCH \
     -H "Authorization: Bearer ${access_token}" \

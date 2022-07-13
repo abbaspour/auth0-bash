@@ -1,9 +1,18 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
 
 set -eo pipefail
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
 
-which awk > /dev/null || { echo >&2 "error: awk not found"; exit 3; }
+command -v curl >/dev/null || { echo >&2 "error: curl not found"; exit 3; }
+command -v jq >/dev/null || { echo >&2 "error: jq not found"; exit 3; }
+
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
     cat <<END >&2
@@ -28,28 +37,36 @@ declare audience=''
 declare api_scopes=''
 declare use_management_api=0
 
-while getopts "e:A:i:a:s:mhv?" opt
-do
+
+
+while getopts "e:A:i:a:s:mhv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        A) access_token=${OPTARG};;
-        i) client_id=${OPTARG};;
-        a) audience=${OPTARG};;
-        s) api_scopes=${OPTARG};;
-        m) use_management_api=1;;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    A) access_token=${OPTARG} ;;
+    i) client_id=${OPTARG} ;;
+    a) audience=${OPTARG} ;;
+    s) api_scopes=${OPTARG} ;;
+    m) use_management_api=1 ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
-declare -r AUTH0_DOMAIN_URL=$(echo ${access_token} | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
+[[ -z "${access_token}" ]] && {   echo >&2 "ERROR: access_token undefined. export access_token='PASTE' ";  usage 1; }
+
+
+declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
+declare -r EXPECTED_SCOPE="create:client_grants"
+[[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
+
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
+
 [[ ! -z "${use_management_api}" ]] && audience=${AUTH0_DOMAIN_URL}api/v2/
-[[ -z "${client_id}" ]] && { echo >&2 "ERROR: client_id undefined."; usage 1; }
+[[ -z "${client_id}" ]] && {  echo >&2 "ERROR: client_id undefined." ;  usage 1; }
 
 
-for s in `echo $api_scopes | tr ',' ' '`; do
+for s in $(echo $api_scopes | tr ',' ' '); do
     scopes+="\"${s}\","
 done
 scopes=${scopes%?}
@@ -68,4 +85,3 @@ curl -k --request POST \
     --data "${BODY}" \
     --header 'content-type: application/json' \
     --url ${AUTH0_DOMAIN_URL}api/v2/client-grants
-

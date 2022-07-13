@@ -1,6 +1,12 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -euo pipefail
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
+
+set -eo pipefail
 
 function usage() {
     cat <<END >&2
@@ -19,34 +25,42 @@ END
 
 urlencode() {
     local length="${#1}"
-    for (( i = 0; i < length; i++ )); do
+    for ((i = 0; i < length; i++)); do
         local c="${1:i:1}"
         case $c in
-            [a-zA-Z0-9.~_-]) printf "${c}" ;;
-            *) printf '%s' "$c" | xxd -p -c1 |
-                   while read -r c; do printf '%%%s' "$c"; done ;;
+        [a-zA-Z0-9.~_-]) printf "${c}" ;;
+        *) printf '%s' "$c" | xxd -p -c1 |
+            while read -r c; do printf '%%%s' "$c"; done ;;
         esac
     done
 }
 
 declare user_id=''
 
-while getopts "e:a:i:hv?" opt
-do
+while getopts "e:a:i:hv?" opt; do
     case ${opt} in
-        e) source "${OPTARG}";;
-        a) access_token=${OPTARG};;
-        i) user_id=$(urlencode ${OPTARG});;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source "${OPTARG}" ;;
+    a) access_token=${OPTARG} ;;
+    i) user_id=$(urlencode ${OPTARG}) ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z ${user_id} ]] && { echo >&2 "ERROR: no 'user_id' defined"; exit 1; }
+[[ -z ${user_id} ]] && { echo >&2 "ERROR: no 'user_id' defined"
+    exit 1
+}
 
-[[ -z ${access_token} ]] && { echo >&2 -e "ERROR: no 'access_token' defined. \n open -a safari https://manage.auth0.com/#/apis/ \n export access_token=\`pbpaste\`"; exit 1; }
-declare -r AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
+[[ -z ${access_token} ]] && { echo >&2 -e "ERROR: no 'access_token' defined. \n open -a safari https://manage.auth0.com/#/apis/ \n export access_token=\`pbpaste\`"
+    exit 1
+}
+
+declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
+declare -r EXPECTED_SCOPE="read:user_custom_blocks"
+[[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
+
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
 curl -s --get -H "Authorization: Bearer ${access_token}" -H 'content-type: application/json' \
     "${AUTH0_DOMAIN_URL}api/v2/users/${user_id}/custom-blocks" | jq .

@@ -1,4 +1,4 @@
-function(access_token, ctx, callback){
+function fupClassic(access_token, ctx, callback){
     'use strict';
 
     console.log('auth0-to-auth0 fetchUserProfile with ctx: ' + JSON.stringify(ctx));

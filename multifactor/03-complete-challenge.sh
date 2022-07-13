@@ -1,9 +1,16 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
 
 set -eo pipefail
 
-declare -r DIR=$(dirname "${BASH_SOURCE[0]}")
-
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 declare AUTH0_SCOPE='openid profile email'
 declare AUTH0_CONNECTION='Username-Password-Authentication'
@@ -24,7 +31,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-m
         -v             # verbose
 
 eg,
-     $0 -t amin01@au -m XXXX -a otp
+     $0 -t amin01@au -m "\${mfa_token}" -o "\${oob_code}" -a otp
 END
     exit $1
 }
@@ -33,36 +40,33 @@ declare AUTH0_DOMAIN=''
 declare AUTH0_CLIENT_ID=''
 declare AUTH0_CLIENT_SECRET=''
 declare authenticator_type=''
-declare oob_code=''
 declare binding_code=''
-declare mfa_token=''
 
 declare opt_verbose=0
 
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
-
-while getopts "e:t:d:c:x:m:a:o:b:hv?" opt
-do
+while getopts "e:t:d:c:x:m:a:o:b:hv?" opt; do
     case ${opt} in
-        e) source "${OPTARG}";;
-        t) AUTH0_DOMAIN=$(echo "${OPTARG}".auth0.com | tr '@' '.');;
-        d) AUTH0_DOMAIN=${OPTARG};;
-        c) AUTH0_CLIENT_ID=${OPTARG};;
-        x) AUTH0_CLIENT_SECRET=${OPTARG};;
-        a) authenticator_type=${OPTARG};;
-        m) mfa_token=${OPTARG};;
-        o) oob_code=${OPTARG};;
-        b) binding_code=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source "${OPTARG}" ;;
+    t) AUTH0_DOMAIN=$(echo "${OPTARG}".auth0.com | tr '@' '.') ;;
+    d) AUTH0_DOMAIN=${OPTARG} ;;
+    c) AUTH0_CLIENT_ID=${OPTARG} ;;
+    x) AUTH0_CLIENT_SECRET=${OPTARG} ;;
+    a) authenticator_type=${OPTARG} ;;
+    m) mfa_token=${OPTARG} ;;
+    o) oob_code=${OPTARG} ;;
+    b) binding_code=${OPTARG} ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
-[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
-[[ -z "${mfa_token}" ]] && { echo >&2 "ERROR: mfa_token undefined"; usage 1; }
-[[ -z "${authenticator_type}" ]] && { echo >&2 "ERROR: authenticator_type undefined"; usage 1; }
+[[ -z "${AUTH0_DOMAIN}" ]] && {  echo >&2 "ERROR: AUTH0_DOMAIN undefined";  usage 1;  }
+[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined";  usage 1; }
+
+[[ -z "${mfa_token}" ]] && { echo >&2 "ERROR: mfa_token undefined";  usage 1; }
+
+[[ -z "${authenticator_type}" ]] && { echo >&2 "ERROR: authenticator_type undefined";  usage 1; }
 
 
 declare secret=''
@@ -80,7 +84,7 @@ if [ "${authenticator_type}" == "otp" ]; then
     "otp" : "${binding_code}"
 }
 EOL
-) 
+    )
 elif [ "${authenticator_type}" == "oob" ]; then
     BODY=$(cat <<EOL
 {
@@ -92,9 +96,10 @@ elif [ "${authenticator_type}" == "oob" ]; then
     "binding_code": "${binding_code}"
 }
 EOL
-) 
+    )
 else
-    echo >&2 "ERROR: authenticator_type invalid"; usage 1;
+    echo >&2 "ERROR: authenticator_type invalid"
+    usage 1
 fi
 
 echo "Body: ${BODY}"

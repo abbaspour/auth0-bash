@@ -1,10 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -ueo pipefail 
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
 
-declare -r DIR=$(dirname ${BASH_SOURCE[0]})
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
+set -ueo pipefail
 
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
     cat <<END >&2
@@ -30,24 +34,25 @@ declare AUTH0_CLIENT_SECRET=''
 declare opt_verbose=0
 declare refresh_token=''
 
-while getopts "e:t:d:c:x:r:hv?" opt
-do
+while getopts "e:t:d:c:x:r:hv?" opt; do
     case ${opt} in
-        e) source ${OPTARG};;
-        t) AUTH0_DOMAIN=`echo ${OPTARG}.auth0.com | tr '@' '.'`;;
-        d) AUTH0_DOMAIN=${OPTARG};;
-        c) AUTH0_CLIENT_ID=${OPTARG};;
-        x) AUTH0_CLIENT_SECRET=${OPTARG};;
-        r) refresh_token=${OPTARG};;
-        v) opt_verbose=1;; #set -x;;
-        h|?) usage 0;;
-        *) usage 1;;
+    e) source ${OPTARG} ;;
+    t) AUTH0_DOMAIN=$(echo ${OPTARG}.auth0.com | tr '@' '.') ;;
+    d) AUTH0_DOMAIN=${OPTARG} ;;
+    c) AUTH0_CLIENT_ID=${OPTARG} ;;
+    x) AUTH0_CLIENT_SECRET=${OPTARG} ;;
+    r) refresh_token=${OPTARG} ;;
+    v) opt_verbose=1 ;; #set -x;;
+    h | ?) usage 0 ;;
+    *) usage 1 ;;
     esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
-[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
-[[ -z "${refresh_token}" ]] && { echo >&2 "ERROR: authorization_code undefined"; usage 1; }
+[[ -z "${AUTH0_DOMAIN}" ]] && {  echo >&2 "ERROR: AUTH0_DOMAIN undefined";  usage 1;  }
+[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined";  usage 1; }
+
+[[ -z "${refresh_token}" ]] && { echo >&2 "ERROR: authorization_code undefined";  usage 1; }
+
 
 declare secret=''
 [[ -n "${AUTH0_CLIENT_SECRET}" ]] && secret="\"client_secret\":\"${AUTH0_CLIENT_SECRET}\","
@@ -62,7 +67,6 @@ EOL
 )
 
 curl --request POST \
-  --url https://${AUTH0_DOMAIN}/oauth/revoke \
-  --header 'content-type: application/json' \
-  --data "${BODY}"
-
+    --url https://${AUTH0_DOMAIN}/oauth/revoke \
+    --header 'content-type: application/json' \
+    --data "${BODY}"

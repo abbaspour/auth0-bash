@@ -1,4 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+##########################################################################################
+# Author: Auth0
+# Date: 2022-06-12
+# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+##########################################################################################
 
 set -ueo pipefail
 
@@ -35,8 +41,6 @@ declare private_pem=''
 declare client_assertion=''
 declare opt_mgmnt=''
 
-[[ -f ${DIR}/.env ]] && . ${DIR}/.env
-
 while getopts "e:t:d:c:a:x:k:f:mhv?" opt; do
   case ${opt} in
   e) source "${OPTARG}" ;;
@@ -45,8 +49,8 @@ while getopts "e:t:d:c:a:x:k:f:mhv?" opt; do
   c) AUTH0_CLIENT_ID=${OPTARG} ;;
   x) AUTH0_CLIENT_SECRET=${OPTARG} ;;
   a) AUTH0_AUDIENCE=${OPTARG} ;;
-  k) kid=${OPTARG};;
-  f) private_pem=${OPTARG};;
+  k) kid=${OPTARG} ;;
+  f) private_pem=${OPTARG} ;;
   m) opt_mgmnt=1 ;;
   v) set -x ;;
   h | ?) usage 0 ;;
@@ -63,12 +67,13 @@ done
 #[[ -z "${AUTH0_AUDIENCE}" ]] && { echo >&2 "ERROR: AUTH0_AUDIENCE undefined"; usage 1; }
 
 if [[ -n "${kid}" && -n "${private_pem}" && -f "${private_pem}" ]]; then
-  readonly assertion=$(../clients/client-assertion.sh -d "${AUTH0_DOMAIN}" -i "${AUTH0_CLIENT_ID}" -k "${kid}" -f "${private_pem}" )
-  client_assertion=$(cat <<EOL
+  readonly assertion=$(../clients/client-assertion.sh -d "${AUTH0_DOMAIN}" -i "${AUTH0_CLIENT_ID}" -k "${kid}" -f "${private_pem}")
+  client_assertion=$(
+    cat <<EOL
   , "client_assertion" : "${assertion}",
   "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
 EOL
-)
+  )
 fi
 
 readonly BODY=$(cat <<EOL
