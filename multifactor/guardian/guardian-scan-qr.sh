@@ -15,6 +15,5 @@ readonly image_file=$(mktemp --suffix .bmp)
 #echo "image file: ${image_file}"
 readonly data=$(screencapture -i "${image_file}" && zbarimg -q --raw "${image_file}")
 
-echo "${data}" | egrep -E "&enrollment_tx_id=(\w+)" -o
-echo "${data}" | egrep -E "&id=([^&]+)" -o
+echo "${data}" | egrep -E "enrollment_tx_id=(\w+)" -o
 echo "${data}" | egrep -E "secret=([^&]+)" -o

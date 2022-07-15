@@ -25,7 +25,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-l enrollment-ticket] [-i device-ide
         -v             # verbose
 
 eg,
-     $0 -t abbaspour -l ISDspISwKFdc66RCiixgeqG3576XXXX -i 123 -f ../ca/mydomain.local.key
+     $0 -t abbaspour -l ISDspISwKFdc66RCiixgeqG3576XXXX -i f4wjsPTaC4Q:xxxx -n TPB4.xxx.xxx  -f ../ca/mydomain.local.key
 END
   exit $1
 }
@@ -34,7 +34,7 @@ declare AUTH0_DOMAIN=''
 declare enrollment_ticket=''
 declare device_identifier=''
 declare device_name='auth0-bash'
-declare gcm_token='123456789'
+declare gcm_token=''
 declare public_pem=''
 
 [[ -f "${DIR}/.env" ]] && . "${DIR}/.env"
@@ -58,6 +58,7 @@ done
 [[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
 [[ -z "${enrollment_ticket}" ]] && { echo >&2 "ERROR: enrollment_ticket undefined"; usage 1; }
 [[ -z "${device_identifier}" ]] && { echo >&2 "ERROR: device_identifier undefined"; usage 1; }
+[[ -z "${device_name}" ]] && { echo >&2 "ERROR: device_name undefined"; usage 1; }
 [[ -f "${public_pem}" ]] || { echo >&2 "ERROR: public_pem missing: ${public_pem}"; usage 1; }
 
 declare -r BODY=$(cat <<EOL
