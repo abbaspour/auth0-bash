@@ -43,4 +43,4 @@ done
 [[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined";  usage 1; }
 
 
-curl -s -H "Authorization: Bearer ${access_token}" https://${AUTH0_DOMAIN}/userinfo | jq '.'
+curl -s -H "Authorization: Bearer ${access_token}" "https://${AUTH0_DOMAIN}/userinfo" | jq '.'

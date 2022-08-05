@@ -24,14 +24,16 @@ declare AUTH0_SCOPE='openid profile email'
 declare AUTH0_RESPONSE_TYPE='token id_token'
 declare AUTH0_RESPONSE_MODE=''
 declare authorization_endpoint='authorize'
+declare par_endpoint='oauth/par'
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r connection] [-R response_type] [-f flow] [-u callback] [-s scope] [-p prompt] [-M mode] [-m|-C|-o|-h]
+USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r connection] [-R response_type] [-f flow] [-u callback] [-s scope] [-p prompt] [-M mode] [-P|-m|-C|-N|-o|-h]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
         -c client_id   # Auth0 client ID
+        -x secret      # Auth0 client secret (for PAR)
         -a audience    # Audience
         -r realm       # Connection
         -R types       # comma separated response types (default is "${AUTH0_RESPONSE_TYPE}")
@@ -47,8 +49,9 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r conn
         -i invitation  # invitation
         -l locale      # ui_locales
         -E endpoint    # change authorization_endpoint. default is ${authorization_endpoint}
+        -P             # use PAR (pushed authorization request)
         -C             # copy to clipboard
-        -P             # disable pretty print
+        -N             # no pretty print
         -m             # Management API audience
         -o             # Open URL
         -b browser     # Choose browser to open (firefox, chrome, safari)
@@ -92,6 +95,7 @@ gen_code_challenge() {
 
 declare AUTH0_DOMAIN=''
 declare AUTH0_CLIENT_ID=''
+declare AUTH0_SECRET=''
 declare AUTH0_CONNECTION=''
 declare AUTH0_AUDIENCE=''
 declare AUTH0_PROMPT=''
@@ -108,15 +112,17 @@ declare ui_locales=''
 declare invitation=''
 declare opt_browser=''
 declare opt_pp=1
+declare opt_par=0
 
 [[ -f "${DIR}/.env" ]] && . "${DIR}/.env"
 
-while getopts "e:t:d:c:a:r:R:f:u:p:s:b:M:S:n:H:O:i:l:E:mCoPhv?" opt; do
+while getopts "e:t:d:c:x:a:r:R:f:u:p:s:b:M:S:n:H:O:i:l:E:mCoPNhv?" opt; do
     case ${opt} in
     e) source ${OPTARG} ;;
     t) AUTH0_DOMAIN=$(echo ${OPTARG}.auth0.com | tr '@' '.') ;;
     d) AUTH0_DOMAIN=${OPTARG} ;;
     c) AUTH0_CLIENT_ID=${OPTARG} ;;
+    x) AUTH0_CLIENT_SECRET=${OPTARG} ;;
     a) AUTH0_AUDIENCE=${OPTARG} ;;
     r) AUTH0_CONNECTION=${OPTARG} ;;
     R) AUTH0_RESPONSE_TYPE=$(echo ${OPTARG} | tr ',' ' ') ;;
@@ -133,7 +139,8 @@ while getopts "e:t:d:c:a:r:R:f:u:p:s:b:M:S:n:H:O:i:l:E:mCoPhv?" opt; do
     l) ui_locales=${OPTARG} ;;
     E) authorization_endpoint=${OPTARG} ;;
     C) opt_clipboard=1 ;;
-    P) opt_pp=0 ;;
+    P) opt_par=1 ;;
+    N) opt_pp=0 ;;
     o) opt_open=1 ;;
     m) opt_mgmnt=1 ;;
     b) opt_browser="-a ${OPTARG} " ;;
@@ -168,24 +175,34 @@ esac
 
 [[ ${AUTH0_DOMAIN} =~ ^http ]] || AUTH0_DOMAIN=https://${AUTH0_DOMAIN}
 
-declare authorize_url="${AUTH0_DOMAIN}/${authorization_endpoint}?client_id=${AUTH0_CLIENT_ID}&${response_param}&nonce=$(urlencode ${opt_nonce})&redirect_uri=$(urlencode ${AUTH0_REDIRECT_URI})&scope=$(urlencode "${AUTH0_SCOPE}")"
+declare authorize_params="client_id=${AUTH0_CLIENT_ID}&${response_param}&nonce=$(urlencode ${opt_nonce})&redirect_uri=$(urlencode ${AUTH0_REDIRECT_URI})&scope=$(urlencode "${AUTH0_SCOPE}")"
 
-[[ -n "${AUTH0_AUDIENCE}" ]] && authorize_url+="&audience=$(urlencode "${AUTH0_AUDIENCE}")"
-[[ -n "${AUTH0_CONNECTION}" ]] && authorize_url+="&connection=${AUTH0_CONNECTION}"
-[[ -n "${AUTH0_PROMPT}" ]] && authorize_url+="&prompt=${AUTH0_PROMPT}"
-[[ -n "${AUTH0_RESPONSE_MODE}" ]] && authorize_url+="&response_mode=${AUTH0_RESPONSE_MODE}"
-[[ -n "${opt_state}" ]] && authorize_url+="&state=$(urlencode "${opt_state}")"
-[[ -n "${opt_login_hint}" ]] && authorize_url+="&login_hint=$(urlencode "${opt_login_hint}")"
-[[ -n "${invitation}" ]] && authorize_url+="&invitation=$(urlencode "${invitation}")"
-[[ -n "${org_id}" ]] && authorize_url+="&organization=$(urlencode "${org_id}")"
-[[ -n "${ui_locales}" ]] && authorize_url+="&ui_locales=${ui_locales}"
+[[ -n "${AUTH0_AUDIENCE}" ]] && authorize_params+="&audience=$(urlencode "${AUTH0_AUDIENCE}")"
+[[ -n "${AUTH0_CONNECTION}" ]] && authorize_params+="&connection=${AUTH0_CONNECTION}"
+[[ -n "${AUTH0_PROMPT}" ]] && authorize_params+="&prompt=${AUTH0_PROMPT}"
+[[ -n "${AUTH0_RESPONSE_MODE}" ]] && authorize_params+="&response_mode=${AUTH0_RESPONSE_MODE}"
+[[ -n "${opt_state}" ]] && authorize_params+="&state=$(urlencode "${opt_state}")"
+[[ -n "${opt_login_hint}" ]] && authorize_params+="&login_hint=$(urlencode "${opt_login_hint}")"
+[[ -n "${invitation}" ]] && authorize_params+="&invitation=$(urlencode "${invitation}")"
+[[ -n "${org_id}" ]] && authorize_params+="&organization=$(urlencode "${org_id}")"
+[[ -n "${ui_locales}" ]] && authorize_params+="&ui_locales=${ui_locales}"
+
+if [[ ${opt_par} -eq 0 ]]; then
+  declare authorize_url="${AUTH0_DOMAIN}/${authorization_endpoint}?${authorize_params}"
+else
+  [[ -n "${AUTH0_CLIENT_SECRET}" ]] && authorize_params+="&client_secret=${AUTH0_CLIENT_SECRET}"
+  declare -r request_uri=$(curl -s --request POST \
+    --url "${AUTH0_DOMAIN}/${par_endpoint}" \
+    -d "${authorize_params}" | jq -r '.request_uri')
+  declare authorize_url="${AUTH0_DOMAIN}/${authorization_endpoint}?client_id=${AUTH0_CLIENT_ID}&request_uri=${request_uri}"
+fi
 
 if [[ ${opt_pp} -eq 0 ]]; then
   echo "${authorize_url}"
 else
     echo "${authorize_url}" | sed -E 's/&/ &\
-      /g'
+    /g'
 fi
 
 [[ -n "${opt_clipboard}" ]] && echo "${authorize_url}" | pbcopy
-[[ -n "${opt_open}" ]] && open ${opt_browser} "${authorize_url}"
+[[ -n "${opt_open}" ]] && open "${opt_browser}" "${authorize_url}"
