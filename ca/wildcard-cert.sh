@@ -8,8 +8,7 @@
 
 set -eo pipefail
 
-command -v curl >/dev/null || { echo >&2 "error: curl not found"; exit 3; }
-command -v jq >/dev/null || { echo >&2 "error: jq not found"; exit 3; }
+command -v openssl >/dev/null || { echo >&2 "error: openssl not found"; exit 3; }
 
 function usage() {
   cat <<END >&2
@@ -41,7 +40,7 @@ done
 declare -r private_key="${DOMAIN}-private.pem"
 declare -r public_key="${DOMAIN}-public.pem"
 
-echo " Generating wildcart certificate: *.$DOMAIN"
+echo " Generating wildcard certificate: *.$DOMAIN"
 
 cat >openssl.cnf <<-EOF
   [req]

@@ -8,13 +8,12 @@
 
 set -eo pipefail
 
-command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
-command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+command -v openssl >/dev/null || { echo >&2 "error: openssl not found";  exit 3; }
 
 function usage() {
     cat <<END >&2
 USAGE: $0 [-n domain]
-        -n name     # name of key pair
+        -n name     # name of key pair (default is localhost)
         -h|?        # usage
         -v          # verbose
 
@@ -24,7 +23,7 @@ END
     exit $1
 }
 
-declare pair_name=''
+declare pair_name='localhost'
 declare opt_verbose=0
 
 while getopts "n:hv?" opt; do
