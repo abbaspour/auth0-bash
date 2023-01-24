@@ -201,7 +201,7 @@ if [[ ${opt_pp} -eq 0 ]]; then
   echo "${authorize_url}"
 else
     echo "${authorize_url}" | sed -E 's/&/ &\
-    /g'
+    /g; s/%20/ /g; s/%3A/:/g;s/%2F/\//g'
 fi
 
 [[ -n "${opt_clipboard}" ]] && echo "${authorize_url}" | pbcopy
