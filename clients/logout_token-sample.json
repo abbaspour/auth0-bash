@@ -1,0 +1,12 @@
+{
+  "iss": "https://abbaspour.auth0.com/",
+  "sub": "auth0|5fadc2e53f6a96006fxxxxxx",
+  "aud": "VJIEWAptlFWokl2pRC2ptswicxxxxx",
+  "iat": 1674609596,
+  "jti": "5e0fbf19-b5a1-4b68-938d-c34974933109",
+  "events": {
+    "http://schemas.openid.net/event/backchannel-logout": {}
+  },
+  "trace_id": "78ed2efa2960aaea",
+  "sid": "uicx6Jvc55rkdOGkQ31roOHCVjms97aD"
+}

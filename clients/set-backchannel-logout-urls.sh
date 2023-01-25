@@ -2,7 +2,7 @@
 
 ##########################################################################################
 # Author: Auth0
-# Date: 2022-06-12
+# Date: 2023-01-25
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
@@ -16,29 +16,29 @@ readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-i client_id] [-m k1:v1,k2:v2] [-v|-h]
+USAGE: $0 [-e env] [-a access_token] [-i client_id] [-u url1,url2] [-v|-h]
         -e file         # .env file location (default cwd)
         -a token        # access_token. default from environment variable
         -i id           # client_id
-        -m key:value    # metadata key:value
+        -u url(s)       # comma seperated back channel logout URL(s)
         -h|?            # usage
         -v              # verbose
 
 eg,
-     $0 -i 62qDW3H3goXmyJTvpzQzMFGLpVGAJ1Qh -m first_party:true,region:AU
+     $0 -i 62qDW3H3goXmyJTvpzQzMFGLpVGAJ1Qh -u https://app1.example.com/bclo
 END
     exit $1
 }
 
 declare client_id=''
-declare metadata=''
+declare urls=''
 
-while getopts "e:a:i:m:hv?" opt; do
+while getopts "e:a:i:u:hv?" opt; do
     case ${opt} in
     e) source ${OPTARG} ;;
     a) access_token=${OPTARG} ;;
     i) client_id=${OPTARG} ;;
-    m) metadata=${OPTARG} ;;
+    u) urls=${OPTARG} ;;
     v) opt_verbose=1 ;; #set -x;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
@@ -56,21 +56,26 @@ declare -r EXPECTED_SCOPES=("update:clients" "update:client_keys") # Either of t
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 [[ -z "${client_id}" ]] && {  echo >&2 "ERROR: client_id undefined." ;  usage 1; }
 
-[[ -z "${metadata}" ]] && { echo >&2 "ERROR: metadata undefined.";  usage 1; }
+[[ -z "${urls}" ]] && { echo >&2 "ERROR: urls undefined.";  usage 1; }
 
+readonly urls_fromated=$(echo "${urls}" | sed -e 's/,/", "/g')
 
-scopes=''
-for s in $(echo $metadata | tr ',' ' '); do
-    scopes+=$(echo $s | awk -F: '{printf("\"%s\":\"%s\",", \$1, \$2)}')
-done
-scopes=${scopes%?}
+declare backchannel_logout_urls=$(cat <<EOL
+  "backchannel_logout_urls": [
+      "${urls_fromated}"
+  ]
+EOL
+)
 
 declare BODY=$(cat <<EOL
 {
-  "client_metadata": { ${scopes} }
+  "oidc_backchannel_logout": { ${backchannel_logout_urls} }
 }
 EOL
 )
+
+echo $BODY
+#exit 0
 
 curl -s --request PATCH \
     -H "Authorization: Bearer ${access_token}" \
@@ -78,4 +83,3 @@ curl -s --request PATCH \
     --header 'content-type: application/json' \
     --url ${AUTH0_DOMAIN_URL}api/v2/clients/${client_id}
 
-echo
