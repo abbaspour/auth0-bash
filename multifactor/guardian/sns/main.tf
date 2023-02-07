@@ -109,6 +109,9 @@ resource "auth0_guardian" "my_guardian" {
   policy        = "all-applications"
   email = true
   push {
+    enabled = true
+    provider = "sns"
+
     amazon_sns {
       aws_region                        = var.region
       aws_access_key_id                 = aws_iam_access_key.auth0_guardian_agent_access_key.id

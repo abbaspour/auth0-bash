@@ -19,7 +19,8 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-l enrollment-ticket] [-i device-ide
         -l ticket      # enrollment-ticket
         -i identifier  # device-identifier
         -n device-name # device-name (defaults to "auth0-bash")
-        -g token       # GCM token (defaults to random)
+        -g token       # GCM token
+        -a token       # APNS token
         -f public.pem  # client public key pem file
         -h|?           # usage
         -v             # verbose
@@ -34,12 +35,14 @@ declare AUTH0_DOMAIN=''
 declare enrollment_ticket=''
 declare device_identifier=''
 declare device_name='auth0-bash'
-declare gcm_token=''
+declare token=''
 declare public_pem=''
+declare service=''
 
 [[ -f "${DIR}/.env" ]] && . "${DIR}/.env"
 
-while getopts "e:t:d:l:i:n:g:f:hv?" opt; do
+
+while getopts "e:t:d:l:i:n:g:a:f:hv?" opt; do
   case ${opt} in
   e) source "${OPTARG}" ;;
   t) AUTH0_DOMAIN=$(echo ${OPTARG}.guardian.auth0.com | tr '@' '.') ;;
@@ -47,7 +50,8 @@ while getopts "e:t:d:l:i:n:g:f:hv?" opt; do
   l) enrollment_ticket=${OPTARG} ;;
   i) device_identifier=${OPTARG} ;;
   n) device_name=${OPTARG} ;;
-  g) gcm_token=${OPTARG} ;;
+  g) service="GCM"; token=${OPTARG} ;;
+  a) service="APNS"; token=${OPTARG} ;;
   f) public_pem=${OPTARG} ;;
   v) set -x ;;
   h | ?) usage 0 ;;
@@ -66,8 +70,8 @@ declare -r BODY=$(cat <<EOL
     "identifier":"${device_identifier}",
     "name": "${device_name}",
     "push_credentials": {
-      "service": "GCM",
-      "token": "${gcm_token}"
+      "service": "${service}",
+      "token": "${token}"
     },
     "public_key": $(../../discovery/create-jwk.sh -f "${public_pem}")
 }
@@ -79,6 +83,7 @@ EOL
 [[ ${AUTH0_DOMAIN} =~ ^http ]] || AUTH0_DOMAIN=https://${AUTH0_DOMAIN}
 
 curl -s -H "Authorization: Ticket id=\"${enrollment_ticket}\"" \
+    -H "Auth0-Client: eyJuYW1lIjoiR3VhcmRpYW4uc3dpZnQiLCJ2ZXJzaW9uIjoiMS4xLjAifQ" \
     --url "${AUTH0_DOMAIN}/api/enroll" \
     -H 'content-type: application/json' \
     --data "${BODY}"
