@@ -20,21 +20,24 @@ USAGE: $0 [-e env] [-a access_token] [-i client_id] [-v|-h]
         -e file         # .env file location (default cwd)
         -a token        # access_token. default from environment variable
         -i conn_id      # connection id
+        -d              # disable domain level flag
         -h|?            # usage
         -v              # verbose
 
 eg,
-     $0 -n "My App" -t non_interactive
+     $0 -i con_xyz
 END
     exit $1
 }
 
-declare client_id=''
+declare connection_id=''
+declare flag=true
 
-while getopts "e:a:i:hv?" opt; do
+while getopts "e:a:i:dhv?" opt; do
     case ${opt} in
     e) source ${OPTARG} ;;
-    i) client_id=${OPTARG} ;;
+    i) connection_id=${OPTARG} ;;
+    d) flag=false;;
     v) set -x ;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
@@ -47,19 +50,19 @@ declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | 
 declare -r EXPECTED_SCOPE="update:connections"
 [[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
 
-[[ -z "${client_id}" ]] && { echo >&2 "ERROR: client_id undefined."; usage 1; }
+[[ -z "${connection_id}" ]] && { echo >&2 "ERROR: connection_id undefined."; usage 1; }
 
 readonly AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
 
 readonly BODY=$(cat <<EOL
 {
-  "is_domain_connection": true
+  "is_domain_connection": ${flag}
 }
 EOL
 )
 
-curl -k --request PATCH \
+curl -s --request PATCH \
     -H "Authorization: Bearer ${access_token}" \
     --data "${BODY}" \
     --header 'content-type: application/json' \
-    --url "${AUTH0_DOMAIN_URL}api/v2/connections/${client_id}"
+    --url "${AUTH0_DOMAIN_URL}api/v2/connections/${connection_id}" | jq .
