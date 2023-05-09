@@ -1,3 +1,7 @@
+SHELL := /bin/bash
+.SHELLFLAGS := -eu -o pipefail -c
+.DELETE_ON_ERROR:
+
 PLAN_FILE=sns.plan
 report="sns.html"
 
@@ -26,6 +30,8 @@ init:
 
 clean:
 	rm $(PLAN_FILE)
+	rm -rf dist
+	rm -f sns-put-lambda.zip
 
 listen-apns:
 	while [[ true ]]; do \
@@ -35,4 +41,18 @@ listen-apns:
 graph:
 	$(PREFIX) terraform graph | dot -Tsvg > graph.svg
 
-.PHONY: clean plan
+.PHONY: all clean plan
+
+all: sns-put-lambda.zip
+
+dist:
+	mkdir -p dist
+
+dist/index.js: src/index.ts
+	npm run build
+
+node_modules: package.json
+	npm i
+
+sns-put-lambda.zip: dist/index.js node_modules
+	zip -r9 sns-put-lambda.zip dist node_modules

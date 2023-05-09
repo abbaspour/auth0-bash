@@ -2,7 +2,7 @@
 
 ##########################################################################################
 # Author: Amin Abbaspour
-# Date: 2022-06-12
+# Date: 2023-05-08
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
@@ -16,29 +16,30 @@ readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-i id] [-v|-h]
-        -e file         # .env file location (default cwd)
-        -a token        # access_token. default from environment variable
-        -i id           # client grant id
-        -h|?            # usage
-        -v              # verbose
+USAGE: $0 [-e env] [-a access_token] [-i id] [-c id] [-v|-h]
+        -e file          # .env file location (default cwd)
+        -a token         # access_token. default from environment variable
+        -c client_id     # client id
+        -i credential_id # credential id
+        -h|?             # usage
+        -v               # verbose
 
 eg,
-     $0 -i g123
+     $0 -i c123 -c cred123
 END
     exit $1
 }
 
-declare grant_id=''
+declare client_id=''
+declare credential_id=''
 
-
-
-while getopts "e:a:i:n:s:hv?" opt; do
+while getopts "e:a:c:i:n:s:hv?" opt; do
     case ${opt} in
     e) source ${OPTARG} ;;
     a) access_token=${OPTARG} ;;
-    i) grant_id=${OPTARG} ;;
-    v) opt_verbose=1 ;; #set -x;;
+    c) client_id=${OPTARG} ;;
+    i) credential_id=${OPTARG} ;;
+    v) set -x;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
     esac
@@ -48,14 +49,15 @@ done
 
 
 declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
-declare -r EXPECTED_SCOPE="delete:client_grants"
+declare -r EXPECTED_SCOPE="delete:client_credentials"
 [[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
 
-[[ -z "${grant_id}" ]] && { echo >&2 "ERROR: grant_id undefined.";  usage 1; }
+[[ -z "${client_id}" ]] && { echo >&2 "ERROR: client_id undefined.";  usage 1; }
+[[ -z "${credential_id}" ]] && { echo >&2 "ERROR: credential_id undefined.";  usage 1; }
 
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
 curl -k --request DELETE \
     -H "Authorization: Bearer ${access_token}" \
-    --url ${AUTH0_DOMAIN_URL}api/v2/client-grants/${grant_id}
+    --url "${AUTH0_DOMAIN_URL}api/v2/clients/${client_id}/credentials/${credential_id}"
