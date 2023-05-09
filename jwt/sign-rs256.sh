@@ -8,18 +8,21 @@
 
 set -eo pipefail
 
-command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
-command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+command -v openssl >/dev/null || {  echo >&2 "error: openssl not found";  exit 3; }
+
 declare alg='RS256'
+declare typ='JWT'
 
 function usage() {
     cat <<END >&2
 USAGE: $0 [-f json] [-i iss] [-a aud] [-k kid] [-p private-key] [-v|-h]
         -f file        # JSON file to sign
+        -p pem         # private key PEM file
         -i iss         # Issuer
         -a aud         # audience
         -k kid         # Key ID
         -A alg         # algorithm. default ${alg}
+        -t type        # type, defaults to "jwt"
         -h|?           # usage
         -v             # verbose
 
@@ -36,7 +39,7 @@ declare kid=''
 declare json_file=''
 declare pem_file=''
 
-while getopts "f:i:a:k:p:A:hv?" opt; do
+while getopts "f:i:a:k:p:A:t:hv?" opt; do
     case ${opt} in
     f) json_file=${OPTARG} ;;
     i) iss=${OPTARG} ;;
@@ -44,6 +47,7 @@ while getopts "f:i:a:k:p:A:hv?" opt; do
     k) kid=${OPTARG} ;;
     p) pem_file=${OPTARG} ;;
     A) alg=${OPTARG} ;;
+    t) typ=${OPTARG} ;;
     v) opt_verbose=1 ;; #set -x;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
@@ -62,7 +66,7 @@ done
 
 
 # header
-declare -r header=$(printf '{"typ":"JWT","alg":"%s","jti":"%s"}' "${alg}" "${kid}" | openssl base64 -e -A | tr '+' '-' | tr '/' '_' | sed -E s/=+$//)
+declare -r header=$(printf '{"typ":"%s","alg":"%s","kid":"%s"}' "${typ}" "${alg}" "${kid}" | openssl base64 -e -A | tr '+' '-' | tr '/' '_' | sed -E s/=+$//)
 
 # body
 declare -r body=$(cat "${json_file}" | openssl base64 -e -A | tr '+' '-' | tr '/' '_' | sed -E s/=+$//)

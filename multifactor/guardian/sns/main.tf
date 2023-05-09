@@ -19,7 +19,7 @@ resource "aws_iam_user_policy" "sns" {
       "Effect": "Allow",
       "Action": "sns:Publish",
       "Resource": [
-        "${aws_sns_topic.apns.arn}",
+        "${var.sns_apns_platform_application_arn}",
         "${aws_sns_topic.fcm.arn}"
       ]
     },
@@ -42,6 +42,7 @@ EOF
 }
 
 # APNS
+/*
 resource "aws_sns_topic" "apns" {
   name = "guardian-push-notification-apns-topic"
 }
@@ -55,6 +56,14 @@ resource "aws_sns_topic_subscription" "apns_sqs_target" {
   protocol  = "sqs"
   endpoint  = aws_sqs_queue.apns.arn
 }
+
+resource "aws_sns_platform_application" "apns_application" {
+  name                = "apns_application"
+  platform            = "APNS_SANDBOX"
+  platform_credential = file("${path.module}/../apns/certificate.pem")
+  platform_principal  = file("${path.module}/../apns/private-key.pem")
+}
+*/
 
 # FCM
 resource "aws_sns_topic" "fcm" {
@@ -76,10 +85,6 @@ output "aws_region" {
   value = var.region
 }
 
-output "apns_arn" {
-  value = aws_sns_topic.apns.arn
-}
-
 output "fcm_arn" {
   value = aws_sns_topic.fcm.arn
 }
@@ -93,11 +98,11 @@ output "aws_access_key_secret" {
   value = aws_iam_access_key.auth0_guardian_agent_access_key.secret
   sensitive = true
 }
-*/
 
 output "apns_queue_url" {
   value = aws_sqs_queue.apns.url
 }
+*/
 
 output "fcm_queue_url" {
   value = aws_sqs_queue.fcm.url
@@ -107,7 +112,7 @@ output "fcm_queue_url" {
 # Auth0
 resource "auth0_guardian" "my_guardian" {
   policy        = "all-applications"
-  email = true
+  email = false
   push {
     enabled = true
     provider = "sns"
@@ -116,7 +121,7 @@ resource "auth0_guardian" "my_guardian" {
       aws_region                        = var.region
       aws_access_key_id                 = aws_iam_access_key.auth0_guardian_agent_access_key.id
       aws_secret_access_key             = aws_iam_access_key.auth0_guardian_agent_access_key.secret
-      sns_apns_platform_application_arn = aws_sns_topic.apns.arn
+      sns_apns_platform_application_arn = var.sns_apns_platform_application_arn # aws_sns_topic.apns.arn
       sns_gcm_platform_application_arn  = aws_sns_topic.fcm.arn
     }
     custom_app {

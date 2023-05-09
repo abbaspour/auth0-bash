@@ -30,7 +30,7 @@ USAGE: $0 [-e env] [-k connection] [-s source] [-c client_id] [-r resource-serve
         -v              # verbose
 
 eg,
-     $0 -c Username-Password-Authentication -s identity_user_id -i
+     $0 -k Username-Password-Authentication -s identity_user_id -i
 END
     exit $1
 }

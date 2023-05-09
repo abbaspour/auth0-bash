@@ -49,7 +49,10 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r conn
         -i invitation  # invitation
         -l locale      # ui_locales
         -E endpoint    # change authorization_endpoint. default is ${authorization_endpoint}
+        -k key_id      # client credentials key_id (enables JAR)
+        -K file.pem    # client credentials private key (enables JAR)
         -P             # use PAR (pushed authorization request)
+        -J             # use JAR (JWT authorization request)
         -C             # copy to clipboard
         -N             # no pretty print
         -m             # Management API audience
@@ -110,16 +113,19 @@ declare opt_login_hint=''
 declare org_id=''
 declare ui_locales=''
 declare invitation=''
+declare key_id=''
+declare key_file=''
 declare opt_browser=''
 declare opt_pp=1
 declare opt_par=0
+declare opt_jar=0
 
 [[ -f "${DIR}/.env" ]] && . "${DIR}/.env"
 
-while getopts "e:t:d:c:x:a:r:R:f:u:p:s:b:M:S:n:H:O:i:l:E:mCoPNhv?" opt; do
+while getopts "e:t:d:c:x:a:r:R:f:u:p:s:b:M:S:n:H:O:i:l:E:k:K:mCoPJNhv?" opt; do
     case ${opt} in
-    e) source ${OPTARG} ;;
-    t) AUTH0_DOMAIN=$(echo ${OPTARG}.auth0.com | tr '@' '.') ;;
+    e) source "${OPTARG}" ;;
+    t) AUTH0_DOMAIN=$(echo "${OPTARG}.auth0.com" | tr '@' '.') ;;
     d) AUTH0_DOMAIN=${OPTARG} ;;
     c) AUTH0_CLIENT_ID=${OPTARG} ;;
     x) AUTH0_CLIENT_SECRET=${OPTARG} ;;
@@ -138,8 +144,11 @@ while getopts "e:t:d:c:x:a:r:R:f:u:p:s:b:M:S:n:H:O:i:l:E:mCoPNhv?" opt; do
     i) invitation=${OPTARG} ;;
     l) ui_locales=${OPTARG} ;;
     E) authorization_endpoint=${OPTARG} ;;
+    k) key_id="${OPTARG}"; opt_jar=1 ;;
+    K) key_file="${OPTARG}"; opt_jar=1 ;;
     C) opt_clipboard=1 ;;
     P) opt_par=1 ;;
+    J) opt_jar=1 ;;
     N) opt_pp=0 ;;
     o) opt_open=1 ;;
     m) opt_mgmnt=1 ;;
@@ -187,15 +196,51 @@ declare authorize_params="client_id=${AUTH0_CLIENT_ID}&${response_param}&nonce=$
 [[ -n "${org_id}" ]] && authorize_params+="&organization=$(urlencode "${org_id}")"
 [[ -n "${ui_locales}" ]] && authorize_params+="&ui_locales=${ui_locales}"
 
-if [[ ${opt_par} -eq 0 ]]; then
-  declare authorize_url="${AUTH0_DOMAIN}/${authorization_endpoint}?${authorize_params}"
-else
-  [[ -n "${AUTH0_CLIENT_SECRET}" ]] && authorize_params+="&client_secret=${AUTH0_CLIENT_SECRET}"
-  declare -r request_uri=$(curl -s --request POST \
+if [[ ${opt_jar} -ne 0 ]]; then                       # JAR
+  [[ -z "${key_id}" ]] && { echo >&2 "ERROR: key_id undefined"; exit 2; }
+  [[ -z "${key_file}" ]] && { echo >&2 "ERROR: key_file undefined"; exit 2; }
+  [[ ! -f "${key_file}" ]] && { echo >&2 "ERROR: key_file missing: ${key_file}"; exit 2; }
+  readonly tmp_jwt=$(mktemp --suffix=.json)
+  # shellcheck disable=SC2129
+  printf "{\n \"iss\":\"%s\", \n " "${AUTH0_CLIENT_ID}" >> "${tmp_jwt}"
+  echo "${authorize_params}" | awk -F'[=&]' '{
+                                 for (i=1;i<=NF;i+=2) {
+                                   gsub(/\+/," ",$(i+1))
+                                   gsub(/%20/," ",$(i+1))
+                                   gsub(/%3A/,":",$(i+1))
+                                   gsub(/%2F/,"/",$(i+1))
+                                   printf("\"%s\":\"%s\",\n ", $i, $(i+1))
+                                 }
+                               }' >> "${tmp_jwt}"
+  echo "\"aud\": \"${AUTH0_DOMAIN}/\""  >> "${tmp_jwt}"
+  echo '}' >> "${tmp_jwt}"
+  #cat "${tmp_jwt}"
+  readonly signed_request=$(../jwt/sign-rs256.sh -p "${key_file}" -f "${tmp_jwt}" -k "${key_id}" -t oauth-authz-req+jwt)
+  #echo "$signed_request"
+  authorize_params="client_id=${AUTH0_CLIENT_ID}&request=${signed_request}"
+fi
+
+if [[ ${opt_par} -ne 0 ]]; then                       # PAR
+  if [[ ${opt_jar} -eq 0 ]]; then
+    [[ -n "${AUTH0_CLIENT_SECRET}" ]] && authorize_params+="&client_secret=${AUTH0_CLIENT_SECRET}"
+  else                                                # PAR+JAR
+    [[ -z "${key_id}" ]] && { echo >&2 "ERROR: key_id undefined"; exit 2; }
+    [[ -z "${key_file}" ]] && { echo >&2 "ERROR: key_file undefined"; exit 2; }
+    [[ ! -f "${key_file}" ]] && { echo >&2 "ERROR: key_file missing: ${key_file}"; exit 2; }
+    readonly client_assertion=$(mktemp --suffix=.json)
+    printf "{\n \"iss\":\"%s\", \n \"aud\":\"%s/\",\n \"sub\":\"%s\" \n}" "${AUTH0_CLIENT_ID}" "${AUTH0_DOMAIN}" "${AUTH0_CLIENT_ID}" >> "${client_assertion}"
+    #cat "${client_assertion}"
+    readonly signed_client_assertion=$(../jwt/sign-rs256.sh -p "${key_file}" -f "${client_assertion}" -k "${key_id}" -t oauth-authz-req+jwt)
+    #echo ${signed_client_assertion}
+    authorize_params+="client_assertion=${signed_client_assertion}&client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+  fi
+  declare -r request_uri=$(curl -v --request POST \
     --url "${AUTH0_DOMAIN}/${par_endpoint}" \
     -d "${authorize_params}" | jq -r '.request_uri')
-  declare authorize_url="${AUTH0_DOMAIN}/${authorization_endpoint}?client_id=${AUTH0_CLIENT_ID}&request_uri=${request_uri}"
+  authorize_params="client_id=${AUTH0_CLIENT_ID}&request_uri=${request_uri}"
 fi
+
+declare authorize_url="${AUTH0_DOMAIN}/${authorization_endpoint}?${authorize_params}"
 
 if [[ ${opt_pp} -eq 0 ]]; then
   echo "${authorize_url}"

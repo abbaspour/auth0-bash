@@ -19,7 +19,7 @@ USAGE: $0 [-e env] [-a access_token] [-n name] [-t type] [-i client_id] [-p PEM]
         -t type         # client type: spa, regular_web, native, non_interactive
         -i client_id    # client_id (if accept_client_id_on_creation is on)
         -3              # mark client is 3rd party (default is 1st party)
-        -p file         # public key PEM for JWT-CA (if jwt_for_client_auth is on)
+        -p file         # public key PEM for JWT-CA (default FF jwt_for_client_auth) # TODO: move to client credentials
         -c uri,uri      # comma seperated list of allowed callback URIs
         -h|?            # usage
         -v              # verbose
