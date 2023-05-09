@@ -218,13 +218,26 @@ if [[ ${opt_jar} -ne 0 ]]; then                       # JAR
   readonly signed_request=$(../jwt/sign-rs256.sh -p "${key_file}" -f "${tmp_jwt}" -k "${key_id}" -t oauth-authz-req+jwt)
   #echo "$signed_request"
   authorize_params="client_id=${AUTH0_CLIENT_ID}&request=${signed_request}"
-elif [[ ${opt_par} -ne 0 ]]; then                       # PAR
-  [[ -n "${AUTH0_CLIENT_SECRET}" ]] && authorize_params+="&client_secret=${AUTH0_CLIENT_SECRET}"
-  declare -r request_uri=$(curl -s --request POST \
+fi
+
+if [[ ${opt_par} -ne 0 ]]; then                       # PAR
+  if [[ ${opt_jar} -eq 0 ]]; then
+    [[ -n "${AUTH0_CLIENT_SECRET}" ]] && authorize_params+="&client_secret=${AUTH0_CLIENT_SECRET}"
+  else                                                # PAR+JAR
+    [[ -z "${key_id}" ]] && { echo >&2 "ERROR: key_id undefined"; exit 2; }
+    [[ -z "${key_file}" ]] && { echo >&2 "ERROR: key_file undefined"; exit 2; }
+    [[ ! -f "${key_file}" ]] && { echo >&2 "ERROR: key_file missing: ${key_file}"; exit 2; }
+    readonly client_assertion=$(mktemp --suffix=.json)
+    printf "{\n \"iss\":\"%s\", \n \"aud\":\"%s/\",\n \"sub\":\"%s\" \n}" "${AUTH0_CLIENT_ID}" "${AUTH0_DOMAIN}" "${AUTH0_CLIENT_ID}" >> "${client_assertion}"
+    #cat "${client_assertion}"
+    readonly signed_client_assertion=$(../jwt/sign-rs256.sh -p "${key_file}" -f "${client_assertion}" -k "${key_id}" -t oauth-authz-req+jwt)
+    #echo ${signed_client_assertion}
+    authorize_params+="client_assertion=${signed_client_assertion}&client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+  fi
+  declare -r request_uri=$(curl -v --request POST \
     --url "${AUTH0_DOMAIN}/${par_endpoint}" \
     -d "${authorize_params}" | jq -r '.request_uri')
   authorize_params="client_id=${AUTH0_CLIENT_ID}&request_uri=${request_uri}"
-  # TODO: JAR + PAR
 fi
 
 declare authorize_url="${AUTH0_DOMAIN}/${authorization_endpoint}?${authorize_params}"
