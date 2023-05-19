@@ -76,6 +76,7 @@ declare BODY=$(cat <<EOL
 EOL
 )
 
+## TODO: detect if PEM is certificate (as opposed to public key) and enable `parse_expiry_from_cert` if so
 #  "parse_expiry_from_cert": true
 
 curl -s -k --request POST \

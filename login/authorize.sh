@@ -49,8 +49,8 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r conn
         -i invitation  # invitation
         -l locale      # ui_locales
         -E endpoint    # change authorization_endpoint. default is ${authorization_endpoint}
-        -k key_id      # client credentials key_id (enables JAR)
-        -K file.pem    # client credentials private key (enables JAR)
+        -k key_id      # client credentials key_id
+        -K file.pem    # client credentials private key
         -P             # use PAR (pushed authorization request)
         -J             # use JAR (JWT authorization request)
         -C             # copy to clipboard
@@ -144,8 +144,8 @@ while getopts "e:t:d:c:x:a:r:R:f:u:p:s:b:M:S:n:H:O:i:l:E:k:K:mCoPJNhv?" opt; do
     i) invitation=${OPTARG} ;;
     l) ui_locales=${OPTARG} ;;
     E) authorization_endpoint=${OPTARG} ;;
-    k) key_id="${OPTARG}"; opt_jar=1 ;;
-    K) key_file="${OPTARG}"; opt_jar=1 ;;
+    k) key_id="${OPTARG}";;
+    K) key_file="${OPTARG}";;
     C) opt_clipboard=1 ;;
     P) opt_par=1 ;;
     J) opt_jar=1 ;;
@@ -221,20 +221,20 @@ if [[ ${opt_jar} -ne 0 ]]; then                       # JAR
 fi
 
 if [[ ${opt_par} -ne 0 ]]; then                       # PAR
-  if [[ ${opt_jar} -eq 0 ]]; then
-    [[ -n "${AUTH0_CLIENT_SECRET}" ]] && authorize_params+="&client_secret=${AUTH0_CLIENT_SECRET}"
-  else                                                # PAR+JAR
+  if [[ -n "${AUTH0_CLIENT_SECRET}" ]]; then
+    authorize_params+="&client_secret=${AUTH0_CLIENT_SECRET}"
+  else                                                # JWT-CA
     [[ -z "${key_id}" ]] && { echo >&2 "ERROR: key_id undefined"; exit 2; }
     [[ -z "${key_file}" ]] && { echo >&2 "ERROR: key_file undefined"; exit 2; }
     [[ ! -f "${key_file}" ]] && { echo >&2 "ERROR: key_file missing: ${key_file}"; exit 2; }
+    readonly exp=$(date +%s --date='5 minutes')
+    readonly now=$(date +%s)
     readonly client_assertion=$(mktemp --suffix=.json)
-    printf "{\n \"iss\":\"%s\", \n \"aud\":\"%s/\",\n \"sub\":\"%s\" \n}" "${AUTH0_CLIENT_ID}" "${AUTH0_DOMAIN}" "${AUTH0_CLIENT_ID}" >> "${client_assertion}"
-    #cat "${client_assertion}"
-    readonly signed_client_assertion=$(../jwt/sign-rs256.sh -p "${key_file}" -f "${client_assertion}" -k "${key_id}" -t oauth-authz-req+jwt)
-    #echo ${signed_client_assertion}
-    authorize_params+="client_assertion=${signed_client_assertion}&client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+    printf '{"iat": %s, "iss":"%s","sub":"%s","aud":"%s/","exp":%s, "jti": "%s"}' "${now}" "${AUTH0_CLIENT_ID}" "${AUTH0_CLIENT_ID}" "${AUTH0_DOMAIN}" "${exp}" "${now}" >> "${client_assertion}"
+    readonly signed_client_assertion=$(../jwt/sign-rs256.sh -p "${key_file}" -f "${client_assertion}" -k "${key_id}" -t JWT)
+    authorize_params+="&client_assertion=${signed_client_assertion}&client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
   fi
-  declare -r request_uri=$(curl -v --request POST \
+  declare -r request_uri=$(curl -s \
     --url "${AUTH0_DOMAIN}/${par_endpoint}" \
     -d "${authorize_params}" | jq -r '.request_uri')
   authorize_params="client_id=${AUTH0_CLIENT_ID}&request_uri=${request_uri}"
