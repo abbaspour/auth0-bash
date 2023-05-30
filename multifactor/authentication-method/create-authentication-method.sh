@@ -23,7 +23,8 @@ USAGE: $0 [-e env] [-a access_token] [-i user_id] [-v|-h]
         -i user_id  # user_id, e.g. 'auth0|5b5fb9702e0e740478884234'
         -t type     # type; "phone" or "email" or "totp" or "webauthn-roaming"
         -n name     # name
-        -s secret   # totp secret
+        -s secret   # Base32 encoded secret for TOTP generation (min 128b)
+        -S secret   # plain secret for TOTP generation (min 128b)
         -p number   # phone number
         -m email    # email
         -h|?        # usage
@@ -36,15 +37,20 @@ END
 }
 
 declare type=''
-declare phone_number=''
+declare method_payload=''
+declare name_string=''
 
-while getopts "e:a:i:t:p:hv?" opt; do
+while getopts "e:a:i:t:n:p:m:s:S:hv?" opt; do
     case ${opt} in
     e) source ${OPTARG} ;;
     a) access_token=${OPTARG} ;;
     i) user_id=${OPTARG} ;;
     t) type=${OPTARG} ;;
-    p) phone_number=${OPTARG} ;;
+    n) name_string="\"name\":\"${OPTARG}\", ";;
+    p) method_payload="\"phone_number\":\"${OPTARG}\"";;
+    m) method_payload="\"email\":\"${OPTARG}\"";;
+    s) method_payload="\"totp_secret\":\"${OPTARG}\"";;
+    S) method_payload="\"totp_secret\":\"$(echo -n ${OPTARG} | base32 -w0)\"";;
     v) opt_verbose=1 ;; #set -x;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
@@ -59,15 +65,14 @@ declare -r EXPECTED_SCOPE="create:authentication_methods"
 
 [[ -z "${user_id}" ]] && { echo >&2 "ERROR: user_id undefined."; usage 1; }
 [[ -z "${type}" ]] && { echo >&2 "ERROR: type undefined."; usage 1; }
+[[ -z "${method_payload}" ]] && { echo >&2 "ERROR: authenticator details missing."; usage 1; }
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
-# todo: add other methods support
-
 declare BODY=$(cat <<EOL
 {
-    "type": "${type}",
-    "phone_number": "${phone_number}"
+    "type": "${type}", ${name_string}
+    ${method_payload}
 }
 EOL
 )

@@ -55,6 +55,6 @@ declare -r EXPECTED_SCOPE="delete:authentication_methods"
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
-curl -v -H "Authorization: Bearer ${access_token}" \
+curl -s -H "Authorization: Bearer ${access_token}" \
     --request DELETE \
     --url "${AUTH0_DOMAIN_URL}api/v2/users/${user_id}/authentication-methods/${authentication_method_id}"
