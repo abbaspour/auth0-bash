@@ -46,8 +46,13 @@ done
 [[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
 
 declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
-declare -r EXPECTED_SCOPE="read:users"
-[[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
+declare -r EXPECTED_SCOPES=("read:users" "read:current_user") # Either of these scopes would do
+[[ " $AVAILABLE_SCOPES " == *" ${EXPECTED_SCOPES[0]} "* || " $AVAILABLE_SCOPES " == *" ${EXPECTED_SCOPES[1]} "*  ]] \
+    || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected (any of): '${EXPECTED_SCOPES[*]}', Available: '$AVAILABLE_SCOPES'"; exit 1; }
+
+if [[ " $AVAILABLE_SCOPES " == *" read:current_user "* && -z "${user_id}" ]]; then
+  user_id=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .sub' <<< "${access_token}")
+fi
 
 [[ -z "${user_id}" ]] && { echo >&2 "ERROR: user_id undefined."; usage 1; }
 
