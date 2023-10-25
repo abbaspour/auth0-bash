@@ -6,22 +6,39 @@
 # License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
 ##########################################################################################
 
-set -ueo pipefail
+set -eo pipefail
 
 readonly DIR=$(dirname "${BASH_SOURCE[0]}")
+
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+
+urlencode() {
+    local length="${#1}"
+    for ((i = 0; i < length; i++)); do
+        local c="${1:i:1}"
+        case $c in
+        [a-zA-Z0-9.~_-]) printf "$c" ;;
+        *) printf '%s' "$c" | xxd -p -u -c1 |
+            while read c; do printf '%%%s' "$c"; done ;;
+        esac
+    done
+}
 
 function usage() {
   cat <<END >&2
 USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-a audience] [-m|-v|-h]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
-        -d domain      # Auth0 domain
-        -c client_id   # Auth0 client ID
+        -d domain      # Auth0 domain or edge location
+        -i client_id   # Auth0 client ID
         -x secret      # Auth0 client secret
         -a audience    # API audience
         -k kid         # client public key jwt id
         -f private.pem # client private key pem file
         -m             # Management API audience
+        -n api_key     # cname_api_key
+        -c cert.pem    # client certificate for mTLS
+        -s             # mark request as CA signed
         -h|?           # usage
         -v             # verbose
 
@@ -39,18 +56,24 @@ declare secret=''
 declare kid=''
 declare private_pem=''
 declare client_assertion=''
+declare cname_api_key=''
+declare client_certificate=''
+declare ca_signed='FAILED: self signed certificate'
 declare opt_mgmnt=''
 
-while getopts "e:t:d:c:a:x:k:f:mhv?" opt; do
+while getopts "e:t:d:i:a:x:k:f:n:c:smhv?" opt; do
   case ${opt} in
   e) source "${OPTARG}" ;;
   t) AUTH0_DOMAIN=$(echo "${OPTARG}.auth0.com" | tr '@' '.') ;;
   d) AUTH0_DOMAIN=${OPTARG} ;;
-  c) AUTH0_CLIENT_ID=${OPTARG} ;;
+  i) AUTH0_CLIENT_ID=${OPTARG} ;;
   x) AUTH0_CLIENT_SECRET=${OPTARG} ;;
   a) AUTH0_AUDIENCE=${OPTARG} ;;
   k) kid=${OPTARG} ;;
   f) private_pem=${OPTARG} ;;
+  n) cname_api_key=${OPTARG} ;;
+  c) client_certificate=$(urlencode "`cat "${OPTARG}"`") ;;
+  s) ca_signed='SUCCESS' ;;
   m) opt_mgmnt=1 ;;
   v) set -x ;;
   h | ?) usage 0 ;;
@@ -86,4 +109,12 @@ readonly BODY=$(cat <<EOL
 EOL
 )
 
-curl -s -k --header 'content-type: application/json' -d "${BODY}" "https://${AUTH0_DOMAIN}/oauth/token"
+if [[ -z "${cname_api_key}"  ]]; then
+  curl -s -k --header 'content-type: application/json' -d "${BODY}" "https://${AUTH0_DOMAIN}/oauth/token"
+else
+  curl -s -k --header 'content-type: application/json' -d "${BODY}" \
+    --header "cname-api-key: ${cname_api_key}" \
+    --header "client-certificate: ${client_certificate}" \
+    --header "client-certificate-ca-verified: ${ca_signed}" \
+    "https://${AUTH0_DOMAIN}/oauth/token"
+fi
