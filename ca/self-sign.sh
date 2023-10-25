@@ -55,7 +55,7 @@ cat >openssl.cnf <<-EOF
   extendedKeyUsage = serverAuth
 EOF
 
-openssl req -nodes -new -x509 -config openssl.cnf -keyout ${private_key} -out ${cert_key}
-openssl x509 -inform PEM -in ${cert_key} -pubkey -noout >${public_key}
+openssl req -nodes -new -x509 -config openssl.cnf -days 365 -keyout "${private_key}" -out "${cert_key}"
+openssl x509 -inform PEM -in ${cert_key} -pubkey -noout >"${public_key}"
 
 rm openssl.cnf

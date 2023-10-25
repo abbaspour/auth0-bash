@@ -15,11 +15,11 @@ function usage() {
 USAGE: $0 [-e env] [-a access_token] [-n name] [-t type] [-i client_id] [-p PEM] [-c callbacks] [-v|-h]
         -e file         # .env file location (default cwd)
         -a token        # access_token. default from environment variable
-        -n name         # client name (e.g. "My Client")
-        -t type         # credential type: public_key
+        -n name         # credential name (e.g. "JWTCA cred 1" or "mTLS cred")
+        -t type         # credential type: public_key, x509_cert
         -i client_id    # client_id (if accept_client_id_on_creation is on)
-        -p file         # public key PEM file
-        -g algorithm    # Can be one of RS256, RS384, PS256. If not specified, RS256 will be used.
+        -p file         # public key or cert PEM file
+        -g algorithm    # Optional. can be one of RS256, RS384, PS256. If not specified, RS256 will be used.
         -h|?            # usage
         -v              # verbose
 
@@ -33,17 +33,17 @@ declare client_id=''
 declare credential_name=''
 declare credential_type='public_key'
 declare public_key_file=''
-declare algorithm='RS256'
+declare algorithm_string=''
 
 while getopts "e:a:n:t:i:p:g:hv?" opt; do
   case ${opt} in
-  e) source ${OPTARG} ;;
+  e) source "${OPTARG}" ;;
   a) access_token=${OPTARG} ;;
   n) credential_name=${OPTARG} ;;
   t) credential_type=${OPTARG} ;;
   i) client_id="${OPTARG}";;
   p) public_key_file=${OPTARG} ;;
-  g) algorithm=${OPTARG} ;;
+  g) algorithm_string=",\"alg\":\"${OPTARG}\"" ;;
   v) set -x;;
   h | ?) usage 0 ;;
   *) usage 1 ;;
@@ -70,8 +70,8 @@ declare BODY=$(cat <<EOL
 {
   "credential_type": "${credential_type}",
   "name": "${credential_name}",
-  "pem": "${credential_public_key}",
-  "alg": "${algorithm}"
+  "pem": "${credential_public_key}"
+  ${algorithm_string}
 }
 EOL
 )
