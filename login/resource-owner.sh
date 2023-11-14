@@ -8,14 +8,21 @@
 
 set -eo pipefail
 
-command -v curl >/dev/null || {
-  echo >&2 "error: curl not found"
-  exit 3
+command -v curl >/dev/null || { echo >&2 "error: curl not found"; exit 3; }
+command -v jq >/dev/null || { echo >&2 "error: jq not found"; exit 3; }
+
+urlencode() {
+    local length="${#1}"
+    for ((i = 0; i < length; i++)); do
+        local c="${1:i:1}"
+        case $c in
+        [a-zA-Z0-9.~_-]) printf "$c" ;;
+        *) printf '%s' "$c" | xxd -p -u -c1 |
+            while read c; do printf '%%%s' "$c"; done ;;
+        esac
+    done
 }
-command -v jq >/dev/null || {
-  echo >&2 "error: jq not found"
-  exit 3
-}
+
 readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 declare AUTH0_SCOPE='openid profile email'
@@ -23,7 +30,7 @@ declare AUTH0_CONNECTION='Username-Password-Authentication'
 
 function usage() {
   cat <<END >&2
-USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u username] [-p passsword] [-x client_secret] [-a audience] [-r connection] [-s scope] [-i IP] [-m|-h|-v]
+USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u username] [-p password] [-x client_secret] [-a audience] [-r connection] [-s scope] [-i IP] [-m|-h|-v]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
@@ -35,11 +42,13 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u username] [-p pass
         -r realm       # Connection (default is "${AUTH0_CONNECTION}")
         -s scopes      # comma separated list of scopes (default is "${AUTH0_SCOPE}")
         -i IP          # set origin IP header. Default is 'x-forwarded-for'
-        -C key         # cname-api-key
+        -n api_key     # cname-api-key
         -A             # switch to 'auth0-forwarded-for' for trust IP header
         -m             # Management API audience
+        -S             # mark request as CA signed
         -k kid         # client public key jwt id
         -f private.pem # client private key pem file
+        -C cert.pem    # client certificate for mTLS
         -h|?           # usage
         -v             # verbose
 
@@ -63,8 +72,10 @@ declare ff_prefix='x'
 declare opt_mgmnt=''
 declare kid=''
 declare private_pem=''
+declare ca_signed='FAILED: self signed certificate'
+declare client_certificate=''
 
-while getopts "e:t:u:p:d:c:x:a:r:s:i:C:k:f:Amhv?" opt; do
+while getopts "e:t:u:p:d:c:x:a:r:s:i:n:k:f:C:SAmhv?" opt; do
   case ${opt} in
   e) source "${OPTARG}" ;;
   t) AUTH0_DOMAIN=$(echo ${OPTARG}.auth0.com | tr '@' '.') ;;
@@ -77,10 +88,12 @@ while getopts "e:t:u:p:d:c:x:a:r:s:i:C:k:f:Amhv?" opt; do
   r) AUTH0_CONNECTION=${OPTARG} ;;
   s) AUTH0_SCOPE=$(echo ${OPTARG} | tr ',' ' ') ;;
   i) origin_ip=${OPTARG} ;;
-  C) cname_api_key=${OPTARG} ;;
+  n) cname_api_key=${OPTARG} ;;
   k) kid=${OPTARG} ;;
   f) private_pem=${OPTARG} ;;
   A) ff_prefix='auth0' ;;
+  C) client_certificate=$(urlencode "`cat "${OPTARG}"`") ;;
+  S) ca_signed='SUCCESS' ;;
   m) opt_mgmnt=1 ;;
   v) set -x ;;
   h | ?) usage 0 ;;
@@ -88,20 +101,10 @@ while getopts "e:t:u:p:d:c:x:a:r:s:i:C:k:f:Amhv?" opt; do
   esac
 done
 
-[[ -z "${AUTH0_DOMAIN}" ]] && {
-  echo >&2 "ERROR: AUTH0_DOMAIN undefined"
-  usage 1
-}
-[[ -z "${AUTH0_CLIENT_ID}" ]] && {
-  echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"
-  usage 1
-}
-[[ -z "${username}" ]] && {
-  echo >&2 "ERROR: username undefined"
-  usage 1
-}
+[[ -z "${AUTH0_DOMAIN}" ]] && { echo >&2 "ERROR: AUTH0_DOMAIN undefined"; usage 1; }
+[[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined"; usage 1; }
+[[ -z "${username}" ]] && { echo >&2 "ERROR: username undefined"; usage 1; }
 
-#[[ -z "${AUTH0_AUDIENCE}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/userinfo"
 [[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"
 
 declare secret=''
@@ -109,8 +112,7 @@ declare secret=''
 
 if [[ -n "${kid}" && -n "${private_pem}" && -f "${private_pem}" ]]; then
   readonly assertion=$(../clients/client-assertion.sh -d "${AUTH0_DOMAIN}" -i "${AUTH0_CLIENT_ID}" -k "${kid}" -f "${private_pem}")
-  readonly client_assertion=$(
-    cat <<EOL
+  readonly client_assertion=$(cat <<EOL
   , "client_assertion" : "${assertion}",
   "client_assertion_type": "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
 EOL
@@ -134,10 +136,21 @@ EOL
 
 # --header "$ff_prefix-forwarded-for: ${origin_ip}" \
 # --header "true-client-ip: 20.30.40.50" \
-# --header "cname-api-key: ${cname_api_key}" \
 
-curl -s -k --header 'content-type: application/json' \
-  -d "${BODY}" \
-  "https://${AUTH0_DOMAIN}/oauth/token"
+if [[ -z "${cname_api_key}"  ]]; then
+  curl -s -k --header 'content-type: application/json' -d "${BODY}" "https://${AUTH0_DOMAIN}/oauth/token"
+else
+  if [[ -z "${client_certificate}" ]]; then
+    curl -s -k --header 'content-type: application/json' -d "${BODY}" \
+      --header "cname-api-key: ${cname_api_key}" \
+      "https://${AUTH0_DOMAIN}/oauth/token"
+  else
+    curl -s -k --header 'content-type: application/json' -d "${BODY}" \
+      --header "cname-api-key: ${cname_api_key}" \
+      --header "client-certificate: ${client_certificate}" \
+      --header "client-certificate-ca-verified: ${ca_signed}" \
+      "https://${AUTH0_DOMAIN}/oauth/token"
+  fi
+fi
 
 echo

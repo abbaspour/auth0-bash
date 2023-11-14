@@ -37,8 +37,8 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-a
         -f private.pem # client private key pem file
         -m             # Management API audience
         -n api_key     # cname_api_key
-        -c cert.pem    # client certificate for mTLS
-        -s             # mark request as CA signed
+        -C cert.pem    # client certificate for mTLS
+        -S             # mark request as CA signed
         -h|?           # usage
         -v             # verbose
 
@@ -61,7 +61,7 @@ declare client_certificate=''
 declare ca_signed='FAILED: self signed certificate'
 declare opt_mgmnt=''
 
-while getopts "e:t:d:i:a:x:k:f:n:c:smhv?" opt; do
+while getopts "e:t:d:i:a:x:k:f:n:C:Smhv?" opt; do
   case ${opt} in
   e) source "${OPTARG}" ;;
   t) AUTH0_DOMAIN=$(echo "${OPTARG}.auth0.com" | tr '@' '.') ;;
@@ -72,8 +72,8 @@ while getopts "e:t:d:i:a:x:k:f:n:c:smhv?" opt; do
   k) kid=${OPTARG} ;;
   f) private_pem=${OPTARG} ;;
   n) cname_api_key=${OPTARG} ;;
-  c) client_certificate=$(urlencode "`cat "${OPTARG}"`") ;;
-  s) ca_signed='SUCCESS' ;;
+  C) client_certificate=$(urlencode "`cat "${OPTARG}"`") ;;
+  S) ca_signed='SUCCESS' ;;
   m) opt_mgmnt=1 ;;
   v) set -x ;;
   h | ?) usage 0 ;;

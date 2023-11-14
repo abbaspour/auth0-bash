@@ -47,7 +47,7 @@ export CLIENT_ID='xxx' # create M2M client from the manage dashboard and assign 
 cd clients
 ./create-client-credential.sh -i ${CLIENT_ID} -p ../ca/mtls-m2m-cert.pem \
   -t x509_cert -n "mtls cred 1" # collect credential ID
-./set-client-credential.sh -i ${CLIENT_ID} -c cred_xxx_from_prev_step  -t self_signed_tls_client_auth
+./set-client-credential.sh -i ${CLIENT_ID} -c ${cred_xxx_from_prev_step}  -t self_signed_tls_client_auth
 ```
 
 ### 6. (Optional) Enable Token Binding on Client
@@ -56,12 +56,20 @@ cd clients
 ./set-token-binding.sh -i ${CLIENT_ID}
 ```
 
-### 7. Test Client Credentials Exchange
+### 7. Test Exchange
+For CC grant
 ```bash
 cd ../login
 ./client-credentials.sh -i ${CLIENT_ID} -a sample.api \
   -d ${EDGE_LOCATION} -n ${CNAME_API_KEY} \
-  -c ../ca/mtls-m2m-cert.pem
+  -C ../ca/mtls-m2m-cert.pem
+```
+
+For ROPG
+```bash
+./resource-owner.sh -c "${CLIENT_ID}" -u USERNAME -p PASSWORD \
+  -d ${EDGE_LOCATION} -n ${CNAME_API_KEY} \
+  -C ../ca/mtls-m2m-cert.pem 
 ```
 
 ## 8. Check Token Binding (if enabled)
