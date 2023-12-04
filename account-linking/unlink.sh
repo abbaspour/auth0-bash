@@ -64,3 +64,5 @@ declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | 
 
 curl -X DELETE -H "Authorization: Bearer $access_token" \
     --url "${AUTH0_DOMAIN_URL}api/v2/users/${userId}/identities/${provider}/${secondary_userId}"
+
+echo

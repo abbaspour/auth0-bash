@@ -19,7 +19,7 @@ USAGE: $0 [-f users.json] [-v|-h]
        -v             # verbose
 
 eg,
-    $0 -i 'auth0|b0dec5bdba02248abd51388'
+    $0 -f all-users.json -o suspicious.json
 END
    exit $1
 }
@@ -40,4 +40,4 @@ done
 [[ -z "${file}" ]] && { echo >&2 "ERROR: no input file defined"; usage 1; }
 [[ ! -f "${file}" ]] && { echo >&2 "ERROR: no input not found: ${file}"; usage 1; }
 
-jq '.[] | select(.identities | length > 1) | select (.email != .identities[1].profileData.email)' "${file}" | jq -s '.' > "${output}"
+jq '.[] | select(.identities | length > 1) | select (.email != .identities[1].profileData.email)' "${file}" | jq -s '.' >> "${output}"
