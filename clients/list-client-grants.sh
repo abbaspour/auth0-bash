@@ -13,11 +13,14 @@ command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 
 readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
+# todo: client_id query parameter
+
 function usage() {
     cat <<END >&2
 USAGE: $0 [-e env] [-a access_token] [-v|-h]
         -e file     # .env file location (default cwd)
         -a token    # access_token. default from environment variable
+        -i id       # client_id
         -h|?        # usage
         -v          # verbose
 
@@ -27,10 +30,13 @@ END
     exit $1
 }
 
-while getopts "e:a:hv?" opt; do
+declare query=''
+
+while getopts "e:a:i:hv?" opt; do
     case ${opt} in
     e) source ${OPTARG} ;;
     a) access_token=${OPTARG} ;;
+    i) query+="client_id=${OPTARG}&" ;;
     v) opt_verbose=1 ;; #set -x;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
@@ -47,4 +53,4 @@ declare -r EXPECTED_SCOPE="read:client_grants"
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
 
 curl -k -s -H "Authorization: Bearer ${access_token}" \
-    --url ${AUTH0_DOMAIN_URL}api/v2/client-grants | jq '.'
+    --url "${AUTH0_DOMAIN_URL}api/v2/client-grants?${query}" | jq '.'
