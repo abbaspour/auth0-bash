@@ -3,7 +3,7 @@
 ##########################################################################################
 # Author: Amin Abbaspour
 # Date: 2023-01-23
-# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+# License: MIT (https://github.com/abbaspour/auth0-bash/blob/master/LICENSE)
 ##########################################################################################
 
 set -eo pipefail
@@ -26,6 +26,9 @@ USAGE: $0 [-e env] [-a access_token] [-i user_id] [-v|-h]
         -s secret   # Base32 encoded secret for TOTP generation (min 128b)
         -S secret   # plain secret for TOTP generation (min 128b)
         -p number   # phone number
+        -k public   # public key file
+        -I cred-id  # credential id
+        -r rp-id    # relying party id
         -m email    # email
         -h|?        # usage
         -v          # verbose
@@ -39,8 +42,11 @@ END
 declare type=''
 declare method_payload=''
 declare name_string=''
+declare public_key_file=''
+declare rp_id=''
+declare cred_id=''
 
-while getopts "e:a:i:t:n:p:m:s:S:hv?" opt; do
+while getopts "e:a:i:t:n:p:m:s:S:k:I:r:hv?" opt; do
     case ${opt} in
     e) source ${OPTARG} ;;
     a) access_token=${OPTARG} ;;
@@ -51,6 +57,9 @@ while getopts "e:a:i:t:n:p:m:s:S:hv?" opt; do
     m) method_payload="\"email\":\"${OPTARG}\"";;
     s) method_payload="\"totp_secret\":\"${OPTARG}\"";;
     S) method_payload="\"totp_secret\":\"$(echo -n ${OPTARG} | base32 -w0)\"";;
+    k) public_key_file="${OPTARG}";;
+    I) cred_id=$(echo "${OPTARG}" | tr -d '=');;
+    r) rp_id="${OPTARG}";;
     v) opt_verbose=1 ;; #set -x;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
@@ -65,7 +74,13 @@ declare -r EXPECTED_SCOPE="create:authentication_methods"
 
 [[ -z "${user_id}" ]] && { echo >&2 "ERROR: user_id undefined."; usage 1; }
 [[ -z "${type}" ]] && { echo >&2 "ERROR: type undefined."; usage 1; }
-[[ -z "${method_payload}" ]] && { echo >&2 "ERROR: authenticator details missing."; usage 1; }
+
+if [[ "${type}" == "webauthn-roaming" ]]; then
+  public_key_payload=$(sed -e '1{/-----BEGIN PUBLIC KEY-----/d;}' "${public_key_file}" |  sed -e '${/-----END PUBLIC KEY-----/d;}' | tr -d '\n')
+  method_payload="\"public_key\":\"${public_key_payload}\", \"key_id\": \"${cred_id}\", \"relying_party_identifier\":\"${rp_id}\""
+elif [[ -z "${method_payload}" ]]; then
+  echo >&2 "ERROR: authenticator details missing."; usage 1;
+fi
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 

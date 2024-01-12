@@ -10,3 +10,6 @@ yarn.lock
 package-lock.json
 qr.png
 login/apps.txt
+*.json
+*.csv
+*.p12

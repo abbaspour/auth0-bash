@@ -3,13 +3,11 @@
 ##########################################################################################
 # Author: Amin Abbaspour
 # Date: 2022-06-12
-# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+# License: MIT (https://github.com/abbaspour/auth0-bash/blob/master/LICENSE)
 ##########################################################################################
 
 set -eo pipefail
 
-command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
-command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 ##
@@ -234,6 +232,8 @@ if [[ ${opt_par} -ne 0 ]]; then                       # PAR
     readonly signed_client_assertion=$(../jwt/sign-rs256.sh -p "${key_file}" -f "${client_assertion}" -k "${key_id}" -t JWT)
     authorize_params+="&client_assertion=${signed_client_assertion}&client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
   fi
+  command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+  command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
   declare -r request_uri=$(curl -s \
     --url "${AUTH0_DOMAIN}/${par_endpoint}" \
     -d "${authorize_params}" | jq -r '.request_uri')

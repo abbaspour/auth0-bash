@@ -3,7 +3,7 @@
 ##########################################################################################
 # Author: Amin Abbaspour
 # Date: 2023-05-08
-# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+# License: MIT (https://github.com/abbaspour/auth0-bash/blob/master/LICENSE)
 ##########################################################################################
 
 

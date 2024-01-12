@@ -3,19 +3,11 @@
 ##########################################################################################
 # Author: Amin Abbaspour
 # Date: 2022-06-12
-# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+# License: MIT (https://github.com/abbaspour/auth0-bash/blob/master/LICENSE)
 ##########################################################################################
 
 set -eo pipefail
 
-command -v curl >/dev/null || {
-  echo >&2 "error: curl not found"
-  exit 3
-}
-command -v jq >/dev/null || {
-  echo >&2 "error: jq not found"
-  exit 3
-}
 declare -i bc_rounds=10
 declare domain='contoso.com'
 

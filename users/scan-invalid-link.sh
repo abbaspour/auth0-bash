@@ -4,7 +4,7 @@
 # Author: Amin Abbaspour
 # This script scans search results to find if there are any linked account with unmatched emails
 # Date: 2023-11-16
-# License: MIT (https://github.com/auth0/auth0-bash/blob/main/LICENSE)
+# License: MIT (https://github.com/abbaspour/auth0-bash/blob/master/LICENSE)
 ##########################################################################################
 
 set -eo pipefail
