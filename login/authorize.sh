@@ -66,6 +66,7 @@ END
 }
 
 urlencode() {
+    # TODO: use the version in okta-bash
     local length="${#1}"
     for ((i = 0; i < length; i++)); do
         local c="${1:i:1}"
@@ -81,7 +82,8 @@ random32() {
     for i in {0..32}; do echo -n $((RANDOM % 10)); done
 }
 
-base64URLEncode() { echo -n "$1" | base64 -w0 | tr '+' '-' | tr '/' '_' | tr -d '='
+base64URLEncode() {
+  echo -n "$1" | base64 -w0 | tr '+' '-' | tr '/' '_' | tr -d '='
 }
 
 gen_code_verifier() {
