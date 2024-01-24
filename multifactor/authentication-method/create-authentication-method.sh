@@ -26,7 +26,7 @@ USAGE: $0 [-e env] [-a access_token] [-i user_id] [-v|-h]
         -s secret   # Base32 encoded secret for TOTP generation (min 128b)
         -S secret   # plain secret for TOTP generation (min 128b)
         -p number   # phone number
-        -k public   # public key file
+        -k public   # public key in base64 encoded CBOR format
         -I cred-id  # credential id
         -r rp-id    # relying party id
         -m email    # email
@@ -42,9 +42,9 @@ END
 declare type=''
 declare method_payload=''
 declare name_string=''
-declare public_key_file=''
+declare public_key=''
 declare rp_id=''
-declare cred_id=''
+declare key_id=''
 
 while getopts "e:a:i:t:n:p:m:s:S:k:I:r:hv?" opt; do
     case ${opt} in
@@ -57,8 +57,8 @@ while getopts "e:a:i:t:n:p:m:s:S:k:I:r:hv?" opt; do
     m) method_payload="\"email\":\"${OPTARG}\"";;
     s) method_payload="\"totp_secret\":\"${OPTARG}\"";;
     S) method_payload="\"totp_secret\":\"$(echo -n ${OPTARG} | base32 -w0)\"";;
-    k) public_key_file="${OPTARG}";;
-    I) cred_id=$(echo "${OPTARG}" | tr -d '=');;
+    k) public_key="${OPTARG}";;
+    I) key_id="${OPTARG}";; # $(echo "${OPTARG}" | tr -d '=');;
     r) rp_id="${OPTARG}";;
     v) opt_verbose=1 ;; #set -x;;
     h | ?) usage 0 ;;
@@ -76,8 +76,7 @@ declare -r EXPECTED_SCOPE="create:authentication_methods"
 [[ -z "${type}" ]] && { echo >&2 "ERROR: type undefined."; usage 1; }
 
 if [[ "${type}" == "webauthn-roaming" ]]; then
-  public_key_payload=$(sed -e '1{/-----BEGIN PUBLIC KEY-----/d;}' "${public_key_file}" |  sed -e '${/-----END PUBLIC KEY-----/d;}' | tr -d '\n')
-  method_payload="\"public_key\":\"${public_key_payload}\", \"key_id\": \"${cred_id}\", \"relying_party_identifier\":\"${rp_id}\""
+  method_payload="\"public_key\":\"${public_key}\", \"key_id\": \"${key_id}\", \"relying_party_identifier\":\"${rp_id}\""
 elif [[ -z "${method_payload}" ]]; then
   echo >&2 "ERROR: authenticator details missing."; usage 1;
 fi
