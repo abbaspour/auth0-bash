@@ -18,7 +18,7 @@ USAGE: $0 [-n records] [-d accounts] [-a algorithm] [-p password] [-s salt] [-E]
         -v           # verbose
 
 eg,
-     $0 -n 1 -d 2 -o users.json
+     $0 -n 1 -d 2 -o users.csv
 END
     exit $1
 }

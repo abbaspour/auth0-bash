@@ -73,6 +73,8 @@ declare -r EXPECTED_SCOPE="create:users"
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
+[[ -n "${AUTH0_CONNECTON}" ]] && { echo >&2 "connection missing"; usage 1; }
+
 #randomId() { for i in {0..20}; do echo -n $(( RANDOM % 10 )); done; }
 #declare user_id=$(randomId)
 

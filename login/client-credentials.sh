@@ -14,7 +14,7 @@ command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
 
 function usage() {
   cat <<END >&2
-USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-a audience] [-m|-v|-h]
+USAGE: $0 [-e env] [-t tenant] [-d domain] [-i client_id] [-x client_secret] [-a audience] [-m|-v|-h]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain or edge location
@@ -31,7 +31,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-x client_secret] [-a
         -v             # verbose
 
 eg,
-     $0 -t amin01@au -c aIioQEeY7nJdX78vcQWDBcAqTABgKnZl -x XXXXXX -m
+     $0 -t amin01@au -i aIioQEeY7nJdX78vcQWDBcAqTABgKnZl -x XXXXXX -m
 END
   exit $1
 }

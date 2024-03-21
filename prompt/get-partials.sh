@@ -2,56 +2,58 @@
 
 ##########################################################################################
 # Author: Amin Abbaspour
-# Date: 2022-06-12
+# Date: 2024-02-27
 # License: MIT (https://github.com/abbaspour/auth0-bash/blob/master/LICENSE)
 ##########################################################################################
 
 set -eo pipefail
 
-readonly DIR=$(dirname "${BASH_SOURCE[0]}")
-
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-q query] [-v|-h]
+USAGE: $0 [-e env] [-a access_token] [-p prompt]
         -e file     # .env file location (default cwd)
         -a token    # access_token. default from environment variable
-        -q query    # query
-        -f from     # log_id for retrieve logs by checkpoint
-        -t take     # The total amount of entries to retrieve when using the from parameter
+        -p prompt   # prompt name
         -h|?        # usage
         -v          # verbose
 
 eg,
-     $0 -q type:s
-     $0 -q 'NOT type:fsa'
+     $0 -p customized-consent
 END
-    exit $1
+    exit ${1}
 }
 
-declare param_query=''
+declare prompt=''
+declare lang='en'
+declare screen=''
+declare text_id=''
+declare text=''
 
-while getopts "e:a:q:f:t:hv?" opt; do
+while getopts "e:a:p:l:s:i:t:hv?" opt; do
     case ${opt} in
     e) source "${OPTARG}" ;;
     a) access_token=${OPTARG} ;;
-    q) param_query+="&q=(${OPTARG})" ;;
-    f) param_query+="&from=${OPTARG}" ;;
-    t) param_query+="&take=${OPTARG}" ;;
-    v) set -x;;
+    p) prompt=${OPTARG} ;;
+    l) lang=${OPTARG} ;;
+    s) screen=${OPTARG} ;;
+    i) text_id=${OPTARG} ;;
+    t) text=${OPTARG} ;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
     esac
 done
 
+[[ -z "${access_token}" ]] && {   echo >&2 "ERROR: access_token undefined. export access_token='PASTE' ";  usage 1; }
 
-[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
 
 declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
-declare -r EXPECTED_SCOPE="read:logs"
+declare -r EXPECTED_SCOPE="read:prompts"
 [[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
 
-declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
+[[ -z "${prompt}" ]] && { echo >&2 "ERROR: prompt undefined.";  usage 1; }
 
-curl -s --get -H "Authorization: Bearer ${access_token}" \
-    -H 'content-type: application/json' \
-    "${AUTH0_DOMAIN_URL}api/v2/logs?${param_query}"
+readonly AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
+
+curl --request GET \
+    -H "Authorization: Bearer ${access_token}" \
+    --url "${AUTH0_DOMAIN_URL}api/v2/prompts/${prompt}/partials"

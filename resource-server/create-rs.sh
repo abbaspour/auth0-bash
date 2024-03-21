@@ -22,6 +22,8 @@ USAGE: $0 [-e env] [-a access_token] [-i identifier] [-n name] [-s scope] [-v|-h
         -i identifer    # API identifier (e.g. my.api)
         -n name         # API name (e.g. "My API")
         -s scopes       # comma separated scopes
+        -p policy       # consent policy, null or 'transactional-authorization-with-mfa'
+        -d details      # authorization details types comma separated: e.g. payment_initiation,money_transfer
         -h|?            # usage
         -v              # verbose
 
@@ -34,14 +36,17 @@ END
 declare api_identifier=''
 declare api_name=''
 declare api_scopes=''
+declare consent_policy_str=''
 
-while getopts "e:a:i:n:s:hv?" opt; do
+while getopts "e:a:i:n:s:p:d:hv?" opt; do
     case ${opt} in
     e) source ${OPTARG} ;;
     a) access_token=${OPTARG} ;;
     i) api_identifier=${OPTARG} ;;
     n) api_name=${OPTARG} ;;
     s) api_scopes=${OPTARG} ;;
+    p) consent_policy_str="\"consent_policy\":\"${OPTARG}\"," ;;
+    d) authorization_details=${OPTARG} ;;
     v) opt_verbose=1 ;; #set -x;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
@@ -62,15 +67,22 @@ declare -r EXPECTED_SCOPE="create:resource_servers"
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
-for s in $(echo $api_scopes | tr ',' ' '); do
+for s in $(echo "${api_scopes}" | tr ',' ' '); do
     scopes+="{\"value\":\"${s}\"},"
 done
 scopes=${scopes%?}
+
+for s in $(echo "${authorization_details}" | tr ',' ' '); do
+    types+="{\"type\":\"${s}\"},"
+done
+types=${types%?}
 
 declare BODY=$(cat <<EOL
 {
   "identifier": "${api_identifier}",
   "name": "${api_name}",
+  ${consent_policy_str}
+  "authorization_details": [ ${types} ],
   "scopes": [ ${scopes} ]
 }
 EOL

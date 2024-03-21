@@ -42,6 +42,7 @@ readonly tmp=$(mktemp --suffix json)
 
 declare -i total_exported=0
 
+# todo: include other valid email characters like; . _ - + () 0..9
 for x in {a..z}; do
   declare -i p=0
   all_done=false
@@ -77,7 +78,7 @@ done
 
 echo "Total exported: ${total_exported}"
 
-jq -s add users-${prefix}-*.json >> "all-users${prefix}.json"
+jq -s add "users-${prefix}-*.json" >> "all-users${prefix}.json"
 
 readonly total_in_file=$(jq length "all-users${prefix}.json")
 

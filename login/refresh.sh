@@ -36,6 +36,8 @@ declare opt_verbose=0
 declare refresh_token=''
 declare AUTH0_SCOPE=''
 
+[[ -f "${DIR}/.env" ]] && . "${DIR}/.env"
+
 while getopts "e:t:d:c:r:x:s:hv?" opt; do
     case ${opt} in
     e) source "${OPTARG}" ;;

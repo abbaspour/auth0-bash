@@ -29,10 +29,10 @@ function urlencode() {
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-i id] [-m email] [-v|-h]
+USAGE: $0 [-e env] [-a access_token] [-c id] [-m email] [-v|-h]
         -e file         # .env file location (default cwd)
         -a token        # access_token. default from environment variable
-        -i id           # connection id
+        -c id           # connection id
         -m email        # user email
         -h|?            # usage
         -v              # verbose
@@ -46,11 +46,11 @@ END
 declare connection_id=''
 declare email=''
 
-while getopts "e:a:i:m:hv?" opt; do
+while getopts "e:a:c:m:hv?" opt; do
     case ${opt} in
     e) source ${OPTARG} ;;
     a) access_token=${OPTARG} ;;
-    i) connection_id=${OPTARG} ;;
+    c) connection_id=${OPTARG} ;;
     m) email=${OPTARG} ;;
     v) set -x;;
     h | ?) usage 0 ;;

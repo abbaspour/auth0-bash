@@ -8,18 +8,16 @@
 
 set -eo pipefail
 
-command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
 command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u callback] [-b browser] [-f|-C|-o|-h]
+USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-i id_token] [-b browser] [-f|-C|-o|-h]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
         -c client_id   # Auth0 client ID
-        -u callback    # callback URL (default ${AUTH0_REDIRECT_URI})
         -f             # federated logout
         -i id_token    # id_token_hint (for RP initiated logout)
         -s hint        # sid or user_id logout hint (for RP initiated logout)

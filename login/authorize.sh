@@ -26,7 +26,7 @@ declare par_endpoint='oauth/par'
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r connection] [-R response_type] [-f flow] [-u callback] [-s scope] [-p prompt] [-M mode] [-P|-m|-C|-N|-o|-h]
+USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r connection] [-R response_type] [-f flow] [-u callback] [-s scope] [-p prompt] [-M mode] [-D details] [-P|-m|-C|-N|-o|-h]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
@@ -49,6 +49,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r conn
         -E endpoint    # change authorization_endpoint. default is ${authorization_endpoint}
         -k key_id      # client credentials key_id
         -K file.pem    # client credentials private key
+        -D details     # authorization_details JSON format
         -P             # use PAR (pushed authorization request)
         -J             # use JAR (JWT authorization request)
         -C             # copy to clipboard
@@ -116,13 +117,14 @@ declare invitation=''
 declare key_id=''
 declare key_file=''
 declare opt_browser=''
+declare authorization_details=''
 declare opt_pp=1
 declare opt_par=0
 declare opt_jar=0
 
 [[ -f "${DIR}/.env" ]] && . "${DIR}/.env"
 
-while getopts "e:t:d:c:x:a:r:R:f:u:p:s:b:M:S:n:H:O:i:l:E:k:K:mCoPJNhv?" opt; do
+while getopts "e:t:d:c:x:a:r:R:f:u:p:s:b:M:S:n:H:O:i:l:E:k:K:D:mCoPJNhv?" opt; do
     case ${opt} in
     e) source "${OPTARG}" ;;
     t) AUTH0_DOMAIN=$(echo "${OPTARG}.auth0.com" | tr '@' '.') ;;
@@ -146,6 +148,7 @@ while getopts "e:t:d:c:x:a:r:R:f:u:p:s:b:M:S:n:H:O:i:l:E:k:K:mCoPJNhv?" opt; do
     E) authorization_endpoint=${OPTARG} ;;
     k) key_id="${OPTARG}";;
     K) key_file="${OPTARG}";;
+    D) authorization_details="${OPTARG}";;
     C) opt_clipboard=1 ;;
     P) opt_par=1 ;;
     J) opt_jar=1 ;;
@@ -195,6 +198,7 @@ declare authorize_params="client_id=${AUTH0_CLIENT_ID}&${response_param}&nonce=$
 [[ -n "${invitation}" ]] && authorize_params+="&invitation=$(urlencode "${invitation}")"
 [[ -n "${org_id}" ]] && authorize_params+="&organization=$(urlencode "${org_id}")"
 [[ -n "${ui_locales}" ]] && authorize_params+="&ui_locales=${ui_locales}"
+[[ -n "${authorization_details}" ]] && authorize_params+="&authorization_details=$(urlencode "${authorization_details}")"
 
 if [[ ${opt_jar} -ne 0 ]]; then                       # JAR
   [[ -z "${key_id}" ]] && { echo >&2 "ERROR: key_id undefined"; exit 2; }
