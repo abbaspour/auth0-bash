@@ -16,7 +16,7 @@ declare algorithm='sha256'
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e file] [-f file] [-v|-h]
+USAGE: $0 [-s salt] [-a algorithm] [-l len] [-p password] [-v|-h]
         -p password    # password
         -s salt        # salt (base64). defaults to a random value
         -i iter        # iterations (defaults to $iterations)

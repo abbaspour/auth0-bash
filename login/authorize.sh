@@ -55,6 +55,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r conn
         -C             # copy to clipboard
         -N             # no pretty print
         -m             # Management API audience
+        -F             # MFA API audience
         -o             # Open URL
         -b browser     # Choose browser to open (firefox, chrome, safari)
         -h|?           # usage
@@ -67,17 +68,21 @@ END
 }
 
 urlencode() {
-    # TODO: use the version in okta-bash
-    local length="${#1}"
-    for ((i = 0; i < length; i++)); do
-        local c="${1:i:1}"
-        case $c in
-        [a-zA-Z0-9.~_-]) printf "$c" ;;
-        *) printf '%s' "$c" | xxd -p -u -c1 |
-            while read c; do printf '%%%s' "$c"; done ;;
-        esac
-    done
+    jq -rn --arg x "${1}" '$x|@uri'
 }
+
+#urlencode() {
+#    # TODO: use the version in okta-bash
+#    local length="${#1}"
+#    for ((i = 0; i < length; i++)); do
+#        local c="${1:i:1}"
+#        case $c in
+#        [a-zA-Z0-9.~_-]) printf "$c" ;;
+#        *) printf '%s' "$c" | xxd -p -u -c1 |
+#            while read c; do printf '%%%s' "$c"; done ;;
+#        esac
+#    done
+#}
 
 random32() {
     for i in {0..32}; do echo -n $((RANDOM % 10)); done
@@ -89,7 +94,7 @@ base64URLEncode() {
 
 gen_code_verifier() {
     readonly rand=$(random32)
-    echo $(base64URLEncode ${rand})
+    base64URLEncode "${rand}"
 }
 
 gen_code_challenge() {
@@ -108,6 +113,7 @@ declare opt_open=''
 declare opt_clipboard=''
 declare opt_flow='implicit'
 declare opt_mgmnt=''
+declare opt_mfa_api=''
 declare opt_state=''
 declare opt_nonce='mynonce'
 declare opt_login_hint=''
@@ -124,7 +130,7 @@ declare opt_jar=0
 
 [[ -f "${DIR}/.env" ]] && . "${DIR}/.env"
 
-while getopts "e:t:d:c:x:a:r:R:f:u:p:s:b:M:S:n:H:O:i:l:E:k:K:D:mCoPJNhv?" opt; do
+while getopts "e:t:d:c:x:a:r:R:f:u:p:s:b:M:S:n:H:O:i:l:E:k:K:D:mFCoPJNhv?" opt; do
     case ${opt} in
     e) source "${OPTARG}" ;;
     t) AUTH0_DOMAIN=$(echo "${OPTARG}.auth0.com" | tr '@' '.') ;;
@@ -155,6 +161,7 @@ while getopts "e:t:d:c:x:a:r:R:f:u:p:s:b:M:S:n:H:O:i:l:E:k:K:D:mCoPJNhv?" opt; d
     N) opt_pp=0 ;;
     o) opt_open=1 ;;
     m) opt_mgmnt=1 ;;
+    F) opt_mfa_api=1 ;;
     b) opt_browser="-a ${OPTARG} " ;;
     v) set -x ;;
     h | ?) usage 0 ;;
@@ -167,6 +174,7 @@ done
 
 
 [[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"
+[[ -n "${opt_mfa_api}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/mfa/"
 
 declare response_param=''
 
@@ -187,6 +195,7 @@ esac
 
 [[ ${AUTH0_DOMAIN} =~ ^http ]] || AUTH0_DOMAIN=https://${AUTH0_DOMAIN}
 
+# shellcheck disable=SC2155
 declare authorize_params="client_id=${AUTH0_CLIENT_ID}&${response_param}&nonce=$(urlencode ${opt_nonce})&redirect_uri=$(urlencode ${AUTH0_REDIRECT_URI})&scope=$(urlencode "${AUTH0_SCOPE}")"
 
 [[ -n "${AUTH0_AUDIENCE}" ]] && authorize_params+="&audience=$(urlencode "${AUTH0_AUDIENCE}")"

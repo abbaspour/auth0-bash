@@ -64,7 +64,7 @@ declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | 
 
 declare DATA=$(cat <<EOF
 {
-    "${filed}": ${value}
+    "${filed}": "${value}"
 }
 EOF
 )
