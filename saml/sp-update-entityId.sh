@@ -57,8 +57,8 @@ readonly BODY=$(curl --silent --request GET \
     --url "${AUTH0_DOMAIN_URL}api/v2/connections/${connection_id}" \
     --header 'content-type: application/json' | jq "del(.realms, .id, .strategy, .name, .provisioning_ticket_url, .options.signing_keys, .options.signing_key) | .options += {\"entityId\":\"${audience}\"}" | jq -r)
 
-curl --request PATCH \
+curl -s --request PATCH \
     -H "Authorization: Bearer ${access_token}" \
     --header 'content-type: application/json' \
     --url "${AUTH0_DOMAIN_URL}api/v2/connections/${connection_id}" \
-    --data "${BODY}"
+    --data "${BODY}" | jq .
