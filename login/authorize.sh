@@ -265,4 +265,4 @@ else
 fi
 
 [[ -n "${opt_clipboard}" ]] && echo "${authorize_url}" | pbcopy
-[[ -n "${opt_open}" ]] && open "${opt_browser}" "${authorize_url}"
+[[ -n "${opt_open}" ]] && open ${opt_browser} "${authorize_url}"
