@@ -21,7 +21,7 @@ declare binding='redirect'
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-t tenant] [-d domain] [-D destination] [-c client_id] [-r connection] [-b binding] [-u acs] [-I issuer] [-C|-N|-o|-h]
+USAGE: $0 [-e env] [-t tenant] [-d domain] [-D destination] [-c client_id] [-r connection] [-b binding] [-u acs] [-I issuer] [-C|-N|-U|-o|-h]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain (IdP)
@@ -39,6 +39,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-D destination] [-c client_id] [-r c
         -K file.pem    # client credentials private key
         -p             # SAML POST binding; default is redirect
         -C             # copy to clipboard
+        -U             # no not send ACS
         -N             # no pretty print
         -o             # Open URL
         -B browser     # Choose browser to open (firefox, chrome, safari)
@@ -86,10 +87,11 @@ declare key_id=''
 declare key_file=''
 declare opt_browser=''
 declare opt_pp=1
+declare opt_no_acs=0
 
 [[ -f "${DIR}/.env" ]] && . "${DIR}/.env"
 
-while getopts "e:t:d:D:c:r:u:B:M:S:n:H:O:i:R:I:l:E:k:K:D:pCoNhv?" opt; do
+while getopts "e:t:d:D:c:r:u:B:M:S:n:H:O:i:R:I:l:E:k:K:D:pCoNUhv?" opt; do
     case ${opt} in
     e) source "${OPTARG}" ;;
     t) AUTH0_DOMAIN=$(echo "${OPTARG}.auth0.com" | tr '@' '.') ;;
@@ -101,7 +103,7 @@ while getopts "e:t:d:D:c:r:u:B:M:S:n:H:O:i:R:I:l:E:k:K:D:pCoNhv?" opt; do
     S) opt_state=${OPTARG} ;;
     H) opt_login_hint=${OPTARG} ;;
     O) org_id=${OPTARG} ;;
-    i) issuer_tenant=$(echo "${OPTARG}" | tr '@' '.') ;;
+    i) issuer_tenant=$(echo "${OPTARG}.auth0.com" | tr '@' '.') ;;
     R) issuer_realm=${OPTARG} ;;
     I) Issuer=${OPTARG} ;;
     l) ui_locales=${OPTARG} ;;
@@ -109,6 +111,7 @@ while getopts "e:t:d:D:c:r:u:B:M:S:n:H:O:i:R:I:l:E:k:K:D:pCoNhv?" opt; do
     K) key_file="${OPTARG}";;
     p) binding='POST' ;;
     C) opt_clipboard=1 ;;
+    U) opt_no_acs=1 ;;
     N) opt_pp=0 ;;
     o) opt_open=1 ;;
     B) opt_browser="-a ${OPTARG^}" ;;
@@ -122,7 +125,7 @@ done
 [[ -z "${Issuer}" ]] && {
   [[ -z "${issuer_tenant}" ]] && {  echo >&2 "ERROR: issuer_tenant undefined";  usage 1;  }
   [[ -z "${issuer_realm}" ]] && { echo >&2 "ERROR: issuer_realm undefined";  usage 1; }
-  Issuer="urn:auth0:${issuer_tenant%.*}:${issuer_realm}";
+  Issuer="urn:auth0:${issuer_tenant%%.*}:${issuer_realm}";
 }
 
 [[ -z "${Destination}" ]] && {
@@ -133,6 +136,11 @@ done
   [[ -n "${AUTH0_CONNECTION}" ]] && Destination+="?connection=${AUTH0_CONNECTION}"
 }
 
+[[ -z "${AssertionConsumerServiceURL}" && ${opt_no_acs} -eq 0 ]] && {
+  [[ -z "${issuer_tenant}" ]] && {  echo >&2 "ERROR: issuer_tenant undefined";  usage 1;  }
+  [[ -z "${issuer_realm}" ]] && { echo >&2 "ERROR: issuer_realm undefined";  usage 1; }
+  AssertionConsumerServiceURL="AssertionConsumerServiceURL=\"https://${issuer_tenant}/login/callback?connection=${issuer_realm}\""
+}
 
 declare -r IssueInstant=$(date +"%Y-%m-%dT%H:%M:%SZ")
 
@@ -141,8 +149,8 @@ declare -r IssueInstant=$(date +"%Y-%m-%dT%H:%M:%SZ")
 #    </saml:Subject>
 
 declare -r AuthnRequestPayload=$(cat <<EOL
-<samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
-  ${AssertionConsumerServiceURL} Destination="${Destination}"
+<samlp:AuthnRequest xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol" ${AssertionConsumerServiceURL}
+  Destination="${Destination}"
   ID="ID$(random32)"
   IssueInstant="${IssueInstant}"
   ProtocolBinding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-${binding^}" Version="2.0">
@@ -164,6 +172,7 @@ declare SAMLRequest=''
 if [[ "${binding}" == 'redirect' ]]; then
   SAMLRequest=$(base64URLEncode "${AuthnRequestPayload}")
   authorize_url="${Destination}?SAMLRequest=${SAMLRequest}"
+  [[ -n "${AUTH0_CONNECTION}" ]] && authorize_url+="&connection=${AUTH0_CONNECTION}"
 else
   SAMLRequest=$(base64Encode "${AuthnRequestPayload}")
 
