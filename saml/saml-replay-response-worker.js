@@ -15,8 +15,10 @@ async function handleRequest(request) {
             return new Response('SAMLResponse parameter is missing.', { status: 400 });
         }
 
+        // TODO: validate Signature, Destination, and Recipient condition before posting to new Destination
+
         // Generate HTML form for redirection
-        const redirectUrl = 'https://abbaspour.auth0.com/login/callback?connection=Amin-JP-SAML'; // Replace with your predefined URL
+        const redirectUrl = 'https://abbaspour.auth0.com/login/callback?connection=Amin-JP-SAML'; // Replace with your callback endpoint
         const html = `
       <!DOCTYPE html>
       <html lang="en">

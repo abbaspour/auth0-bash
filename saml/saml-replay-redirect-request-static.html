@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Replaying SAML Request</title>
+    <script>
+        window.onload = function() {
+            // Predefined URL to redirect to
+            const redirectUrl = "https://amin.jp.auth0.com/samlp/9vunOIReq1SVCLlcndzvRyC6g5tBZWjp";
+
+            // Function to get query parameter by name
+            function getQueryParam(name) {
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get(name);
+            }
+
+            // Get SAMLRequest and RelayState from query parameters
+            const samlRequest = getQueryParam('SAMLRequest');
+            const relayState = getQueryParam('RelayState');
+
+            // Construct the new URL with query parameters
+            const newUrl = new URL(redirectUrl);
+            if (samlRequest) {
+                newUrl.searchParams.set('SAMLRequest', samlRequest);
+            }
+            if (relayState) {
+                newUrl.searchParams.set('RelayState', relayState);
+            }
+
+            // Redirect to the new URL
+            window.location.href = newUrl.toString();
+        };
+    </script>
+</head>
+<body>
+<h1>Redirecting...</h1>
+<p>If you are not redirected automatically, <a id="redirectLink" href="#">click here</a>.</p>
+<script>
+    document.getElementById('redirectLink').href = new URLSearchParams(window.location.search).toString();
+</script>
+</body>
+</html>

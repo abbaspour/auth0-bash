@@ -19,7 +19,7 @@ USAGE: $0 [-e env] [-a access_token] [-i client_id] [-v|-h]
         -e file       # .env file location (default cwd)
         -a token      # access_token. default from environment variable
         -i client_id  # client id
-        -i cred_id    # client credentials id
+        -c cred_id    # client credentials id
         -h|?          # usage
         -v            # verbose
 
