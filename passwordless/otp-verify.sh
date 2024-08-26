@@ -20,7 +20,7 @@ declare AUTH0_SCOPE='openid email'
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u email] [-x code] [-p phone_number] [-s scope] [-m|-h]
+USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-u email] [-o otp] [-p phone_number] [-s scope] [-m|-h]
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain
@@ -94,7 +94,10 @@ declare data=$(cat <<EOL
     "username": "${username}",
     "otp": "${otp_code}",
     "scope": "${AUTH0_SCOPE}",
-    "device": "bash"
+    "user_metadata": {
+      "first_name": "Some",
+      "last_name": "One"
+    }
 }
 EOL
 )

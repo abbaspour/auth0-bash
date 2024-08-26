@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Note: This method is no longer supported.
+# use Actions: https://auth0.com/docs/authenticate/protocols/saml/saml-sso-integrations/sign-and-encrypt-saml-requests#change-the-signing-key-for-saml-responses
+
 set -eo pipefail
 
 command -v awk > /dev/null || { echo >&2 "error: awk not found"; exit 3; }
@@ -68,6 +71,10 @@ declare BODY=$(cat <<EOL
 }
 EOL
 )
+
+echo $BODY
+
+#exit
 
 curl --request PATCH \
     -H "Authorization: Bearer ${access_token}" \

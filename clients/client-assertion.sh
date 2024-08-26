@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
 
+##########################################################################################
+# Author: Amin Abbaspour
+# Date: 2022-06-12
+# License: MIT (https://github.com/abbaspour/auth0-bash/blob/master/LICENSE)
+##########################################################################################
+
 set -eo pipefail
 
-command -v curl >/dev/null || { echo >&2 "error: curl not found"; exit 3; }
-command -v jq >/dev/null || { echo >&2 "error: jq not found"; exit 3; }
+command -v openssl >/dev/null || { echo >&2 "error: openssl not found"; exit 3; }
+command -v sed >/dev/null || { echo >&2 "error: sed not found"; exit 3; }
 
 
 function usage() {

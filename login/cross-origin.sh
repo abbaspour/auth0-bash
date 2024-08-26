@@ -65,6 +65,8 @@ declare opt_verbose=0
 declare opt_state=''
 declare opt_nonce=''
 
+[[ -f "${DIR}/.env" ]] && . "${DIR}/.env"
+
 while getopts "e:t:d:c:a:u:p:r:o:U:s:S:n:mhv?" opt; do
     case ${opt} in
     e) source ${OPTARG} ;;
@@ -121,7 +123,7 @@ echo "login_ticket=${login_ticket}"
 
 [[ ${login_ticket} == "null" ]] && { echo >&2 "login_ticket collection failed"; exit 3; }
 
-declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&response_type=$(urlencode "token id_token")&redirect_uri=$(urlencode ${AUTH0_REDIRECT_URI})&login_ticket=${login_ticket}" # &auth0Client=${AUTH0_CLIENT_B64}
+declare authorize_url="https://${AUTH0_DOMAIN}/authorize?client_id=${AUTH0_CLIENT_ID}&response_type=$(urlencode "token id_token")&redirect_uri=$(urlencode ${AUTH0_REDIRECT_URI})&login_ticket=${login_ticket}&nonce=n1" # &auth0Client=${AUTH0_CLIENT_B64}
 
 [[ -n "${AUTH0_AUDIENCE}" ]] && authorize_url+="&audience=$(urlencode ${AUTH0_AUDIENCE})"
 [[ -n "${AUTH0_CONNECTION}" ]] && authorize_url+="&connection=${AUTH0_CONNECTION}"

@@ -12,7 +12,7 @@ set -eo pipefail
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-i connection_id] [-c cert-file] [-p key-file] [-v|-h]
+USAGE: $0 [-e env] [-a access_token] [-i connection_id] [-E|-v|-h]
         -e file     # .env file location (default cwd)
         -a token    # access_token. default from environment variable
         -i id       # connection_id

@@ -2,7 +2,7 @@
 
 ##########################################################################################
 # Author: Amin Abbaspour
-# Date: 2022-06-12
+# Date: 2024-08-21
 # License: MIT (https://github.com/abbaspour/auth0-bash/blob/master/LICENSE)
 ##########################################################################################
 
@@ -12,29 +12,32 @@ set -eo pipefail
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-i connection_id] [-E|-v|-h]
+USAGE: $0 [-e env] [-a access_token] [-i connection_id] [-d url] [-E] [-v|-h]
         -e file     # .env file location (default cwd)
         -a token    # access_token. default from environment variable
         -i id       # connection_id
-        -E          # enable (default is to disable)
+        -d dst      # destination Url
+        -E          # erase custom destination Url
         -h|?        # usage
         -v          # verbose
 
 eg,
-     $0 -c con_mcjX9wmTo1l7RdGh
+     $0 -c con_mcjX9wmTo1l7RdGh -d https://my.previous.saml.sp/distination/url
 END
     exit $1
 }
 
 declare connection_id=''
-declare mode=false
+declare erase=false
+declare destinationUrl=''
 
-while getopts "e:a:i:Ehv?" opt; do
+while getopts "e:a:i:d:Ehv?" opt; do
     case ${opt} in
     e) source "${OPTARG}" ;;
     a) access_token=${OPTARG} ;;
     i) connection_id=${OPTARG} ;;
-    E) mode=true ;;
+    d) destinationUrl=${OPTARG} ;;
+    E) erase=true ;;
     v) set -x ;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
@@ -54,10 +57,19 @@ declare -r EXPECTED_SCOPES=("read:connections" "update:connections") # Both scop
 
 readonly AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
 
-readonly BODY=$(curl --silent --request GET \
+declare BODY
+
+if [[ ${erase} == true ]]; then
+  BODY=$(curl --silent --request GET \
     -H "Authorization: Bearer ${access_token}" \
     --url "${AUTH0_DOMAIN_URL}api/v2/connections/${connection_id}" \
-    --header 'content-type: application/json' | jq "del(.realms, .id, .strategy, .name, .provisioning_ticket_url) | .options += {\"checkRecipient\": ${mode} }")
+    --header 'content-type: application/json' | jq "del(.realms, .id, .strategy, .name, .provisioning_ticket_url, .destinationUrl)")
+else
+  BODY=$(curl --silent --request GET \
+    -H "Authorization: Bearer ${access_token}" \
+    --url "${AUTH0_DOMAIN_URL}api/v2/connections/${connection_id}" \
+    --header 'content-type: application/json' | jq "del(.realms, .id, .strategy, .name, .provisioning_ticket_url) | .options += {\"destinationUrl\": \"${destinationUrl}\" }")
+fi
 
 curl -s --request PATCH \
     -H "Authorization: Bearer ${access_token}" \

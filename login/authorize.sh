@@ -19,7 +19,7 @@ readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 declare AUTH0_REDIRECT_URI='https://jwt.io'
 declare AUTH0_SCOPE='openid profile email'
-declare AUTH0_RESPONSE_TYPE='token id_token'
+declare AUTH0_RESPONSE_TYPE='id_token'
 declare AUTH0_RESPONSE_MODE=''
 declare authorization_endpoint='authorize'
 declare par_endpoint='oauth/par'
@@ -70,19 +70,6 @@ END
 urlencode() {
     jq -rn --arg x "${1}" '$x|@uri'
 }
-
-#urlencode() {
-#    # TODO: use the version in okta-bash
-#    local length="${#1}"
-#    for ((i = 0; i < length; i++)); do
-#        local c="${1:i:1}"
-#        case $c in
-#        [a-zA-Z0-9.~_-]) printf "$c" ;;
-#        *) printf '%s' "$c" | xxd -p -u -c1 |
-#            while read c; do printf '%%%s' "$c"; done ;;
-#        esac
-#    done
-#}
 
 random32() {
     for i in {0..32}; do echo -n $((RANDOM % 10)); done

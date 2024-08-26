@@ -11,8 +11,6 @@ set -eo pipefail
 command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
 command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
 
-readonly DIR=$(dirname "${BASH_SOURCE[0]}")
-
 function usage() {
     cat <<END >&2
 USAGE: $0 [-e env] [-a access_token] [-f file] [-v|-h]
@@ -41,7 +39,7 @@ while getopts "e:a:f:m:n:hv?" opt; do
     f) json_file=${OPTARG} ;;
     m) metadata_file=${OPTARG} ;;
     n) name=${OPTARG} ;;
-    v) opt_verbose=1 ;; #set -x;;
+    v) set -x;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
     esac

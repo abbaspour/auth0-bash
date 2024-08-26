@@ -63,6 +63,8 @@ declare private_pem=''
 declare ca_signed='FAILED: self signed certificate'
 declare client_certificate=''
 
+[[ -f "${DIR}/.env" ]] && . "${DIR}/.env"
+
 while getopts "e:t:u:p:d:c:x:a:r:s:i:n:k:f:C:SAmhv?" opt; do
   case ${opt} in
   e) source "${OPTARG}" ;;

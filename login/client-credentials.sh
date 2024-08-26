@@ -18,7 +18,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-i client_id] [-x client_secret] [-a
         -e file        # .env file location (default cwd)
         -t tenant      # Auth0 tenant@region
         -d domain      # Auth0 domain or edge location
-        -i client_id   # Auth0 client ID
+        -c client_id   # Auth0 client ID
         -x secret      # Auth0 client secret
         -a audience    # API audience
         -k kid         # client public key jwt id
@@ -49,12 +49,14 @@ declare client_certificate=''
 declare ca_signed='FAILED: self signed certificate'
 declare opt_mgmnt=''
 
-while getopts "e:t:d:i:a:x:k:f:n:C:Smhv?" opt; do
+[[ -f "${DIR}/.env" ]] && . "${DIR}/.env"
+
+while getopts "e:t:d:c:a:x:k:f:n:C:Smhv?" opt; do
   case ${opt} in
   e) source "${OPTARG}" ;;
   t) AUTH0_DOMAIN=$(echo "${OPTARG}.auth0.com" | tr '@' '.') ;;
   d) AUTH0_DOMAIN=${OPTARG} ;;
-  i) AUTH0_CLIENT_ID=${OPTARG} ;;
+  c) AUTH0_CLIENT_ID=${OPTARG} ;;
   x) AUTH0_CLIENT_SECRET=${OPTARG} ;;
   a) AUTH0_AUDIENCE=${OPTARG} ;;
   k) kid=${OPTARG} ;;

@@ -6,8 +6,11 @@
 # License: MIT (https://github.com/abbaspour/auth0-bash/blob/master/LICENSE)
 ##########################################################################################
 
-
 set -eo pipefail
+
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+
 readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {

@@ -81,7 +81,7 @@ declare DATA=$(cat <<EOF
 EOF
 )
 
-curl --request POST \
+curl -s --request POST \
   --url "https://${AUTH0_DOMAIN}/dbconnections/signup" \
   --header 'content-type: application/json' \
-  --data "${DATA}"
+  --data "${DATA}" | jq .
