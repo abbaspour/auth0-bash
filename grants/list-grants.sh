@@ -28,7 +28,7 @@ declare opt_verbose=0
 
 while getopts "e:a:u:hv?" opt; do
     case ${opt} in
-    e) source ${OPTARG} ;;
+    e) source "${OPTARG}" ;;
     a) access_token=${OPTARG} ;;
     u) userId=${OPTARG} ;;
     h | ?) usage 0 ;;
@@ -36,7 +36,7 @@ while getopts "e:a:u:hv?" opt; do
     esac
 done
 
-[[ -z "${access_token}" ]] && {   echo >&2 "ERROR: access_token undefined. export access_token='PASTE' ";  usage 1; }
+[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' ";  usage 1; }
 
 
 declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
@@ -51,4 +51,4 @@ declare -r jq_query+=".[] | \"\(.id) \(.user_id) \(.audience) \(.clientID)\" "
 
 curl -s --request GET \
     -H "Authorization: Bearer ${access_token}" \
-    --url ${AUTH0_DOMAIN_URL}api/v2/grants${qs} | jq -rc "${jq_query}" | sort
+    --url "${AUTH0_DOMAIN_URL}api/v2/grants${qs}" | jq -rc "${jq_query}" | sort

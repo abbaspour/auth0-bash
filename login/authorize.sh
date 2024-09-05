@@ -50,6 +50,7 @@ USAGE: $0 [-e env] [-t tenant] [-d domain] [-c client_id] [-a audience] [-r conn
         -k key_id      # client credentials key_id
         -K file.pem    # client credentials private key
         -D details     # authorization_details JSON format
+        -T protocol    # protocol to use. can be samlp, wsfed or oauth (default)
         -P             # use PAR (pushed authorization request)
         -J             # use JAR (JWT authorization request)
         -C             # copy to clipboard
@@ -72,7 +73,7 @@ urlencode() {
 }
 
 random32() {
-    for i in {0..32}; do echo -n $((RANDOM % 10)); done
+    for _ in {0..32}; do echo -n $((RANDOM % 10)); done
 }
 
 base64URLEncode() {
@@ -86,12 +87,12 @@ gen_code_verifier() {
 
 gen_code_challenge() {
     readonly cc=$(echo -n "$1" | openssl dgst -binary -sha256)
-    echo $(base64URLEncode "$cc")
+    base64URLEncode "$cc"
 }
 
 declare AUTH0_DOMAIN=''
 declare AUTH0_CLIENT_ID=''
-declare AUTH0_SECRET=''
+declare AUTH0_CLIENT_SECRET=''
 declare AUTH0_CONNECTION=''
 declare AUTH0_AUDIENCE=''
 declare AUTH0_PROMPT=''
@@ -111,13 +112,14 @@ declare key_id=''
 declare key_file=''
 declare opt_browser=''
 declare authorization_details=''
+declare protocol='oauth'
 declare opt_pp=1
 declare opt_par=0
 declare opt_jar=0
 
 [[ -f "${DIR}/.env" ]] && . "${DIR}/.env"
 
-while getopts "e:t:d:c:x:a:r:R:f:u:p:s:b:M:S:n:H:O:i:l:E:k:K:D:mFCoPJNhv?" opt; do
+while getopts "e:t:d:c:x:a:r:R:f:u:p:s:b:M:S:n:H:O:i:l:E:k:K:D:T:mFCoPJNhv?" opt; do
     case ${opt} in
     e) source "${OPTARG}" ;;
     t) AUTH0_DOMAIN=$(echo "${OPTARG}.auth0.com" | tr '@' '.') ;;
@@ -142,6 +144,7 @@ while getopts "e:t:d:c:x:a:r:R:f:u:p:s:b:M:S:n:H:O:i:l:E:k:K:D:mFCoPJNhv?" opt; 
     k) key_id="${OPTARG}";;
     K) key_file="${OPTARG}";;
     D) authorization_details="${OPTARG}";;
+    T) protocol="${OPTARG}";;
     C) opt_clipboard=1 ;;
     P) opt_par=1 ;;
     J) opt_jar=1 ;;
@@ -159,6 +162,17 @@ done
 [[ -z "${AUTH0_DOMAIN}" ]] && {  echo >&2 "ERROR: AUTH0_DOMAIN undefined";  usage 1;  }
 [[ -z "${AUTH0_CLIENT_ID}" ]] && { echo >&2 "ERROR: AUTH0_CLIENT_ID undefined";  usage 1; }
 
+[[ ${AUTH0_DOMAIN} =~ ^http ]] || AUTH0_DOMAIN=https://${AUTH0_DOMAIN}
+
+if [[ "${protocol}" != "oauth" && "${protocol}" != "oidc" ]]; then
+  declare signon_url="${AUTH0_DOMAIN}/${protocol}/${AUTH0_CLIENT_ID}"
+
+  echo "${signon_url}"
+  [[ -n "${opt_clipboard}" ]] && echo "${signon_url}" | pbcopy
+  [[ -n "${opt_open}" ]] && open ${opt_browser} "${signon_url}"
+
+  exit 0
+fi
 
 [[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"
 [[ -n "${opt_mfa_api}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/mfa/"
@@ -180,7 +194,6 @@ pkce | hybrid)
     ;;
 esac
 
-[[ ${AUTH0_DOMAIN} =~ ^http ]] || AUTH0_DOMAIN=https://${AUTH0_DOMAIN}
 
 # shellcheck disable=SC2155
 declare authorize_params="client_id=${AUTH0_CLIENT_ID}&${response_param}&nonce=$(urlencode ${opt_nonce})&redirect_uri=$(urlencode ${AUTH0_REDIRECT_URI})&scope=$(urlencode "${AUTH0_SCOPE}")"

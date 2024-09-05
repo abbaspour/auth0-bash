@@ -4,9 +4,12 @@
 # Author: Amin Abbaspour
 # Date: 2024-08-21
 # License: MIT (https://github.com/abbaspour/auth0-bash/blob/master/LICENSE)
+#
+# WARNING: this is unsafe. Use sp-set-destination-url.sh
+#
 ##########################################################################################
 
-# https://auth0.com/docs/configure/saml-configuration/saml-sso-integrations/sign-and-encrypt-saml-requests#use-custom-certificate-to-sign-requests
+# https://auth0.com/docs/authenticate/protocols/saml/saml-sso-integrations/configure-auth0-saml-service-provider#configure-saml-connection-for-proxy-gateways
 
 set -eo pipefail
 

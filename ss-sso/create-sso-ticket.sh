@@ -56,7 +56,7 @@ done
 [[ -z "${enabled_clients}" ]] && { echo >&2 "ERROR: enabled_client(s) is required."; usage 1; }
 
 declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
-declare -r EXPECTED_SCOPE="create:connection"
+declare -r EXPECTED_SCOPE="create:sso_access_tickets"
 [[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
 
 declare -r client_ids=$(echo "${enabled_clients}" | sed -e 's/,/", "/g')
