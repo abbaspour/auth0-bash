@@ -4,9 +4,10 @@
 # Author: Amin Abbaspour
 # Date: 2022-06-12
 # License: MIT (https://github.com/abbaspour/auth0-bash/blob/master/LICENSE)
+#
+# WARNING: this is unsafe for SP-initiated logins.
+#
 ##########################################################################################
-
-# https://auth0.com/docs/configure/saml-configuration/saml-sso-integrations/sign-and-encrypt-saml-requests#use-custom-certificate-to-sign-requests
 
 set -eo pipefail
 
