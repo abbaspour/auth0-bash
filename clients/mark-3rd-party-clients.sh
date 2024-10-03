@@ -24,7 +24,7 @@ USAGE: $0 [-e env] [-a access_token] [-i client_id] [-v|-h]
         -v              # verbose
 
 eg,
-     $0 -n "My App" -t non_interactive
+     $0 -i nkC8NeROYIdsU0f9BvfHi9nQ8yGb811a
 END
     exit $1
 }

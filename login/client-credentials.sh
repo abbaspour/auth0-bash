@@ -93,8 +93,7 @@ readonly BODY=$(cat <<EOL
 {
     "client_id":"${AUTH0_CLIENT_ID}", ${secret}
     "audience":"${AUTH0_AUDIENCE}",
-    "grant_type":"client_credentials"
-    ${client_assertion}
+    "grant_type":"client_credentials" ${client_assertion}
 }
 EOL
 )

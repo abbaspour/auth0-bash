@@ -174,8 +174,8 @@ if [[ "${protocol}" != "oauth" && "${protocol}" != "oidc" ]]; then
   exit 0
 fi
 
-[[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/api/v2/"
-[[ -n "${opt_mfa_api}" ]] && AUTH0_AUDIENCE="https://${AUTH0_DOMAIN}/mfa/"
+[[ -n "${opt_mgmnt}" ]] && AUTH0_AUDIENCE="${AUTH0_DOMAIN}/api/v2/"
+[[ -n "${opt_mfa_api}" ]] && AUTH0_AUDIENCE="${AUTH0_DOMAIN}/mfa/"
 
 declare response_param=''
 
