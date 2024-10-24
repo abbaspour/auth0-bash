@@ -166,6 +166,7 @@ done
 
 if [[ "${protocol}" != "oauth" && "${protocol}" != "oidc" ]]; then
   declare signon_url="${AUTH0_DOMAIN}/${protocol}/${AUTH0_CLIENT_ID}"
+  [[ -n "${AUTH0_CONNECTION}" ]] && signon_url+="?connection=${AUTH0_CONNECTION}"
 
   echo "${signon_url}"
   [[ -n "${opt_clipboard}" ]] && echo "${signon_url}" | pbcopy
@@ -236,7 +237,7 @@ fi
 if [[ ${opt_par} -ne 0 ]]; then                       # PAR
   if [[ -n "${AUTH0_CLIENT_SECRET}" ]]; then
     authorize_params+="&client_secret=${AUTH0_CLIENT_SECRET}"
-  else                                                # JWT-CA
+  elif [[ -n "${key_id}" ]]; then                                                # JWT-CA
     [[ -z "${key_id}" ]] && { echo >&2 "ERROR: key_id undefined"; exit 2; }
     [[ -z "${key_file}" ]] && { echo >&2 "ERROR: key_file undefined"; exit 2; }
     [[ ! -f "${key_file}" ]] && { echo >&2 "ERROR: key_file missing: ${key_file}"; exit 2; }
