@@ -73,7 +73,7 @@ declare -r BODY=$(cat <<EOL
       "service": "${service}",
       "token": "${token}"
     },
-    "public_key": $(../../discovery/create-jwk.sh -f "${public_pem}")
+    "public_key": $(./create-jwk.sh -f "${public_pem}")
 }
 EOL
 )
