@@ -15,7 +15,7 @@ function usage() {
 USAGE: $0 [-e env] [-a access_token] [-v|-h]
         -e file     # .env file location (default cwd)
         -a token    # access_token. default from environment variable
-        -f file      # template file
+        -f file     # template file
         -h|?        # usage
         -v          # verbose
 

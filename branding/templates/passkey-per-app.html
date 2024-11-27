@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ prompt.screen.texts.pageTitle }}</title>
+    {%- auth0:head -%}
+    {% if application.metadata.PASSKEY == "false" %}
+    <style>
+        .passkey-challenge-button {
+            display: none;
+        }
+    </style>
+    {% endif %}
+</head>
+<body>
+<div class="_widget-auto-layout">
+    {%- auth0:widget -%}
+</div>
+</body>
+</html>
