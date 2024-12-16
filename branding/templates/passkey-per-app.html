@@ -15,5 +15,47 @@
 <div class="_widget-auto-layout">
     {%- auth0:widget -%}
 </div>
+{% if application.metadata.PASSKEY == "false" %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const currentPath = window.location.pathname;
+
+        /* auto complete passkey */
+        if (currentPath === "/u/login/identifier") {
+            const usernameInput = document.getElementById("username");
+            if (usernameInput) {
+                usernameInput.setAttribute("autoComplete", "username");
+                console.log("webauthn autoComplete removed.");
+            }
+        }
+
+        /* signup */
+        if (currentPath === "/u/signup/passkeys") {
+            const form = document.querySelector(".ulp-action-form-abort-passkey-enrollment");
+            if (form) {
+                console.log("auto-submit abort-passkey-enrollment during sign-up.");
+                form.action = "abort-passkey-enrollment";
+                form.submit();
+            }
+        }
+
+        /* login */
+        if (currentPath === "/u/passkey-enrollment") {
+            const form = document.querySelector(".ulp-action-form-abort-passkey-enrollment");
+            if (form) {
+                console.log("auto-submit abort-passkey-enrollment during login");
+
+                const input = document.createElement("input");
+                input.type = "hidden";
+                input.name = "action";
+                input.value = "abort-passkey-enrollment";
+                form.appendChild(input);
+
+                form.submit();
+            }
+        }
+    });
+</script>
+{% endif %}
 </body>
 </html>

@@ -69,7 +69,7 @@ declare DATA=$(cat <<EOF
 EOF
 )
 
-curl -X PATCH \
+curl -s -X PATCH \
     -H "Authorization: Bearer ${access_token}" \
     -H 'content-type: application/json' \
     -d "${DATA}" \
