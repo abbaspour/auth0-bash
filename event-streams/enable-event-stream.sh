@@ -2,22 +2,18 @@
 
 ##########################################################################################
 # Author: Amin Abbaspour
-# Date: 2022-06-12
+# Date: 2025-01-28
 # License: MIT (https://github.com/abbaspour/auth0-bash/blob/master/LICENSE)
 ##########################################################################################
 
-### usage in custom-db
-# function login(email, password, context, callback) {
-#    // context.realm
-# }
-set -eo pipefail
+set -euo pipefail
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-i connection_id] [-D|-v|-h]
+USAGE: $0 [-e env] [-a access_token] [-i id] [-D|-v|-h]
         -e file     # .env file location (default cwd)
         -a token    # access_token. default from environment variable
-        -i id       # connection_id
+        -i id       # event_stream_id
         -D          # Disable (default is to enable)
         -h|?        # usage
         -v          # verbose
@@ -28,15 +24,15 @@ END
     exit $1
 }
 
-declare connection_id=''
-declare mode=true
+declare event_stream_id=''
+declare status='enabled'
 
 while getopts "e:a:i:Ehv?" opt; do
     case ${opt} in
     e) source "${OPTARG}" ;;
     a) access_token=${OPTARG} ;;
-    i) connection_id=${OPTARG} ;;
-    D) mode=false ;;
+    i) event_stream_id=${OPTARG} ;;
+    D) status='disabled' ;;
     v) set -x ;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
@@ -46,20 +42,17 @@ done
 [[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
 
 declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
-declare -r EXPECTED_SCOPE="update:connections"
+declare -r EXPECTED_SCOPE="update:event_streams"
 [[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
 
-[[ -z "${connection_id}" ]] && { echo >&2 "ERROR: connection_id undefined."; usage 1; }
+[[ -z "${event_stream_id}" ]] && { echo >&2 "ERROR: event_stream_id undefined."; usage 1; }
 
 readonly AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
 
-readonly BODY=$(curl --silent --request GET \
-    -H "Authorization: Bearer ${access_token}" \
-    --url "${AUTH0_DOMAIN_URL}api/v2/connections/${connection_id}" \
-    --header 'content-type: application/json' | jq "del(.realms, .id, .strategy, .name, .provisioning_ticket_url) | .options += {\"realm_fallback\": ${mode}, \"enable_script_context\": ${mode} }")
+readonly BODY="{\"status\":\"${status}\"}"
 
 curl --request PATCH \
     -H "Authorization: Bearer ${access_token}" \
     --header 'content-type: application/json' \
-    --url "${AUTH0_DOMAIN_URL}api/v2/connections/${connection_id}" \
+    --url "${AUTH0_DOMAIN_URL}api/v2/event-streams/${event_stream_id}" \
     --data "${BODY}"

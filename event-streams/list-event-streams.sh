@@ -2,40 +2,40 @@
 
 ##########################################################################################
 # Author: Amin Abbaspour
-# Date: 2024-02-27
+# Date: 2025-01-28
 # License: MIT (https://github.com/abbaspour/auth0-bash/blob/master/LICENSE)
 ##########################################################################################
 
 set -eo pipefail
 
+command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
+command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
+
+readonly DIR=$(dirname "${BASH_SOURCE[0]}")
+
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-p prompt]
+USAGE: $0 [-e env] [-a access_token] [-i connection_id] [-v|-h]
         -e file     # .env file location (default cwd)
         -a token    # access_token. default from environment variable
-        -p prompt   # prompt name
+        -i id       # connection id
         -h|?        # usage
         -v          # verbose
 
 eg,
-     $0 -p customized-consent
+     $0
 END
-    exit ${1}
+    exit $1
 }
 
-declare prompt=''
-declare lang='en'
-declare text_id=''
-declare text=''
+declare uri='event-streams'
 
-while getopts "e:a:p:l:s:i:t:hv?" opt; do
+while getopts "e:a:i:hv?" opt; do
     case ${opt} in
-    e) source "${OPTARG}" ;;
+    e) source ${OPTARG} ;;
     a) access_token=${OPTARG} ;;
-    p) prompt=${OPTARG} ;;
-    l) lang=${OPTARG} ;;
-    i) text_id=${OPTARG} ;;
-    t) text=${OPTARG} ;;
+    i) uri+="/${OPTARG}" ;;
+    v) opt_verbose=1 ;; #set -x;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
     esac
@@ -45,13 +45,10 @@ done
 
 
 declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
-declare -r EXPECTED_SCOPE="read:prompts"
+declare -r EXPECTED_SCOPE="read:event_streams"
 [[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
 
-[[ -z "${prompt}" ]] && { echo >&2 "ERROR: prompt undefined.";  usage 1; }
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
 
-readonly AUTH0_DOMAIN_URL=$(echo "${access_token}" | awk -F. '{print $2}' | base64 -di 2>/dev/null | jq -r '.iss')
-
-curl --request GET \
-    -H "Authorization: Bearer ${access_token}" \
-    --url "${AUTH0_DOMAIN_URL}api/v2/prompts/${prompt}/partials"
+curl -s -H "Authorization: Bearer ${access_token}" \
+    --url ${AUTH0_DOMAIN_URL}api/v2/${uri} | jq '.'
