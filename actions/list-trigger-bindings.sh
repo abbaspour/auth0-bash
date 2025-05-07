@@ -13,7 +13,7 @@ command -v jq >/dev/null || { echo >&2 "error: jq not found"; exit 3; }
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-T trigger_id] [-n name] [-d (true|false)] [-i (true|false)] [-v|-h]
+USAGE: $0 [-e env] [-a access_token] [-t trigger_id] [-n name] [-d (true|false)] [-i (true|false)] [-v|-h]
         -e file         # .env file location (default cwd)
         -a token        # access_token. default from environment variable
         -t trigger_id   # trigger id. eg: post-login, pre-user-registration

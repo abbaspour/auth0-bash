@@ -21,12 +21,14 @@ USAGE: $0 [-e env] [-a access_token] [-n name] [-s type(s)] [-d type] [-u endpoi
         -n name         # event stream name (e.g. "my-event-stream")
         -t type(s)      # subscription event types ("user.created", "user.updated", "user.deleted") comma seperated.
         -d type         # destination type ("webhook", "eventbridge")
-        -u endpoint     # destination endpoint
+        -u endpoint     # webhook endpoint
+        -r region       # AWS region
+        -i account      # AWS account number id
         -h|?            # usage
         -v              # verbose
 
 eg,
-     $0 -n "my-event-stream-1" -s user.created,user.updated -d webhook -u https://example.com/webhook
+     $0 -n "my-event-stream-1" -s user.created,user.updated,user.deleted -d webhook -u https://example.com/webhook
 END
   exit $1
 }
@@ -35,8 +37,10 @@ declare stream_name=''
 declare subscription_types=''
 declare destination_type=''
 declare webhook_endpoint=''
+declare aws_region=''
+declare aws_account_id=''
 
-while getopts "e:a:n:s:d:u:hv?" opt; do
+while getopts "e:a:n:s:d:u:r:i:hv?" opt; do
   case ${opt} in
   e) source ${OPTARG} ;;
   a) access_token=${OPTARG} ;;
@@ -44,6 +48,8 @@ while getopts "e:a:n:s:d:u:hv?" opt; do
   s) subscription_types=${OPTARG} ;;
   d) destination_type=${OPTARG} ;;
   u) webhook_endpoint=${OPTARG} ;;
+  r) aws_region=${OPTARG} ;;
+  i) aws_account_id=${OPTARG} ;;
   v) opt_verbose=1 ;; #set -x;;
   h | ?) usage 0 ;;
   *) usage 1 ;;
@@ -59,7 +65,6 @@ declare -r EXPECTED_SCOPE="create:event_streams"
 [[ -z "${stream_name}" ]] && { echo >&2 "ERROR: stream_name undefined."; usage 1; }
 [[ -z "${subscription_types}" ]] && { echo >&2 "ERROR: subscription_types undefined."; usage 1; }
 [[ -z "${destination_type}" ]] && { echo >&2 "ERROR: destination_type undefined."; usage 1; }
-[[ -z "${webhook_endpoint}" ]] && { echo >&2 "ERROR: webhook_endpoint undefined."; usage 1; }
 
 # Convert the input into an array
 IFS=',' read -r -a items <<< "${subscription_types}"
@@ -77,6 +82,32 @@ for i in "${!items[@]}"; do
   fi
 done
 
+declare configuration_field=''
+
+if [[ "${destination_type}" == "webhook" ]]; then
+  [[ -z "${webhook_endpoint}" ]] && { echo >&2 "ERROR: webhook_endpoint undefined."; usage 1; }
+  configuration_field=$(cat <<EOL
+      "webhook_endpoint": "${webhook_endpoint}",
+      "webhook_authorization": {
+        "method": "bearer",
+        "token": "my-token"
+      }
+EOL
+  )
+elif [[ "${destination_type}" == "eventbridge" ]]; then
+  [[ -z "${aws_region}" ]] && { echo >&2 "ERROR: aws_region undefined."; usage 1; }
+  [[ -z "${aws_account_id}" ]] && { echo >&2 "ERROR: aws_account_id undefined."; usage 1; }
+
+  configuration_field=$(cat <<EOL
+      "aws_region": "${aws_region}",
+      "aws_account_id": "${aws_account_id}"
+EOL
+  )
+
+else
+  echo >&2 "ERROR: unsupported destination_type: ${destination_type}"; usage 1;
+fi
+
 # End the JSON string
 subscriptions_field+=']'
 
@@ -89,11 +120,7 @@ declare BODY=$(cat <<EOL
   "destination": {
     "type": "${destination_type}",
     "configuration": {
-      "webhook_endpoint": "${webhook_endpoint}",
-      "webhook_authorization": {
-        "method": "bearer",
-        "token": "my-token"
-      }
+      ${configuration_field}
     }
   }
 }

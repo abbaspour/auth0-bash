@@ -3,6 +3,7 @@
 *.pem
 jobs/*.json
 .env*
+.wrangler/
 node_modules
 cookie.txt
 .idea

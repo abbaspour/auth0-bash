@@ -20,7 +20,7 @@ USAGE: $0 [-e env] [-a access_token] [-i client_id] [-v|-h]
         -e file         # .env file location (default cwd)
         -a token        # access_token. default from environment variable
         -i conn_id      # connection id
-        -p name         # upstream params name
+        -n name         # upstream params name
         -d dynamic      # dynamic value alias name
         -s static       # static value
         -h|?            # usage
