@@ -55,48 +55,56 @@ declare -r EXPECTED_SCOPE="read:users"
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
 # Initialize variables for pagination
-declare -i page=0
-declare -i per_page=100
 declare -i total_users=0
 declare all_users="[]"
+declare next_param=""
 
-# Fetch users with pagination
+# Fetch users with checkpoint pagination
 while true; do
   if [[ ${opt_verbose} -eq 1 ]]; then
-    echo "Fetching page ${page}..." >&2
+    if [[ -z "${next_param}" ]]; then
+      echo "Fetching first batch of users..." >&2
+    else
+      echo "Fetching next batch of users..." >&2
+    fi
   fi
 
   # Make API request
-  response=$(curl -v -s --get -H "Authorization: Bearer ${access_token}" \
-    -H 'content-type: application/json' \
-    --data-urlencode "page=${page}" \
-    --data-urlencode "per_page=${per_page}" \
-    --data-urlencode "include_totals=true" \
-    --url "${AUTH0_DOMAIN_URL}api/v2/roles/${role_id}/users")
-
-  # Extract users and total count
-  users=$(echo "${response}" | jq -r '.users')
-  length=$(echo "${response}" | jq -r '.limit')
-  total=$(echo "${response}" | jq -r '.total')
-
-  # Display progress
-  if [[ ${page} -eq 0 && ${opt_verbose} -eq 1 ]]; then
-    echo "Total users: ${total}" >&2
+  if [[ -z "${next_param}" ]]; then
+    # First request - use take=100
+    response=$(curl -s --get -H "Authorization: Bearer ${access_token}" \
+      -H 'content-type: application/json' \
+      --data-urlencode "take=100" \
+      --url "${AUTH0_DOMAIN_URL}api/v2/roles/${role_id}/users")
+  else
+    # Subsequent requests - use the next parameter
+    response=$(curl -s --get -H "Authorization: Bearer ${access_token}" \
+      -H 'content-type: application/json' \
+      --data-urlencode "take=100" \
+      --data-urlencode "from=${next_param}" \
+      --url "${AUTH0_DOMAIN_URL}api/v2/roles/${role_id}/users")
   fi
+
+  # Extract users and next parameter
+  users=$(echo "${response}" | jq -r '. | if has("users") then .users else . end')
+  next_param=$(echo "${response}" | jq -r '.next // empty')
+  length=$(echo "${users}" | jq -r 'length // 0')
 
   # Combine with previous results
   all_users=$(echo "${all_users}" | jq --argjson new "${users}" '. + $new')
-  
+
   # Update total count
   total_users=$((total_users + length))
-  
-  # Check if we've reached the end
-  if [[ ${length} -lt ${per_page} ]]; then
+
+  # Display progress
+  if [[ ${opt_verbose} -eq 1 ]]; then
+    echo "Retrieved ${length} users in this batch (total so far: ${total_users})" >&2
+  fi
+
+  # Check if we've reached the end (no next parameter)
+  if [[ -z "${next_param}" ]]; then
     break
   fi
-  
-  # Move to next page
-  page=$((page + 1))
 done
 
 if [[ ${opt_verbose} -eq 1 ]]; then
