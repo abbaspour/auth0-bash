@@ -7,7 +7,6 @@
 ##########################################################################################
 
 set -eo pipefail
-tenant=amin01.au
 
 function usage() {
     cat <<END >&2
@@ -59,4 +58,5 @@ declare -r EXPECTED_SCOPE="delete:users"
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
 curl -s -X DELETE -H "Authorization: Bearer ${access_token}" -H 'content-type: application/json' \
-    https://${tenant}.auth0.com/api/v2/users/${user_id} | jq .
+    "${AUTH0_DOMAIN_URL}api/v2/users/${user_id}" | jq .
+

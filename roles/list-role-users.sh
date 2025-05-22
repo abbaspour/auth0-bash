@@ -45,6 +45,11 @@ while getopts "e:a:i:o:hv?" opt; do
   esac
 done
 
+# Set up redirection if output file is specified
+if [[ -n "${output_file}" ]]; then
+  exec > "${output_file}"
+fi
+
 [[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
 [[ -z "${role_id}" ]] && { echo >&2 "ERROR: role_id undefined. Use -i to specify role_id"; usage 1; }
 
@@ -56,8 +61,11 @@ declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | 
 
 # Initialize variables for pagination
 declare -i total_users=0
-declare all_users="[]"
 declare next_param=""
+declare first_batch=true
+
+# Initialize output
+echo "["
 
 # Fetch users with checkpoint pagination
 while true; do
@@ -90,9 +98,6 @@ while true; do
   next_param=$(echo "${response}" | jq -r '.next // empty')
   length=$(echo "${users}" | jq -r 'length // 0')
 
-  # Combine with previous results
-  all_users=$(echo "${all_users}" | jq --argjson new "${users}" '. + $new')
-
   # Update total count
   total_users=$((total_users + length))
 
@@ -101,20 +106,35 @@ while true; do
     echo "Retrieved ${length} users in this batch (total so far: ${total_users})" >&2
   fi
 
+  # Write users to output
+  if [[ ${length} -gt 0 ]]; then
+    # Add comma before this batch if it's not the first batch
+    if [[ "${first_batch}" = true ]]; then
+      first_batch=false
+    else
+      echo ","
+    fi
+
+    # Remove the outer brackets from the users array
+    formatted_users=$(echo "${users}" | jq -c '.[] | ., ""' | sed '$ d')
+
+    # Write formatted users
+    echo -n "${formatted_users}" | sed 's/$/,/' | sed '$ s/,$//'
+  fi
+
   # Check if we've reached the end (no next parameter)
   if [[ -z "${next_param}" ]]; then
     break
   fi
 done
 
+# Close the JSON array
+echo "]"
+
+# Print summary if verbose mode is enabled
 if [[ ${opt_verbose} -eq 1 ]]; then
   echo "Retrieved ${total_users} users" >&2
-fi
-
-# Output results
-if [[ -n "${output_file}" ]]; then
-  echo "${all_users}" | jq '.' > "${output_file}"
-  echo "Results saved to ${output_file}" >&2
-else
-  echo "${all_users}" | jq '.'
+  if [[ -n "${output_file}" ]]; then
+    echo "Results saved to ${output_file}" >&2
+  fi
 fi
