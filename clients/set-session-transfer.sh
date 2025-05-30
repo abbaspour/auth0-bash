@@ -21,15 +21,19 @@ USAGE: $0 [-e env] [-a access_token] [-i client_id] [-m auth_methods] [-b bindin
         -e file         # .env file location (default cwd)
         -a token        # access_token. default from environment variable
         -i id           # client_id
-        -m methods      # allowed_authentication_methods. comma separated (default: "cookie", "query")
+        -m methods      # allowed_authentication_methods. comma separated (allowed values: "cookie", "query")
         -b binding      # enforce_device_binding: ip, none, asn (default: none)
         -d              # disable can_create_session_transfer_token
         -h|?            # usage
         -v              # verbose
 
 eg,
-     $0 -i 62qDW3H3goXmyJTvpzQzMFGLpVGAJ1Qh -m cookie,query -b ip
+     # Native apps: use -b and/or -d parameters
+     $0 -i 62qDW3H3goXmyJTvpzQzMFGLpVGAJ1Qh -b ip
      $0 -i 62qDW3H3goXmyJTvpzQzMFGLpVGAJ1Qh -d
+
+     # Web apps: use -m parameter
+     $0 -i VJIEWAptlFWokl2pRC2ptswic1jCGoEC -m cookie,query
 END
     exit $1
 }
@@ -39,13 +43,14 @@ declare auth_methods='cookie,query'
 declare device_binding='none'
 declare can_create=true
 declare opt_verbose=0
+declare auth_methods_provided=false
 
 while getopts "e:a:i:m:b:dhv?" opt; do
     case ${opt} in
     e) source ${OPTARG} ;;
     a) access_token=${OPTARG} ;;
     i) client_id=${OPTARG} ;;
-    m) auth_methods=${OPTARG} ;;
+    m) auth_methods=${OPTARG}; auth_methods_provided=true ;;
     b) device_binding=${OPTARG} ;;
     d) can_create=false ;;
     v) opt_verbose=1 ;; #set -x;;
@@ -76,18 +81,33 @@ readonly auth_methods_array=$(echo "${auth_methods}" | tr ',' '\n' | while read 
   echo "      \"${method}\""
 done | paste -sd, -)
 
-declare BODY=$(cat <<EOL
+# Determine payload format based on input parameters
+# If auth_methods is explicitly provided, use Format 2 (web apps)
+# Otherwise, use Format 1 (native apps)
+if [[ "${auth_methods_provided}" == "true" ]]; then
+    # Format 2: web apps - allowed_authentication_methods with cookie or query
+    declare BODY=$(cat <<EOL
+{
+  "session_transfer": {
+    "allowed_authentication_methods": [
+${auth_methods_array}
+    ]
+  }
+}
+EOL
+    )
+else
+    # Format 1: native apps - only can_create_session_transfer_token and enforce_device_binding
+    declare BODY=$(cat <<EOL
 {
   "session_transfer": {
     "can_create_session_transfer_token": ${can_create},
-    "allowed_authentication_methods": [
-${auth_methods_array}
-    ],
     "enforce_device_binding": "${device_binding}"
   }
 }
 EOL
-)
+    )
+fi
 
 if [[ ${opt_verbose} ]]; then
     echo $BODY
@@ -98,3 +118,5 @@ curl -s --request PATCH \
     --data "${BODY}" \
     --header 'content-type: application/json' \
     --url "${AUTH0_DOMAIN_URL}api/v2/clients/${client_id}"
+
+echo
