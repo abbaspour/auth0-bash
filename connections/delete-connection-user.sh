@@ -71,6 +71,6 @@ declare -r EXPECTED_SCOPE="delete:users"
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
 
-curl -v --request DELETE \
+curl --request DELETE \
     -H "Authorization: Bearer ${access_token}" \
     --url "${AUTH0_DOMAIN_URL}api/v2/connections/${connection_id}/users?email=${email_urlencode}"

@@ -74,12 +74,14 @@ declare BODY=$(cat <<EOL
 EOL
 )
 
-echo $BODY
-#exit 0
+if [[ ${opt_verbose} -eq 1 ]]; then
+    echo "${BODY}"
+fi
 
 curl -s --request PATCH \
     -H "Authorization: Bearer ${access_token}" \
     --data "${BODY}" \
     --header 'content-type: application/json' \
-    --url ${AUTH0_DOMAIN_URL}api/v2/clients/${client_id}
+    --url "${AUTH0_DOMAIN_URL}api/v2/clients/${client_id}"
 
+echo

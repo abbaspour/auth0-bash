@@ -109,8 +109,8 @@ EOL
     )
 fi
 
-if [[ ${opt_verbose} ]]; then
-    echo $BODY
+if [[ ${opt_verbose} -eq 1 ]]; then
+    echo "${BODY}"
 fi
 
 curl -s --request PATCH \
