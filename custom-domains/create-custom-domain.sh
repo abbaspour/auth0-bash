@@ -101,7 +101,7 @@ if [[ ${opt_verbose} -eq 1 ]]; then
     echo "Request body: ${BODY}"
 fi
 
-curl --request POST \
+curl -v --request POST \
     -H "Authorization: Bearer ${access_token}" \
     --data "${BODY}" \
     --header 'content-type: application/json' \

@@ -17,7 +17,8 @@ USAGE: $0 [-e env] [-a access_token] [-n name] [-t type] [-i client_id] [-p PEM]
         -a token        # access_token. default from environment variable
         -n name         # credential name (e.g. "JWTCA cred 1" or "mTLS cred")
         -t type         # credential type: public_key, x509_cert
-        -i client_id    # client_id (if accept_client_id_on_creation is on)
+        -i client_id    # client_id
+        -k kid          # kid (optional)
         -p file         # public key or cert PEM file
         -g algorithm    # Optional. can be one of RS256, RS384, PS256. If not specified, RS256 will be used.
         -h|?            # usage
@@ -34,8 +35,10 @@ declare credential_name=''
 declare credential_type='public_key'
 declare public_key_file=''
 declare algorithm_string=''
+declare kid=''
+declare opt_verbose=''
 
-while getopts "e:a:n:t:i:p:g:hv?" opt; do
+while getopts "e:a:n:t:i:p:g:k:hv?" opt; do
   case ${opt} in
   e) source "${OPTARG}" ;;
   a) access_token=${OPTARG} ;;
@@ -44,7 +47,8 @@ while getopts "e:a:n:t:i:p:g:hv?" opt; do
   i) client_id="${OPTARG}";;
   p) public_key_file=${OPTARG} ;;
   g) algorithm_string=",\"alg\":\"${OPTARG}\"" ;;
-  v) set -x;;
+  k) kid=",\"kid\":\"${OPTARG}\"" ;;
+  v) opt_verbose=1;; # set -x;;
   h | ?) usage 0 ;;
   *) usage 1 ;;
   esac
@@ -72,9 +76,12 @@ declare BODY=$(cat <<EOL
   "name": "${credential_name}",
   "pem": "${credential_public_key}"
   ${algorithm_string}
+  ${kid}
 }
 EOL
 )
+
+[[ -n "${opt_verbose}" ]] && echo "${BODY}"
 
 ## TODO: detect if PEM is certificate (as opposed to public key) and enable `parse_expiry_from_cert` if so
 #  "parse_expiry_from_cert": true
