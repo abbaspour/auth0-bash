@@ -6,17 +6,19 @@ readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-i user_id] [-v|-h]
+USAGE: $0 [-e env] [-a access_token] [-i user_id] [-D domain] [-v|-h]
         -e file     # .env file location (default cwd)
         -a token    # access_token. default from environment variable
         -i user_id  # user_id
         -f key      # profile field name. e.g. name, email, given_name, family_name. full list at: https://auth0.com/docs/users/references/user-profile-structure
         -s val      # profile field value to set
+        -D domain   # (optional) custom domain for auth0-custom-domain header
         -h|?        # usage
         -v          # verbose
 
 eg,
      $0 -i 'auth0|b0dec5bdba02248abd51388' -f name -s "Amin"
+     $0 -i 'auth0|b0dec5bdba02248abd51388' -f name -s "Amin" -D custom.domain.com
 END
     exit $1
 }
@@ -36,14 +38,16 @@ urlencode() {
 declare user_id=''
 declare filed=''
 declare value=''
+declare custom_domain=''
 
-while getopts "e:a:i:f:s:hv?" opt; do
+while getopts "e:a:i:f:s:D:hv?" opt; do
     case ${opt} in
     e) source ${OPTARG} ;;
     a) access_token=${OPTARG} ;;
     i) user_id=$(urlencode ${OPTARG}) ;;
     f) filed=${OPTARG} ;;
     s) value=${OPTARG} ;;
+    D) custom_domain="auth0-custom-domain: ${OPTARG}" ;;
     v) opt_verbose=1 ;; #set -x;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
@@ -72,5 +76,6 @@ EOF
 curl -s -X PATCH \
     -H "Authorization: Bearer ${access_token}" \
     -H 'content-type: application/json' \
+    -H "${custom_domain}" \
     -d "${DATA}" \
     "${AUTH0_DOMAIN_URL}api/v2/users/${user_id}"

@@ -12,7 +12,7 @@ declare AUTH0_CONNECTION='Username-Password-Authentication'
 
 function usage() {
   cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-u username] [-p password] [-c connection] [-m mail] [-M phone_number] [-i user_id] [-V|-v|-h]
+USAGE: $0 [-e env] [-a access_token] [-u username] [-p password] [-c connection] [-m mail] [-M phone_number] [-i user_id] [-D domain] [-V|-v|-h]
         -e file     # .env file location (default cwd)
         -a token    # access_token. default from environment variable
         -u username # username
@@ -21,6 +21,7 @@ USAGE: $0 [-e env] [-a access_token] [-u username] [-p password] [-c connection]
         -p password # password
         -c realm    # connection (defaults to "${AUTH0_CONNECTION}")
         -i user_id  # (optional) user ID
+        -D domain   # (optional) custom domain for auth0-custom-domain header
         -V          # Mark as email/phone verified
         -s          # send verify email
         -U k:v      # user_metadata key/value
@@ -30,6 +31,7 @@ USAGE: $0 [-e env] [-a access_token] [-u username] [-p password] [-c connection]
 
 eg,
      $0 -u somebody -m somebody@gmail.com -p ramzvorood
+     $0 -u somebody -m somebody@gmail.com -p ramzvorood -D custom.domain.com
 END
   exit $1
 }
@@ -41,11 +43,12 @@ declare phone_number=''
 declare verified_flag=''
 declare send_verify_email=''
 declare user_id=''
+declare custom_domain=''
 
 declare -a user_metadata=()
 declare -a app_metadata=()
 
-while getopts "e:a:u:m:M:p:c:i:U:A:Vshv?" opt; do
+while getopts "e:a:u:m:M:p:c:i:U:A:D:Vshv?" opt; do
   case ${opt} in
   e) source ${OPTARG} ;;
   a) access_token=${OPTARG} ;;
@@ -57,6 +60,7 @@ while getopts "e:a:u:m:M:p:c:i:U:A:Vshv?" opt; do
   i) user_id=${OPTARG} ;;
   U) user_metadata+=(${OPTARG}) ;;
   A) app_metadata+=(${OPTARG}) ;;
+  D) custom_domain="auth0-custom-domain: ${OPTARG}" ;;
   V) verified_flag='1' ;;
   s) send_verify_email='1' ;;
   v) opt_verbose=1 ;; #set -x;;
@@ -131,4 +135,5 @@ curl -s --request POST \
   -H "Authorization: Bearer ${access_token}" \
   --url ${AUTH0_DOMAIN_URL}api/v2/users \
   --header 'content-type: application/json' \
+  --header "${custom_domain}" \
   --data "${BODY}"

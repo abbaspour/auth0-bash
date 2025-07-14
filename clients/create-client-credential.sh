@@ -45,7 +45,7 @@ while getopts "e:a:n:t:i:p:g:k:hv?" opt; do
   n) credential_name=${OPTARG} ;;
   t) credential_type=${OPTARG} ;;
   i) client_id="${OPTARG}";;
-  p) public_key_file=${OPTARG} ;;
+  p) public_key_file="${OPTARG}" ;;
   g) algorithm_string=",\"alg\":\"${OPTARG}\"" ;;
   k) kid=",\"kid\":\"${OPTARG}\"" ;;
   v) opt_verbose=1;; # set -x;;
