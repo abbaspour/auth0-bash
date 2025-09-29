@@ -50,5 +50,6 @@ done
 
 curl -s --request GET \
     --url "https://${AUTH0_DOMAIN}/mfa/authenticators" \
+    --header "Origin: xxx" \
     --header "authorization: Bearer ${mfa_token}" \
     --header 'content-type: application/x-www-form-urlencoded' | jq .

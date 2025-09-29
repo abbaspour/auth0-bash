@@ -22,7 +22,10 @@ USAGE: $0 [-e env] [-A access_token] [-i client_id] [-a audience] [-s scopes] [-
         -i id           # client id
         -a audience     # resource server API audience
         -s scopes       # scopes to grant
-        -m              # Management API audience
+        -t type         # subject type; client or user.
+        -m              # MyAccount API audience
+        -M              # Management API audience
+        -O              # MyOrg API audience
         -h|?            # usage
         -v              # verbose
 
@@ -35,18 +38,23 @@ END
 declare client_id=''
 declare audience=''
 declare api_scopes=''
-declare use_management_api=0
+declare use_management_api=''
+declare use_myaccount_api=''
+declare use_myorg_api=''
+declare subject_type_field=''
 
 
-
-while getopts "e:A:i:a:s:mhv?" opt; do
+while getopts "e:A:i:a:s:t:mMOhv?" opt; do
     case ${opt} in
     e) source ${OPTARG} ;;
     A) access_token=${OPTARG} ;;
     i) client_id=${OPTARG} ;;
     a) audience=${OPTARG} ;;
     s) api_scopes=${OPTARG} ;;
-    m) use_management_api=1 ;;
+    t) subject_type_field="\"subject_type\":\"${OPTARG}\", " ;;
+    m) use_myaccount_api=1 ;;
+    M) use_management_api=1 ;;
+    O) use_myorg_api=1 ;;
     v) opt_verbose=1 ;; #set -x;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
@@ -62,7 +70,10 @@ declare -r EXPECTED_SCOPE="create:client_grants"
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
-[[ ! -z "${use_management_api}" ]] && audience=${AUTH0_DOMAIN_URL}api/v2/
+[[ -n "${use_management_api}" ]] && audience=${AUTH0_DOMAIN_URL}api/v2/
+[[ -n "${use_myaccount_api}" ]] && audience=${AUTH0_DOMAIN_URL}me/
+[[ -n "${use_myorg_api}" ]] && audience=${AUTH0_DOMAIN_URL}my-org/
+
 [[ -z "${client_id}" ]] && {  echo >&2 "ERROR: client_id undefined." ;  usage 1; }
 
 
@@ -75,6 +86,7 @@ declare BODY=$(cat <<EOL
 {
   "client_id": "${client_id}",
   "audience": "${audience}",
+  ${subject_type_field}
   "scope": [ ${scopes} ]
 }
 EOL
