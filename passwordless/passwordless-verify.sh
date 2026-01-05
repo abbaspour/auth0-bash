@@ -106,8 +106,7 @@ declare data=$(cat <<EOL
 {
     "connection": "${AUTH0_CONNECTION}",
     ${recipient}
-    "verification_code": "${verification_code}",
-    "scope": "${AUTH0_SCOPE}"
+    "verification_code": "${verification_code}"
 }
 EOL
 )

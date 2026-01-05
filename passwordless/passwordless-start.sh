@@ -126,3 +126,5 @@ curl --request POST \
     --header 'content-type: application/json' \
     --header "x-request-language: ${language}" \
     --data "${data}"
+
+echo

@@ -64,8 +64,8 @@ fi
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
 
-curl --request PATCH \
+curl -s --request PATCH \
     -H "Authorization: Bearer ${access_token}" \
     --url ${AUTH0_DOMAIN_URL}api/v2/connections/${connection_id} \
     --header 'content-type: application/json' \
-    --data @${json_file}
+    --data @${json_file} | jq .

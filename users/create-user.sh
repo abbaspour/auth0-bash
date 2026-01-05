@@ -136,4 +136,6 @@ curl -s --request POST \
   --url ${AUTH0_DOMAIN_URL}api/v2/users \
   --header 'content-type: application/json' \
   --header "${custom_domain}" \
-  --data "${BODY}"
+  --data "${BODY}" | jq .
+
+echo

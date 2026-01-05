@@ -6,10 +6,6 @@
 # License: MIT (https://github.com/abbaspour/auth0-bash/blob/master/LICENSE)
 ##########################################################################################
 
-## note:
-# this script is using legacy endpoint `/oauth/ro`.
-# you should have grant type 'Legacy:RO' and disable 'OIDC Conformant'
-
 set -eo pipefail
 
 command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
@@ -105,3 +101,5 @@ EOL
 curl --url "https://${AUTH0_DOMAIN}/oauth/token" \
     --header 'content-type: application/json' \
     --data "${data}"
+
+echo
