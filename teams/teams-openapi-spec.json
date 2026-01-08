@@ -1,0 +1,1971 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "contact": {},
+    "title": "Teams API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://{teamSlug}.teams.auth0.com",
+      "description": "The base URL for Teams API",
+      "variables": {
+        "teamSlug": {
+          "default": "teamSlug",
+          "description": "Team slug"
+        }
+      }
+    }
+  ],
+  "security": [
+    {
+      "bearer": []
+    }
+  ],
+  "paths": {
+    "/api/members": {
+      "get": {
+        "400": {
+          "$ref": "../schemas/errors/BadRequestResponse.json"
+        },
+        "401": {
+          "$ref": "../schemas/errors/UnauthorizedResponse.json"
+        },
+        "403": {
+          "$ref": "../schemas/errors/ForbiddenResponse.json"
+        },
+        "404": {
+          "$ref": "../schemas/errors/NotFoundResponse.json"
+        },
+        "429": {
+          "$ref": "../schemas/errors/TooManyRequestsResponse.json"
+        },
+        "500": {
+          "$ref": "../schemas/errors/InternalServerErrorResponse.json"
+        },
+        "operationId": "listMembers",
+        "summary": "List members of a team",
+        "description": "Retrieves the first 50 members for the specified team.",
+        "security": [
+          {
+            "bearer": [
+              "read:members"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of members",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "members": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "$ref": "#/components/schemas/UserId"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "The full name of the team member.",
+                            "examples": [
+                              "John Doe",
+                              "Jane Smith"
+                            ]
+                          },
+                          "given_name": {
+                            "type": "string",
+                            "description": "The first name (given name) of the team member. Returns empty string if not available.",
+                            "examples": [
+                              "John",
+                              "Jane"
+                            ]
+                          },
+                          "family_name": {
+                            "type": "string",
+                            "description": "The last name (family name) of the team member. Returns empty string if not available.",
+                            "examples": [
+                              "Doe",
+                              "Smith"
+                            ]
+                          },
+                          "nickname": {
+                            "type": "string",
+                            "description": "The nickname of the team member. Returns empty string if not available.",
+                            "examples": [
+                              "johndoe",
+                              "jsmith"
+                            ]
+                          },
+                          "email": {
+                            "type": "string",
+                            "format": "email",
+                            "description": "The email of the team member.",
+                            "examples": [
+                              "john.doe@example.com",
+                              "jane.smith@company.com"
+                            ]
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "teams_owner",
+                              "teams_contributor",
+                              "teams_report_viewer"
+                            ],
+                            "description": "The team-level role of the team member.",
+                            "examples": [
+                              "teams_owner"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "given_name",
+                          "family_name",
+                          "nickname",
+                          "email",
+                          "role"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "members"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "inviteMember",
+        "summary": "Invite a new team member",
+        "description": "Creates a new team member invitation for the specified team.",
+        "security": [
+          {
+            "bearer": [
+              "create:invitations"
+            ]
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email of the invitee",
+                    "examples": [
+                      "jane.smith@company.com"
+                    ]
+                  },
+                  "role": {
+                    "$ref": "#/components/schemas/TeamMemberRole"
+                  },
+                  "tenant_ids": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/TenantId"
+                    },
+                    "description": "Array of tenant IDs"
+                  },
+                  "tenant_roles": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/TenantMemberRole"
+                    },
+                    "description": "Roles assigned to the invitee on tenants"
+                  },
+                  "client_ids": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ClientId"
+                    },
+                    "description": "Client IDs for editor-specific-apps role",
+                    "examples": [
+                      [
+                        "client_123",
+                        "client_456"
+                      ]
+                    ]
+                  }
+                },
+                "required": [
+                  "email",
+                  "role"
+                ],
+                "examples": [
+                  {
+                    "email": "jane.smith@company.com",
+                    "role": "teams_contributor",
+                    "tenant_ids": [
+                      "538c9e21-e3d5-4ad6-b3d0-352c62369fb0",
+                      "b1c9e21e-1234-4ad6-b3d0-352c6236abcd"
+                    ],
+                    "tenant_roles": [
+                      "owner",
+                      "editor-users"
+                    ],
+                    "client_ids": [
+                      "client_123",
+                      "client_456"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Invitation created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "The unique identifier for the created invitation",
+                      "examples": [
+                        "invite_abc123"
+                      ]
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "description": "Email of the invitee",
+                      "examples": [
+                        "jane.smith@company.com"
+                      ]
+                    },
+                    "role": {
+                      "$ref": "#/components/schemas/TeamMemberRole"
+                    },
+                    "tenant_ids": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TenantId"
+                      },
+                      "description": "Array of tenant IDs"
+                    },
+                    "tenant_roles": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TenantMemberRole"
+                      },
+                      "description": "Roles assigned to the invitee on tenants"
+                    },
+                    "client_ids": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ClientId"
+                      },
+                      "description": "Client IDs for editor-specific-apps role",
+                      "examples": [
+                        [
+                          "client_123",
+                          "client_456"
+                        ]
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "email",
+                    "role"
+                  ],
+                  "examples": [
+                    {
+                      "id": "invite_abc123",
+                      "email": "jane.smith@company.com",
+                      "role": "teams_contributor",
+                      "tenant_ids": [
+                        "538c9e21-e3d5-4ad6-b3d0-352c62369fb0",
+                        "b1c9e21e-1234-4ad6-b3d0-352c6236abcd"
+                      ],
+                      "tenant_roles": [
+                        "owner",
+                        "editor-users"
+                      ],
+                      "client_ids": [
+                        "client_123",
+                        "client_456"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequestsResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/tenants": {
+      "post": {
+        "operationId": "createTenant",
+        "summary": "Create a tenant under the current team",
+        "description": "This endpoint creates a new tenant under your team. Upon successful creation, the response includes the tenant's details along with the management client credentials that can be used to configure and manage the tenant.",
+        "security": [
+          {
+            "bearer": [
+              "create:tenants"
+            ]
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTenantPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tenant Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateTenantResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "409": {
+            "$ref": "#/components/responses/ConflictResponse"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequestsResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerErrorResponse"
+          }
+        }
+      },
+      "get": {
+        "operationId": "getTenantsByCheckpoint",
+        "summary": "Get tenants for the current team",
+        "description": "Retrieves the first 50 tenants for the specified team. If private cloud support beta is enabled for the team, both public and private tenants are returned; otherwise, only public tenants are returned.",
+        "security": [
+          {
+            "bearer": [
+              "read:tenants"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of tenants",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tenants": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "tenant_id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "The unique identifier for this tenant"
+                          },
+                          "tenant_name": {
+                            "$ref": "#/components/schemas/TenantName"
+                          },
+                          "environment": {
+                            "type": "string",
+                            "description": "The environment short name",
+                            "examples": [
+                              "US-3",
+                              "EU-1",
+                              "acme-dev"
+                            ]
+                          },
+                          "environment_type": {
+                            "$ref": "#/components/schemas/EnvironmentType"
+                          },
+                          "tenant_fqdn": {
+                            "type": "string",
+                            "description": "The fully qualified domain name (FQDN) of the tenant, which uniquely identifies its domain within the system. The FQDN is used to define the audience when interacting with the Management API, enabling programmatic management of the tenant’s configuration and resources.",
+                            "examples": [
+                              "acme-development-tenant.us.auth0.com",
+                              "acme-development-tenant.acme-dev.auth0app.com"
+                            ]
+                          },
+                          "region": {
+                            "type": "string",
+                            "description": "The region/locality of the tenant",
+                            "examples": [
+                              "us",
+                              "eu",
+                              "virginia",
+                              "frankfurt"
+                            ]
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "When the tenant was created"
+                          }
+                        },
+                        "required": [
+                          "tenant_id",
+                          "tenant_name",
+                          "environment",
+                          "tenant_fqdn",
+                          "region",
+                          "created_at"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "tenants"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequestsResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/environments": {
+      "get": {
+        "operationId": "getEnvironments",
+        "summary": "Retrieve environment list of a team",
+        "description": "Returns the list of environments associated with the team.",
+        "security": [
+          {
+            "bearer": [
+              "read:members"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Environment list retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "environments": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "List of environments. For Public cloud → hostEnvironment value. For Private cloud → space.name value"
+                    }
+                  },
+                  "required": [
+                    "environments"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenResponse"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequestsResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/tenants/{tenantId}": {
+      "get": {
+        "operationId": "getTenant",
+        "summary": "Retrieve details for a specific tenant",
+        "description": "This endpoint retrieves the details of a single tenant.",
+        "security": [
+          {
+            "bearer": [
+              "read:tenants"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenantId",
+            "required": true,
+            "description": "The unique ID of the tenant to retrieve.",
+            "schema": {
+              "$ref": "#/components/schemas/TenantId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tenant details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tenant_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "The unique ID of the tenant."
+                    },
+                    "tenant_name": {
+                      "$ref": "#/components/schemas/TenantName"
+                    },
+                    "tenant_fqdn": {
+                      "type": "string",
+                      "description": "The fully qualified domain name (FQDN) of the tenant.",
+                      "examples": [
+                        "acme-development-tenant.us.auth0.com",
+                        "acme-development-tenant.acme-dev.auth0app.com"
+                      ]
+                    },
+                    "environment": {
+                      "type": "string",
+                      "description": "The name of the cloud environment where the tenant was created.",
+                      "examples": [
+                        "US-3",
+                        "EU-1",
+                        "acme-dev"
+                      ]
+                    },
+                    "region": {
+                      "type": "string",
+                      "description": "Region in which the tenant was created.",
+                      "examples": [
+                        "us",
+                        "eu",
+                        "virginia",
+                        "frankfurt"
+                      ]
+                    },
+                    "environment_type": {
+                      "$ref": "#/components/schemas/EnvironmentType"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "The date and time when the tenant was created."
+                    }
+                  },
+                  "required": [
+                    "tenant_id",
+                    "tenant_name",
+                    "tenant_fqdn",
+                    "environment",
+                    "region",
+                    "created_at"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequestsResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerErrorResponse"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteTenant",
+        "summary": "Delete a tenant from the current team",
+        "description": "Delete a tenant from the current team",
+        "security": [
+          {
+            "bearer": [
+              "delete:tenants"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenantId",
+            "required": true,
+            "description": "The id of the tenant to delete",
+            "schema": {
+              "$ref": "#/components/schemas/TenantId"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/EmptyResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequestsResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/tenants/{tenantId}/members": {
+      "get": {
+        "operationId": "listTenantMembers",
+        "summary": "Retrieve a list of tenant members",
+        "description": "This endpoint retrieves first 50 members for a specific tenant.",
+        "security": [
+          {
+            "bearer": [
+              "read:members"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenantId",
+            "required": true,
+            "description": "The unique ID of the tenant.",
+            "schema": {
+              "$ref": "#/components/schemas/TenantId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of tenant members",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "members": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TenantMember"
+                      }
+                    }
+                  },
+                  "required": [
+                    "members"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequestsResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerErrorResponse"
+          }
+        },
+        "components": {
+          "schemas": {
+            "TenantMember": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "The unique ID of the tenant member (Auth0 user ID).",
+                  "examples": [
+                    "auth0|68da0038bab277c02ed1d4c8",
+                    "google-oauth2|123456789012345678901"
+                  ]
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The full name of the member. Returns empty string if not available.",
+                  "examples": [
+                    "John Doe",
+                    "Jane Smith"
+                  ]
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "description": "The email of the member.",
+                  "examples": [
+                    "john.doe@example.com",
+                    "jane.smith@example.com"
+                  ]
+                },
+                "roles": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TenantMemberRole"
+                  },
+                  "description": "An array of roles assigned to the member.",
+                  "examples": [
+                    [
+                      "owner"
+                    ],
+                    [
+                      "editor-users",
+                      "editor-connections"
+                    ],
+                    [
+                      "viewer-users"
+                    ]
+                  ]
+                },
+                "given_name": {
+                  "type": "string",
+                  "description": "The first name (given name) of the member. Returns empty string if not available.",
+                  "examples": [
+                    "John",
+                    "Jane"
+                  ]
+                },
+                "family_name": {
+                  "type": "string",
+                  "description": "The last name (family name) of the member. Returns empty string if not available.",
+                  "examples": [
+                    "Doe",
+                    "Smith"
+                  ]
+                },
+                "nickname": {
+                  "type": "string",
+                  "description": "The nickname of the member. Returns empty string if not available.",
+                  "examples": [
+                    "johndoe",
+                    "jsmith"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "email",
+                "roles",
+                "given_name",
+                "family_name",
+                "nickname",
+                "name"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "/api/members/{team_member_id}": {
+      "get": {
+        "operationId": "getMember",
+        "summary": "Retrieve detailed information for a specific team member",
+        "description": "This endpoint retrieves the details of a single team member, including their basic profile information and team-level role.",
+        "security": [
+          {
+            "bearer": [
+              "read:members"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "team_member_id",
+            "required": true,
+            "description": "The unique ID of the team member to retrieve (Auth0 user ID, e.g., auth0|68da0038bab277c02ed1d4c8).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Team member details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "The unique ID of the team member (Auth0 user ID).",
+                      "examples": [
+                        "auth0|68da0038bab277c02ed1d4c8",
+                        "google-oauth2|123456789012345678901"
+                      ]
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "The full name of the team member."
+                    },
+                    "given_name": {
+                      "type": "string",
+                      "description": "The first name (given name) of the team member. Returns empty string if not available."
+                    },
+                    "family_name": {
+                      "type": "string",
+                      "description": "The last name (family name) of the team member. Returns empty string if not available."
+                    },
+                    "nickname": {
+                      "type": "string",
+                      "description": "The nickname of the team member. Returns empty string if not available."
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "description": "The email of the team member."
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "teams_owner",
+                        "teams_contributor",
+                        "teams_report_viewer"
+                      ],
+                      "description": "The team-level role of the team member."
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "given_name",
+                    "family_name",
+                    "nickname",
+                    "email",
+                    "role"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequestsResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerErrorResponse"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteTeamMember",
+        "summary": "Delete a team member",
+        "description": "This endpoint deletes a team member from the team.",
+        "security": [
+          {
+            "bearer": [
+              "delete:members"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "team_member_id",
+            "required": true,
+            "description": "The unique ID of the team member to delete (Auth0 user ID, e.g., auth0|68da0038bab277c02ed1d4c8).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/EmptyResponse"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequestsResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerErrorResponse"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateTeamMemberRole",
+        "summary": "Update a team member's role",
+        "description": "This endpoint performs a partial update to a team member's information, specifically to change their team role.",
+        "security": [
+          {
+            "bearer": [
+              "update:members"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "team_member_id",
+            "required": true,
+            "description": "The unique ID of the team member to update (Auth0 user ID, e.g., auth0|68da0038bab277c02ed1d4c8).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "teams_owner",
+                      "teams_contributor",
+                      "teams_report_viewer"
+                    ],
+                    "description": "The new role to assign to the team member.",
+                    "examples": [
+                      "teams_owner",
+                      "teams_contributor",
+                      "teams_report_viewer"
+                    ]
+                  }
+                },
+                "required": [
+                  "role"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Team member role updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "The unique ID of the team member (Auth0 user ID).",
+                      "examples": [
+                        "auth0|68da0038bab277c02ed1d4c8",
+                        "google-oauth2|123456789012345678901"
+                      ]
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "description": "The email of the team member.",
+                      "examples": [
+                        "john.doe@example.com",
+                        "jane.smith@company.org"
+                      ]
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "teams_owner",
+                        "teams_contributor",
+                        "teams_report_viewer"
+                      ],
+                      "description": "The team-level role of the team member.",
+                      "examples": [
+                        "teams_owner",
+                        "teams_contributor"
+                      ]
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "The full name of the team member.",
+                      "examples": [
+                        "John Doe",
+                        "Jane Smith"
+                      ]
+                    },
+                    "given_name": {
+                      "type": "string",
+                      "description": "The first name (given name) of the team member. Returns empty string if not available.",
+                      "examples": [
+                        "John",
+                        "Jane"
+                      ]
+                    },
+                    "family_name": {
+                      "type": "string",
+                      "description": "The last name (family name) of the team member. Returns empty string if not available.",
+                      "examples": [
+                        "Doe",
+                        "Smith"
+                      ]
+                    },
+                    "nickname": {
+                      "type": "string",
+                      "description": "The nickname of the team member. Returns empty string if not available.",
+                      "examples": [
+                        "johndoe",
+                        "jsmith"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "email",
+                    "role",
+                    "name",
+                    "given_name",
+                    "family_name",
+                    "nickname"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequestsResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/members/{team_member_id}/tenants/{environment}": {
+      "get": {
+        "operationId": "listTenantAccessByEnvironment",
+        "summary": "List a member's tenant access within an environment",
+        "description": "Returns all tenants (within the specified environment) the team member has access to, including roles per tenant.",
+        "security": [
+          {
+            "bearer": [
+              "read:members"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "team_member_id",
+            "required": true,
+            "description": "The unique ID of the team member (Auth0 user ID, e.g., auth0|68da0038bab277c02ed1d4c8).",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "environment",
+            "required": true,
+            "description": "The cloud environment identifier (e.g. 'US-3', 'EU-1', 'acme-dev').",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Member tenant access list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "environment": {
+                      "type": "string",
+                      "description": "The queried environment.",
+                      "examples": [
+                        "US-3",
+                        "EU-1",
+                        "acme-dev"
+                      ]
+                    },
+                    "tenants": {
+                      "type": "array",
+                      "description": "List of tenants the member has access to within this environment.",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "tenant_id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "description": "The unique identifier of the tenant."
+                          },
+                          "tenant_fqdn": {
+                            "type": "string",
+                            "description": "The fully qualified domain name (FQDN) of the tenant.",
+                            "examples": [
+                              "acme-development-tenant.us.auth0.com",
+                              "acme-development-tenant.acme-dev.auth0app.com"
+                            ]
+                          },
+                          "roles": {
+                            "type": "array",
+                            "description": "An array of roles assigned to the team member within the tenant.",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "role": {
+                                  "type": "string",
+                                  "enum": [
+                                    "admin",
+                                    "editor-connection",
+                                    "editor-key-management",
+                                    "editor-organizations",
+                                    "editor-specific-apps",
+                                    "editor-users",
+                                    "viewer-users",
+                                    "viewer-config-settings",
+                                    "elevated-support-access"
+                                  ],
+                                  "description": "The role assigned to the member."
+                                },
+                                "clientIds": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "description": "The list of apps the user has access to for the 'editor-specific-apps' role. This property is only present for this role.",
+                                  "examples": [
+                                    [
+                                      "App-A",
+                                      "App-B"
+                                    ]
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "role"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "tenant_id",
+                          "tenant_fqdn",
+                          "roles"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "environment",
+                    "tenants"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestResponse"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenResponse"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundResponse"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequestsResponse"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerErrorResponse"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "description": "Security schema for api endpoints",
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "string"
+      }
+    },
+    "schemas": {
+      "UserId": {
+        "type": "string",
+        "pattern": "^(?=.{1,1024}$).+|.+$",
+        "transform": [
+          "trim"
+        ]
+      },
+      "TeamMemberRole": {
+        "description": "Team Member Role",
+        "enum": [
+          "teams_owner",
+          "teams_contributor",
+          "teams_report_viewer"
+        ],
+        "examples": [
+          "teams_owner"
+        ]
+      },
+      "TenantId": {
+        "type": "string",
+        "format": "uuid",
+        "transform": [
+          "trim"
+        ]
+      },
+      "TenantMemberRole": {
+        "description": "Tenant Member Role",
+        "enum": [
+          "owner",
+          "editor-connections",
+          "editor-users",
+          "editor-specific-apps",
+          "editor-organizations",
+          "viewer-config",
+          "viewer-users",
+          "support-access",
+          "elevated-support-access",
+          "editor-kms"
+        ],
+        "examples": [
+          "owner"
+        ]
+      },
+      "ClientId": {
+        "type": "string",
+        "minLength": 5,
+        "maxLength": 50,
+        "pattern": "^([0-9a-zA-Z-_@\\.~]{5,64})$",
+        "examples": [
+          "x3qNvwb7BmNH4NMbLHqaN72OKNjDVGVg"
+        ]
+      },
+      "TenantName": {
+        "type": "string",
+        "pattern": "^[a-z0-9][-a-z0-9]{1,62}[a-z0-9]$",
+        "minLength": 3,
+        "maxLength": 63,
+        "transform": [
+          "trim"
+        ],
+        "examples": [
+          "acme-development-tenant"
+        ],
+        "description": "The tenant name uniquely identifies a tenant programmatically and within various dashboards, such as Auth0 Dashboard. It can only contain alphanumeric characters, lowercase letters and \"-\". However, it can't start nor end with \"-\". If not specified, a tenant name will be auto-generated."
+      },
+      "EnvironmentType": {
+        "description": "Specifies the Environment type for the tenant created in the Auth0 Public Cloud. It is used to distinguish between development, staging and production environments.<br> Development and Staging environments are intended for testing and pre-production use, while production is designated for live applications and subject to hiher rate limits. Selecting the correct environment type ensures appropriate resource allocation and rate limits.",
+        "enum": [
+          "development",
+          "production",
+          "staging"
+        ],
+        "examples": [
+          "development"
+        ],
+        "default": "development"
+      },
+      "AdminEmail": {
+        "type": "string",
+        "format": "email",
+        "description": "The email of the person that will be added as an admin of the tenant. The person must be a member of the team."
+      },
+      "PublicCloudRegion": {
+        "type": "string",
+        "description": "Specifies the Auth0 Public Cloud region where the tenant will be created.<br> Available regions include United States (us), Europe (eu), Australia (au), Japan (jp), Canada (ca) and United Kingdom (uk).",
+        "minLength": 2,
+        "maxLength": 5,
+        "examples": [
+          "us",
+          "eu",
+          "au",
+          "jp",
+          "ca",
+          "uk"
+        ]
+      },
+      "PrivateCloudEnvironment": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 32,
+        "pattern": "^[a-z]([-]?[a-z0-9])*$",
+        "examples": [
+          "acme-dev"
+        ],
+        "description": "Specifies the name of the Auth0 Private Cloud environment where the tenant will be created."
+      },
+      "PublicCloudPayload": {
+        "properties": {
+          "tenant_name": {
+            "$ref": "#/components/schemas/TenantName"
+          },
+          "admin_email": {
+            "$ref": "#/components/schemas/AdminEmail"
+          },
+          "region": {
+            "$ref": "#/components/schemas/PublicCloudRegion"
+          },
+          "environment_type": {
+            "$ref": "#/components/schemas/EnvironmentType"
+          }
+        },
+        "required": [
+          "admin_email",
+          "region"
+        ],
+        "additionalProperties": false
+      },
+      "PrivateCloudPayload": {
+        "properties": {
+          "tenant_name": {
+            "$ref": "#/components/schemas/TenantName"
+          },
+          "admin_email": {
+            "$ref": "#/components/schemas/AdminEmail"
+          },
+          "environment": {
+            "$ref": "#/components/schemas/PrivateCloudEnvironment"
+          }
+        },
+        "required": [
+          "admin_email",
+          "environment"
+        ],
+        "additionalProperties": false
+      },
+      "CreateTenantPayload": {
+        "type": "object",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/PublicCloudPayload"
+          },
+          {
+            "$ref": "#/components/schemas/PrivateCloudPayload"
+          }
+        ],
+        "errorMessage": {
+          "oneOf": "must have a matching schema between 'Public Cloud' or 'Private Cloud'"
+        },
+        "definitions": {
+          "PublicCloudPayload": {
+            "properties": {
+              "tenant_name": {
+                "$ref": "#/components/schemas/TenantName"
+              },
+              "admin_email": {
+                "$ref": "#/components/schemas/AdminEmail"
+              },
+              "region": {
+                "$ref": "#/components/schemas/PublicCloudRegion"
+              },
+              "environment_type": {
+                "$ref": "#/components/schemas/EnvironmentType"
+              }
+            },
+            "required": [
+              "admin_email",
+              "region"
+            ],
+            "additionalProperties": false
+          },
+          "PrivateCloudPayload": {
+            "properties": {
+              "tenant_name": {
+                "$ref": "#/components/schemas/TenantName"
+              },
+              "admin_email": {
+                "$ref": "#/components/schemas/AdminEmail"
+              },
+              "environment": {
+                "$ref": "#/components/schemas/PrivateCloudEnvironment"
+              }
+            },
+            "required": [
+              "admin_email",
+              "environment"
+            ],
+            "additionalProperties": false
+          },
+          "AdminEmail": {
+            "type": "string",
+            "format": "email",
+            "description": "The email of the person that will be added as an admin of the tenant. The person must be a member of the team."
+          }
+        }
+      },
+      "ManagementClient": {
+        "type": "object",
+        "description": "The Auth0 Management Client credentials required to authenticate and interact with the newly created tenant. These credentials allow authorized access to manage the tenant's configuration, resources, and API interactions.",
+        "properties": {
+          "client_name": {
+            "type": "string",
+            "description": "The name of the Machine to Machine client, which is used for secure, automated interactions with the tenant's APIs and services."
+          },
+          "client_id": {
+            "type": "string",
+            "description": "The id of the Machine to Machine client, which is used for secure, automated interactions with the tenant's APIs and services."
+          },
+          "client_secret": {
+            "type": "string",
+            "description": "The client secret the Machine to Machine client, which is used for secure, automated interactions with the tenant's APIs and services."
+          }
+        },
+        "required": [
+          "client_name",
+          "client_id",
+          "client_secret"
+        ]
+      },
+      "CreateTenantResponse": {
+        "type": "object",
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "format": "uuid",
+            "examples": [
+              "538c9e21-e3d5-4ad6-b3d0-352c62369fb0"
+            ],
+            "description": "The unique identifier of the created tenant (UUID). This identifier is required for performing operations such as deleting the tenant. UUIDs ensure global uniqueness and are essential for managing tenant resources programmatically"
+          },
+          "tenant_name": {
+            "$ref": "#/components/schemas/TenantName"
+          },
+          "tenant_fqdn": {
+            "type": "string",
+            "description": "The fully qualified domain name (FQDN) of the tenant, which uniquely identifies its domain within the system. The FQDN is used to define the audience when interacting with the Management API, enabling programmatic management of the tenant’s configuration and resources.",
+            "examples": [
+              "acme-development-tenant.us.auth0.com",
+              "acme-development-tenant.acme-dev.auth0app.com"
+            ]
+          },
+          "environment_type": {
+            "$ref": "#/components/schemas/EnvironmentType"
+          },
+          "region": {
+            "type": "string",
+            "description": "Region in which the tenant was created.",
+            "examples": [
+              "us",
+              "eu",
+              "virginia",
+              "frankfurt"
+            ]
+          },
+          "environment": {
+            "type": "string",
+            "description": "The name of the cloud environment where the tenant was created",
+            "examples": [
+              "US-3",
+              "EU-1",
+              "acme-dev"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The date and time when the tenant was created, formatted in ISO 8601 standard. This timestamp ensures consistency across time zones and systems.",
+            "format": "date-time"
+          },
+          "management_client": {
+            "$ref": "#/components/schemas/ManagementClient"
+          }
+        },
+        "required": [
+          "tenant_id",
+          "tenant_name",
+          "tenant_fqdn",
+          "region",
+          "environment",
+          "created_at",
+          "management_client"
+        ],
+        "definitions": {
+          "ManagementClient": {
+            "type": "object",
+            "description": "The Auth0 Management Client credentials required to authenticate and interact with the newly created tenant. These credentials allow authorized access to manage the tenant's configuration, resources, and API interactions.",
+            "properties": {
+              "client_name": {
+                "type": "string",
+                "description": "The name of the Machine to Machine client, which is used for secure, automated interactions with the tenant's APIs and services."
+              },
+              "client_id": {
+                "type": "string",
+                "description": "The id of the Machine to Machine client, which is used for secure, automated interactions with the tenant's APIs and services."
+              },
+              "client_secret": {
+                "type": "string",
+                "description": "The client secret the Machine to Machine client, which is used for secure, automated interactions with the tenant's APIs and services."
+              }
+            },
+            "required": [
+              "client_name",
+              "client_id",
+              "client_secret"
+            ]
+          }
+        }
+      },
+      "TenantMember": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The unique ID of the tenant member (Auth0 user ID).",
+            "examples": [
+              "auth0|68da0038bab277c02ed1d4c8",
+              "google-oauth2|123456789012345678901"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "description": "The full name of the member. Returns empty string if not available.",
+            "examples": [
+              "John Doe",
+              "Jane Smith"
+            ]
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "The email of the member.",
+            "examples": [
+              "john.doe@example.com",
+              "jane.smith@example.com"
+            ]
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TenantMemberRole"
+            },
+            "description": "An array of roles assigned to the member.",
+            "examples": [
+              [
+                "owner"
+              ],
+              [
+                "editor-users",
+                "editor-connections"
+              ],
+              [
+                "viewer-users"
+              ]
+            ]
+          },
+          "given_name": {
+            "type": "string",
+            "description": "The first name (given name) of the member. Returns empty string if not available.",
+            "examples": [
+              "John",
+              "Jane"
+            ]
+          },
+          "family_name": {
+            "type": "string",
+            "description": "The last name (family name) of the member. Returns empty string if not available.",
+            "examples": [
+              "Doe",
+              "Smith"
+            ]
+          },
+          "nickname": {
+            "type": "string",
+            "description": "The nickname of the member. Returns empty string if not available.",
+            "examples": [
+              "johndoe",
+              "jsmith"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "roles",
+          "given_name",
+          "family_name",
+          "nickname",
+          "name"
+        ]
+      }
+    },
+    "responses": {
+      "BadRequestResponse": {
+        "description": "Invalid input based on schema.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": 400
+                },
+                "code": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "details": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "status",
+                "code",
+                "title"
+              ],
+              "examples": [
+                {
+                  "status": 400,
+                  "code": "VALIDATION_ERROR",
+                  "title": "Invalid payload"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "UnauthorizedResponse": {
+        "description": "Token has expired or signature is invalid.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": 401
+                },
+                "code": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "details": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "status",
+                "code",
+                "title"
+              ],
+              "examples": [
+                {
+                  "status": 401,
+                  "code": "UNAUTHORIZED",
+                  "title": "Unauthorized"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "ForbiddenResponse": {
+        "description": "Forbidden. The message will vary depending on the cause.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": 403
+                },
+                "code": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "details": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "status",
+                "code",
+                "title"
+              ],
+              "examples": [
+                {
+                  "status": 403,
+                  "code": "TENANT_LIMIT_REACHED",
+                  "title": "You have reached the limit for tenants in your current plan"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "NotFoundResponse": {
+        "description": "Not Found. The message will vary depending on the cause.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": 404
+                },
+                "code": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "details": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "status",
+                "code",
+                "title"
+              ],
+              "examples": [
+                {
+                  "status": 404,
+                  "code": "TENANT_NOT_FOUND",
+                  "title": "The tenant was not found"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "TooManyRequestsResponse": {
+        "description": "Too Many Requests. The message will vary depending on the cause.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": 429
+                },
+                "code": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "details": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "status",
+                "code",
+                "title"
+              ],
+              "examples": [
+                {
+                  "status": 429,
+                  "code": "TOO_MANY_REQUESTS",
+                  "title": "Too many requests"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "InternalServerErrorResponse": {
+        "description": "Internal Server Error. The server encountered an unexpected condition and could not fulfill the request.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": 500
+                },
+                "code": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "details": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "status",
+                "code",
+                "title"
+              ],
+              "examples": [
+                {
+                  "status": 500,
+                  "code": "UNKNOWN_ERROR",
+                  "title": "An unknown error occurred"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "ConflictResponse": {
+        "description": "Conflict. The message will vary depending on the cause.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "const": 409
+                },
+                "code": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "details": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "status",
+                "code",
+                "title"
+              ],
+              "examples": [
+                {
+                  "status": 409,
+                  "code": "TENANT_ALREADY_EXISTS",
+                  "title": "A tenant with the same name already exists"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "EmptyResponse": {
+        "description": "No Content"
+      }
+    }
+  }
+}
