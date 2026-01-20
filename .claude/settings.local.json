@@ -3,7 +3,12 @@
     "allow": [
       "Bash(ls:*)",
       "Bash(chmod:*)",
-      "Bash(gh pr create:*)"
+      "Bash(gh pr create:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "Bash(grep:*)",
+      "Bash(wc:*)",
+      "Bash(./multifactor/get-guardian-enrollment.sh:*)"
     ]
   }
 }
