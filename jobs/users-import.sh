@@ -15,14 +15,16 @@ readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 declare users_file=''
 declare connection_id=''
+declare upsert='false'
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-c connection_id] [-f users.file] [-v|-h]
+USAGE: $0 [-e env] [-a access_token] [-c connection_id] [-f users.file] [-u|-v|-h]
         -e file     # .env file location (default cwd)
         -a token    # access_token. default from environment variable
         -c id       # connection_id
         -f file     # users file
+        -u          # enable upsert (default false)
         -h|?        # usage
         -v          # verbose
 
@@ -32,12 +34,13 @@ END
     exit $1
 }
 
-while getopts "e:a:f:c:hv?" opt; do
+while getopts "e:a:f:c:uhv?" opt; do
     case ${opt} in
     e) source ${OPTARG} ;;
     a) access_token=${OPTARG} ;;
     c) connection_id=${OPTARG} ;;
     f) users_file=${OPTARG} ;;
+    u) upsert=true ;;
     v) opt_verbose=1 ;; #set -x;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
@@ -58,6 +61,6 @@ declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | 
 curl -s -H "Authorization: Bearer ${access_token}" \
     -F users=@${users_file} \
     -F connection_id=${connection_id} \
-    -F upsert=false \
+    -F upsert=${upsert} \
     -F send_completion_email=false \
     --url ${AUTH0_DOMAIN_URL}api/v2/jobs/users-imports | jq -r '.id'
