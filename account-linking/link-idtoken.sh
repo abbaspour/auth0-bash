@@ -50,7 +50,7 @@ done
 
 [[ -z "${id_token}" ]] && { echo >&2 "ERROR: id_token undefined";  usage 1; }
 
-declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | gsub("%3D";"=") | @base64d | fromjson | .iss' <<<"${access_token}")
 
 declare -r BODY=$(cat <<EOL
 {

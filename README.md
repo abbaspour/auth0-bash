@@ -2,6 +2,15 @@
 
 Handy Bash scripts for Auth0
 
+## Pre-requisites
+Since jq does not support base64url encoded which is the default format for web safe JWTs, you need to extend this support by adding the following to you `~/.jq` file
+
+```shell
+cat ~/.jq
+def base64url: @base64 | gsub("\\+"; "-") | gsub("/"; "_") | gsub("="; "");
+def base64urld: gsub("-"; "+") | gsub("_"; "/") | gsub("%3D"; "=") | @base64d;
+```
+
 ## What is Auth0?
 
 Auth0 helps you to:

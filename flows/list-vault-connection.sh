@@ -56,13 +56,13 @@ done
 [[ -z "${access_token:-}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' or use -a"; usage 1; }
 
 # Validate scope contains read:flows_vault_connections
-AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
+AVAILABLE_SCOPES=$(jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | gsub("%3D";"=") | @base64d | fromjson | .scope' <<< "${access_token}")
 EXPECTED_SCOPE="read:flows_vault_connections"
 [[ " ${AVAILABLE_SCOPES} " == *" ${EXPECTED_SCOPE} "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '${EXPECTED_SCOPE}', Available: '${AVAILABLE_SCOPES}'"; exit 1; }
 
 # Determine domain URL
 if [[ -z "${AUTH0_DOMAIN:-}" ]]; then
-  AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
+  AUTH0_DOMAIN_URL=$(jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | gsub("%3D";"=") | @base64d | fromjson | .iss' <<<"${access_token}")
 else
   # ensure scheme
   if [[ "${AUTH0_DOMAIN}" == http*://* ]]; then

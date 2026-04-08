@@ -55,7 +55,7 @@ done
 [[ -z "${connection_id_or_name}" ]] && { echo >&2 "ERROR: connection name or id required."; usage 1; }
 [[ -z "${enabled_clients}" ]] && { echo >&2 "ERROR: enabled_client(s) is required."; usage 1; }
 
-declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
+declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | gsub("%3D";"=") | @base64d | fromjson | .scope' <<< "${access_token}")
 declare -r EXPECTED_SCOPE="create:sso_access_tickets"
 [[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
 
@@ -67,7 +67,7 @@ enabled_clients_str=$(cat <<EOL
 EOL
 )
 
-declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<< "${access_token}")
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | gsub("%3D";"=") | @base64d | fromjson | .iss' <<< "${access_token}")
 
 declare BODY=$(cat <<EOL
 {

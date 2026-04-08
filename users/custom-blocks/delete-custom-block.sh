@@ -54,7 +54,7 @@ done
     exit 1
 }
 
-declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
+declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | gsub("%3D";"=") | @base64d | fromjson | .scope' <<< "${access_token}")
 declare -r EXPECTED_SCOPE="delete:user_custom_blocks"
 [[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
 
@@ -65,7 +65,7 @@ declare -r EXPECTED_SCOPE="delete:user_custom_blocks"
 [[ -z ${access_token} ]] && { echo >&2 -e "ERROR: no 'access_token' defined. \n open -a safari https://manage.auth0.com/#/apis/ \n export access_token=\`pbpaste\`"
     exit 1
 }
-declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | gsub("%3D";"=") | @base64d | fromjson | .iss' <<<"${access_token}")
 
 curl -X DELETE -H "Authorization: Bearer ${access_token}" -H 'content-type: application/json' \
     --url "${AUTH0_DOMAIN_URL}api/v2/users/${user_id}/custom-blocks/${reason_code}"

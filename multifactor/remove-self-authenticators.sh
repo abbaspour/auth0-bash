@@ -46,7 +46,7 @@ done
 [[ -z "${authenticator_id}" ]] && { echo >&2 "ERROR: authenticator_id undefined.";  usage 1; }
 
 
-declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | gsub("%3D";"=") | @base64d | fromjson | .iss' <<<"${access_token}")
 
 curl -s -H "Authorization: Bearer ${access_token}" \
     --request DELETE \

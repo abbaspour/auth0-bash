@@ -52,14 +52,14 @@ done
     exit 1
 }
 
-declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .scope' <<< "${access_token}")
+declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | gsub("%3D";"=") | @base64d | fromjson | .scope' <<< "${access_token}")
 declare -r EXPECTED_SCOPES=("read:federated_connections_tokens") # Either of these scopes would do
 [[ " $AVAILABLE_SCOPES " == *" ${EXPECTED_SCOPES[0]} "* || " $AVAILABLE_SCOPES " == *" ${EXPECTED_SCOPES[1]} "*  || " $AVAILABLE_SCOPES " == *" ${EXPECTED_SCOPES[2]} "* ]] \
     || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected (any of): '${EXPECTED_SCOPES[*]}', Available: '$AVAILABLE_SCOPES'"; exit 1; }
 
 [[ -z ${user_id} ]] && { echo >&2 "ERROR: no 'user_id' defined"; usage 1; }
 
-declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".") | .[1] | @base64d | fromjson | .iss' <<<"${access_token}")
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | gsub("%3D";"=") | @base64d | fromjson | .iss' <<<"${access_token}")
 
 curl -s --get -H "Authorization: Bearer ${access_token}" -H 'content-type: application/json' \
     "${AUTH0_DOMAIN_URL}api/v2/users/${user_id}/federated-connections-tokensets" | jq .
