@@ -1,0 +1,4 @@
+{
+  "enabled": true,
+  "report_uri": "https://reports.customer.com/xss"
+}

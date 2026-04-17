@@ -1,0 +1,59 @@
+{
+      "enabled": true,
+      "policies": [
+        {
+          "mode": "enforcing",
+          "directives": {
+            "default-src": ["'self'"],
+            "script-src": ["'self'", "https://cdn.auth0.com"],
+            "script-src-elem": ["'self'", "'unsafe-inline'", "https://cdn.auth0.com"],
+            "script-src-attr": ["'none'"],
+            "style-src": ["'self'", "'unsafe-inline'"],
+            "style-src-elem": ["'self'", "'unsafe-inline'", "https://cdn.auth0.com"],
+            "style-src-attr": ["'unsafe-inline'"],
+            "img-src": ["'self'", "data:", "https://cdn.auth0.com"],
+            "font-src": ["'self'"],
+            "connect-src": ["'self'"],
+            "media-src": ["'none'"],
+            "object-src": ["'none'"],
+            "worker-src": ["'self'"],
+            "child-src": ["'self'"],
+            "manifest-src": ["'self'"],
+            "frame-src": ["'none'"],
+            "frame-ancestors": ["'none'"],
+            "form-action": ["'self'"],
+            "base-uri": ["'self'"],
+            "navigate-to": ["'self'"],
+            "sandbox": ["allow-forms", "allow-scripts"],
+            "require-trusted-types-for": ["'script'"],
+            "trusted-types": ["policy-name"]
+          },
+          "flags": ["upgrade-insecure-requests", "block-all-mixed-content"],
+          "reporting": {
+            "report_uri": "https://reports.customer.com/csp-report-uri",
+            "report_to_group": "csp-endpoint"
+          }
+        },
+        {
+          "mode": "reporting",
+          "directives": {
+            "script-src": ["'self'", "https://cdn.auth0.com", "'strict-dynamic'"]
+          },
+          "reporting": {
+            "report_to_group": "csp-endpoint"
+          }
+        }
+      ],
+      "reporting_infrastructure": {
+        "report_to": {
+          "group": "csp-endpoint",
+          "max_age": 86400,
+          "endpoints": [
+            { "url": "https://reports.customer.com/csp" }
+          ]
+        },
+        "reporting_endpoints": {
+          "csp-endpoint": "https://reports.customer.com/csp"
+        }
+      }
+}
