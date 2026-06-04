@@ -2,7 +2,7 @@
 
 ##########################################################################################
 # Author: Amin Abbaspour
-# Date: 2022-06-12
+# Date: 2026-06-04
 # License: MIT (https://github.com/abbaspour/auth0-bash/blob/master/LICENSE)
 ##########################################################################################
 
@@ -10,8 +10,6 @@ set -eo pipefail
 
 command -v curl >/dev/null || { echo >&2 "error: curl not found";  exit 3; }
 command -v jq >/dev/null || {  echo >&2 "error: jq not found";  exit 3; }
-
-readonly DIR=$(dirname "${BASH_SOURCE[0]}")
 
 function usage() {
     cat <<END >&2
@@ -22,7 +20,7 @@ USAGE: $0 [-e env] [-a access_token] [-v|-h]
         -v          # verbose
 
 eg,
-     $0 -f "enable_client_connections":true
+     $0
 END
     exit $1
 }
@@ -37,14 +35,20 @@ while getopts "e:a:hv?" opt; do
     esac
 done
 
-[[ -z "${access_token}" ]] && {   echo >&2 "ERROR: access_token undefined. export access_token='PASTE' ";  usage 1; }
-
+[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE'"; usage 1; }
 
 declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | gsub("%3D";"=") | @base64d | fromjson | .scope' <<< "${access_token}")
-declare -r EXPECTED_SCOPE="read:tenant_settings"
+declare -r EXPECTED_SCOPE="update:tenant_settings"
 [[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
 
-declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | gsub("%3D";"=") | @base64d | fromjson | .iss' <<<"${access_token}")
+declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | gsub("%3D";"=") | @base64d | fromjson | .iss' <<< "${access_token}")
+
+declare -r BODY='{"security_headers":{"x_xss_protection":null}}'
 
 curl -s -H "Authorization: Bearer ${access_token}" \
-    --url "${AUTH0_DOMAIN_URL}api/v2/tenants/settings" | jq '.'
+    --request PATCH \
+    --data "${BODY}" \
+    --header 'content-type: application/json' \
+    --url "${AUTH0_DOMAIN_URL}api/v2/tenants/settings"
+
+echo

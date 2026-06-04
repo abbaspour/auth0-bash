@@ -1,4 +1,5 @@
 .DS_Store
+old-envs/
 *.swp
 *.pem
 jobs/*.json

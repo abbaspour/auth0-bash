@@ -57,6 +57,6 @@ curl -s -H "Authorization: Bearer ${access_token}" \
     --request PATCH \
     --data "${BODY}" \
     --header 'content-type: application/json' \
-    --url "${AUTH0_DOMAIN_URL}api/v2/tenants/settings"
+    --url "${AUTH0_DOMAIN_URL}api/v2/tenants/settings" | jq .
 
 echo
