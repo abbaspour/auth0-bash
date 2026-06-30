@@ -24,8 +24,8 @@ USAGE: $0 [-e env] [-a api_token] [-t team_slug] [-i team_member_id] [-v|-h]
         -v            # verbose
 
 eg,
-     $0 -t my-team -i auth0|68da0038bab277c02ed1d4c8
-     $0 -e sus -i google-oauth2|123456789012345678901
+     $0 -t my-team -i 'auth0|68da0038bab277c02ed1d4c8'
+     $0 -e sus -i 'google-oauth2|123456789012345678901'
 END
     exit $1
 }
