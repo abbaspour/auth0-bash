@@ -63,6 +63,6 @@ fi
 
 curl -v -s --request DELETE \
     -H "Authorization: Bearer ${api_token}" \
-    --url "${TEAMS_API_URL}/api/tenants/${tenant_id}"
+    --url "${TEAMS_API_URL}/api/tenants/${tenant_id}" | jq .
 
-#echo "Tenant ${tenant_id} deleted successfully"
+echo
