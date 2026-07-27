@@ -2,7 +2,7 @@
 
 ##########################################################################################
 # Author: Amin Abbaspour
-# Date: 2026-07-07
+# Date: 2026-06-30
 # License: MIT (https://github.com/abbaspour/auth0-bash/blob/master/LICENSE)
 ##########################################################################################
 
@@ -15,9 +15,10 @@ command -v jq >/dev/null || { echo >&2 "error: jq not found"; exit 3; }
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-n tenant_name] [-m admin_email] (-l locality | -p private_env) [-T environment_tag] [-v|-h]
-        -e file       # .env file location (default cwd)
-        -a token      # access_token. default from environment variable
+USAGE: $0 [-e env] [-a api_token] [-t team_slug] [-n tenant_name] [-m admin_email] (-l locality | -p private_env) [-T environment_tag] [-v|-h]
+        -e env        # Environment (default: prod). Use 'prod' for teams.auth0.com, or specify env like 'sus' for teams.sus.auth0.com
+        -a token      # API access_token (opaque token, not JWT)
+        -t slug       # Team slug
         -n name       # Tenant name (optional; auto-generated if omitted)
         -m email      # Admin email (must be a team member)
         -l locality   # Public Cloud locality: us | eu | au | jp | ca | uk  [mutually exclusive with -p]
@@ -27,24 +28,29 @@ USAGE: $0 [-e env] [-a access_token] [-n tenant_name] [-m admin_email] (-l local
         -v            # verbose
 
 eg,
-     $0 -n acme-dev -m admin@company.com -l us
-     $0 -n acme-prod -m admin@company.com -l eu -T production
-     $0 -n acme-private -m admin@company.com -p acme-dev
+     $0 -t my-team -n acme-dev -m admin@company.com -l us
+     $0 -t my-team -n acme-prod -m admin@company.com -l eu -T production
+     $0 -t my-team -n acme-private -m admin@company.com -p acme-dev
 END
     exit $1
 }
 
+declare api_token=''
+declare TEAM_SLUG=''
 declare tenant_name=''
 declare admin_email=''
 declare locality=''
 declare private_env=''
 declare environment_tag='development'
-declare -i opt_verbose=0
+declare ENV='prod'
 
-while getopts "e:a:n:m:l:p:T:hv?" opt; do
+[[ -f "${DIR}/.env" ]] && . "${DIR}/.env"
+
+while getopts "e:a:t:n:m:l:p:T:hv?" opt; do
     case ${opt} in
-    e) source "${OPTARG}" ;;
-    a) access_token=${OPTARG} ;;
+    e) ENV=${OPTARG} ;;
+    a) api_token=${OPTARG} ;;
+    t) TEAM_SLUG=${OPTARG} ;;
     n) tenant_name=${OPTARG} ;;
     m) admin_email=${OPTARG} ;;
     l) locality=${OPTARG} ;;
@@ -56,16 +62,17 @@ while getopts "e:a:n:m:l:p:T:hv?" opt; do
     esac
 done
 
-[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
+[[ -z "${api_token}" ]] && { echo >&2 "ERROR: api_token undefined. Use -a or set api_token in .env"; usage 1; }
+[[ -z "${TEAM_SLUG}" ]] && { echo >&2 "ERROR: TEAM_SLUG undefined. Use -t or set TEAM_SLUG in .env"; usage 1; }
 [[ -z "${admin_email}" ]] && { echo >&2 "ERROR: admin_email undefined. Use -m"; usage 1; }
 [[ -z "${locality}" && -z "${private_env}" ]] && { echo >&2 "ERROR: specify -l locality (public cloud) or -p environment (private cloud)"; usage 1; }
 [[ -n "${locality}" && -n "${private_env}" ]] && { echo >&2 "ERROR: -l and -p are mutually exclusive"; usage 1; }
 
-declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | gsub("%3D";"=") | @base64d | fromjson | .scope' <<< "${access_token}")
-declare -r EXPECTED_SCOPE="create:tenants"
-[[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
-
-declare -r TEAMS_API_URL=$(jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | gsub("%3D";"=") | @base64d | fromjson | .aud | if type == "array" then .[0] else . end | rtrimstr("/api/")' <<< "${access_token}")
+if [[ "${ENV}" == "prod" ]]; then
+    declare -r TEAMS_API_URL="https://${TEAM_SLUG}.teams.auth0.com"
+else
+    declare -r TEAMS_API_URL="https://${TEAM_SLUG}.teams.${ENV}.auth0.com"
+fi
 
 declare tenant_name_field=''
 [[ -n "${tenant_name}" ]] && tenant_name_field="\"tenant_name\": \"${tenant_name}\","
@@ -92,11 +99,11 @@ EOL
 )
 fi
 
-[[ ${opt_verbose} -eq 1 ]] && echo "POST ${TEAMS_API_URL}/api/tenants" >&2
-[[ ${opt_verbose} -eq 1 ]] && echo "${BODY}" >&2
+[[ -n "${opt_verbose}" ]] && echo "POST ${TEAMS_API_URL}/api/tenants" >&2
+[[ -n "${opt_verbose}" ]] && echo "${BODY}" >&2
 
 curl -s --request POST \
-    -H "Authorization: Bearer ${access_token}" \
+    -H "Authorization: Bearer ${api_token}" \
     -H "Content-Type: application/json" \
     --url "${TEAMS_API_URL}/api/tenants" \
     --data "${BODY}" | jq '.'

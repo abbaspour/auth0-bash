@@ -15,28 +15,31 @@ command -v jq >/dev/null || { echo >&2 "error: jq not found"; exit 3; }
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-i team_member_id] [-v|-h]
+USAGE: $0 [-e env] [-a access_token] [-i member_id] [-T tenant_ids] [-v|-h]
         -e file       # .env file location (default cwd)
         -a token      # access_token. default from environment variable
-        -i id         # Team member ID (Auth0 user ID, e.g., auth0|xxx or google-oauth2|xxx)
+        -i id         # Team member ID (Auth0 user ID, e.g., auth0|xxx)
+        -T ids        # Comma-separated tenant UUIDs to remove access from (max 10)
         -h|?          # usage
         -v            # verbose
 
 eg,
-     $0 -i 'auth0|68da0038bab277c02ed1d4c8'
-     $0 -i 'google-oauth2|123456789012345678901'
+     $0 -i 'auth0|xxx' -T 538c9e21-e3d5-4ad6-b3d0-352c62369fb0
+     $0 -i 'auth0|xxx' -T uuid1,uuid2
 END
     exit $1
 }
 
-declare team_member_id=''
+declare member_id=''
+declare tenant_ids=''
 declare -i opt_verbose=0
 
-while getopts "e:a:i:hv?" opt; do
+while getopts "e:a:i:T:hv?" opt; do
     case ${opt} in
     e) source "${OPTARG}" ;;
     a) access_token=${OPTARG} ;;
-    i) team_member_id=${OPTARG} ;;
+    i) member_id=${OPTARG} ;;
+    T) tenant_ids=${OPTARG} ;;
     v) opt_verbose=1 ;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
@@ -44,15 +47,26 @@ while getopts "e:a:i:hv?" opt; do
 done
 
 [[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
-[[ -z "${team_member_id}" ]] && { echo >&2 "ERROR: team_member_id undefined. Use -i"; usage 1; }
+[[ -z "${member_id}" ]] && { echo >&2 "ERROR: member_id undefined. Use -i"; usage 1; }
+[[ -z "${tenant_ids}" ]] && { echo >&2 "ERROR: tenant_ids undefined. Use -T"; usage 1; }
 
 declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | gsub("%3D";"=") | @base64d | fromjson | .scope' <<< "${access_token}")
-declare -r EXPECTED_SCOPE="read:members"
+declare -r EXPECTED_SCOPE="update:members"
 [[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
 
 declare -r TEAMS_API_URL=$(jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | gsub("%3D";"=") | @base64d | fromjson | .aud | if type == "array" then .[0] else . end | rtrimstr("/api/")' <<< "${access_token}")
 
-[[ ${opt_verbose} -eq 1 ]] && echo "GET ${TEAMS_API_URL}/api/members/${team_member_id}" >&2
+declare tenants_json
+tenants_json=$(echo "${tenant_ids}" | tr ',' '\n' | jq -R . | jq -s .)
 
-curl -s -H "Authorization: Bearer ${access_token}" \
-    --url "${TEAMS_API_URL}/api/members/${team_member_id}" | jq '.'
+declare BODY
+BODY=$(jq -n --argjson tenants "${tenants_json}" '{tenants: $tenants}')
+
+[[ ${opt_verbose} -eq 1 ]] && echo "DELETE ${TEAMS_API_URL}/api/members/${member_id}/tenants" >&2
+[[ ${opt_verbose} -eq 1 ]] && echo "${BODY}" >&2
+
+curl -s --request DELETE \
+    -H "Authorization: Bearer ${access_token}" \
+    -H "Content-Type: application/json" \
+    --url "${TEAMS_API_URL}/api/members/${member_id}/tenants" \
+    --data "${BODY}" | jq '.'

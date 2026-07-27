@@ -15,31 +15,38 @@ command -v jq >/dev/null || { echo >&2 "error: jq not found"; exit 3; }
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-i team_member_id] [-r role] [-v|-h]
+USAGE: $0 [-e env] [-a access_token] [-i member_id] [-T tenant_ids] [-r roles] [-C client_ids] [-v|-h]
         -e file       # .env file location (default cwd)
         -a token      # access_token. default from environment variable
-        -i id         # Team member ID (Auth0 user ID, e.g., auth0|xxx or google-oauth2|xxx)
-        -r role       # New team role: teams_owner | teams_contributor | teams_report_viewer
+        -i id         # Team member ID (Auth0 user ID, e.g., auth0|xxx)
+        -T ids        # Comma-separated tenant UUIDs to update (max 10; max 1 when -C is used)
+        -r roles      # Comma-separated roles to assign (e.g., owner,editor-users)
+        -C ids        # Comma-separated client IDs (only for editor-specific-apps role; limits -T to 1 tenant)
         -h|?          # usage
         -v            # verbose
 
 eg,
-     $0 -i 'auth0|68da0038bab277c02ed1d4c8' -r teams_owner
-     $0 -i 'google-oauth2|123456789012345678901' -r teams_contributor
+     $0 -i 'auth0|xxx' -T 538c9e21-e3d5-4ad6-b3d0-352c62369fb0 -r owner
+     $0 -i 'auth0|xxx' -T uuid1,uuid2 -r editor-users
+     $0 -i 'auth0|xxx' -T uuid1 -r editor-specific-apps -C client_123,client_456
 END
     exit $1
 }
 
-declare team_member_id=''
-declare role=''
+declare member_id=''
+declare tenant_ids=''
+declare roles=''
+declare client_ids=''
 declare -i opt_verbose=0
 
-while getopts "e:a:i:r:hv?" opt; do
+while getopts "e:a:i:T:r:C:hv?" opt; do
     case ${opt} in
     e) source "${OPTARG}" ;;
     a) access_token=${OPTARG} ;;
-    i) team_member_id=${OPTARG} ;;
-    r) role=${OPTARG} ;;
+    i) member_id=${OPTARG} ;;
+    T) tenant_ids=${OPTARG} ;;
+    r) roles=${OPTARG} ;;
+    C) client_ids=${OPTARG} ;;
     v) opt_verbose=1 ;;
     h | ?) usage 0 ;;
     *) usage 1 ;;
@@ -47,8 +54,9 @@ while getopts "e:a:i:r:hv?" opt; do
 done
 
 [[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
-[[ -z "${team_member_id}" ]] && { echo >&2 "ERROR: team_member_id undefined. Use -i"; usage 1; }
-[[ -z "${role}" ]] && { echo >&2 "ERROR: role undefined. Use -r (teams_owner, teams_contributor, teams_report_viewer)"; usage 1; }
+[[ -z "${member_id}" ]] && { echo >&2 "ERROR: member_id undefined. Use -i"; usage 1; }
+[[ -z "${tenant_ids}" ]] && { echo >&2 "ERROR: tenant_ids undefined. Use -T"; usage 1; }
+[[ -z "${roles}" ]] && { echo >&2 "ERROR: roles undefined. Use -r"; usage 1; }
 
 declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | gsub("%3D";"=") | @base64d | fromjson | .scope' <<< "${access_token}")
 declare -r EXPECTED_SCOPE="update:members"
@@ -56,19 +64,25 @@ declare -r EXPECTED_SCOPE="update:members"
 
 declare -r TEAMS_API_URL=$(jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | gsub("%3D";"=") | @base64d | fromjson | .aud | if type == "array" then .[0] else . end | rtrimstr("/api/")' <<< "${access_token}")
 
-declare BODY
-BODY=$(cat <<EOL
-{
-  "role": "${role}"
-}
-EOL
-)
+declare tenants_json roles_json
+tenants_json=$(echo "${tenant_ids}" | tr ',' '\n' | jq -R . | jq -s .)
+roles_json=$(echo "${roles}" | tr ',' '\n' | jq -R . | jq -s .)
 
-[[ ${opt_verbose} -eq 1 ]] && echo "PATCH ${TEAMS_API_URL}/api/members/${team_member_id}" >&2
+declare BODY
+BODY=$(jq -n --argjson tenants "${tenants_json}" --argjson roles "${roles_json}" \
+    '{tenants: $tenants, roles: $roles}')
+
+if [[ -n "${client_ids}" ]]; then
+    declare client_ids_json
+    client_ids_json=$(echo "${client_ids}" | tr ',' '\n' | jq -R . | jq -s .)
+    BODY=$(echo "${BODY}" | jq --argjson cids "${client_ids_json}" '. + {client_ids: $cids}')
+fi
+
+[[ ${opt_verbose} -eq 1 ]] && echo "PATCH ${TEAMS_API_URL}/api/members/${member_id}/tenants" >&2
 [[ ${opt_verbose} -eq 1 ]] && echo "${BODY}" >&2
 
 curl -s --request PATCH \
     -H "Authorization: Bearer ${access_token}" \
     -H "Content-Type: application/json" \
-    --url "${TEAMS_API_URL}/api/members/${team_member_id}" \
+    --url "${TEAMS_API_URL}/api/members/${member_id}/tenants" \
     --data "${BODY}" | jq '.'
