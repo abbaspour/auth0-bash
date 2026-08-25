@@ -61,7 +61,10 @@ readonly BODY=$(curl --silent --request GET \
     -H "Authorization: Bearer ${access_token}" \
     --url "${AUTH0_DOMAIN_URL}api/v2/connections/${connection_id}" \
     --header 'content-type: application/json' | \
-    jq "del(.realms, .id, .strategy, .name, .provisioning_ticket_url) | .options += {\"enable_par\": $flag, \"pushed_authorization_request_endpoint\": \"${par_endpoint}\" }" )
+    jq --argjson flag "${flag}" --arg endpoint "${par_endpoint}" \
+        'del(.realms, .id, .strategy, .name, .provisioning_ticket_url) |
+         .options += {"enable_pushed_authorization_requests": $flag} +
+             (if $endpoint != "" then {"pushed_authorization_request_endpoint": $endpoint} else {"pushed_authorization_request_endpoint": null} end)' )
 
 curl -s --request PATCH \
     -H "Authorization: Bearer ${access_token}" \
