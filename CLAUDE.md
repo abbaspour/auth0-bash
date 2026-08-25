@@ -49,17 +49,17 @@ All Management API scripts share this three-step flow:
 
 ### Common Parameters (maintain consistency)
 
-| Flag | Meaning |
-|------|---------|
-| `-e <file>` | Source `.env` file |
-| `-a <token>` | Access token |
-| `-t <tenant>` | Short notation: `tenant@region` → `tenant.region.auth0.com` |
-| `-d <domain>` | Full domain |
-| `-c <connection>` | Connection/realm name |
-| `-i <id>` | Resource ID |
-| `-f <file>` | JSON file for request body |
-| `-D <domain>` | Custom domain (adds `auth0-custom-domain` header) |
-| `-v` | Verbose mode |
+| Flag              | Meaning                                                     |
+|-------------------|-------------------------------------------------------------|
+| `-e <file>`       | Source `.env` file                                          |
+| `-a <token>`      | Access token                                                |
+| `-t <tenant>`     | Short notation: `tenant@region` → `tenant.region.auth0.com` |
+| `-d <domain>`     | Full domain                                                 |
+| `-c <connection>` | Connection/realm name                                       |
+| `-i <id>`         | Resource ID                                                 |
+| `-f <file>`       | JSON file for request body                                  |
+| `-D <domain>`     | Custom domain (adds `auth0-custom-domain` header)           |
+| `-v`              | Verbose mode                                                |
 
 Tenant conversion: `t) AUTH0_DOMAIN=$(echo "${OPTARG}.auth0.com" | tr '@' '.')`
 
@@ -98,7 +98,7 @@ EOL
 
 ## Directory Organization
 
-**Management API:** `users/`, `clients/`, `connections/`, `roles/`, `organizations/`, `actions/`, `rules/`, `branding/`, `email-template/`, `attack-protection/`, `tenant/`
+**Management API:** `users/`, `clients/`, `connections/`, `roles/`, `organizations/`, `actions/`, `rules/`, `branding/`, `email-template/`, `attack-protection/`, `tenant/`, `agents/`
 
 **Auth Flows:** `passwordless/`, `multifactor/`, `saml/`, `co/` (PAR), `consent/`, `delegation/`
 
