@@ -15,30 +15,37 @@ command -v jq >/dev/null || { echo >&2 "error: jq not found"; exit 3; }
 
 function usage() {
     cat <<END >&2
-USAGE: $0 [-e env] [-a access_token] [-i team_member_id] [-E environment] [-v|-h]
-        -e file       # .env file location (default cwd)
-        -a token      # access_token. default from environment variable
+USAGE: $0 [-e env] [-a api_token] [-t team_slug] [-i member_id] [-E environment] [-v|-h]
+        -e env        # Runtime environment (default: prod). Use 'prod' for teams.auth0.com, or specify env like 'sus' for teams.sus.auth0.com
+        -a token      # API key (opaque token, not JWT)
+        -t slug       # Team slug
         -i id         # Team member ID (Auth0 user ID, e.g., auth0|xxx or google-oauth2|xxx)
-        -E env        # Cloud environment identifier (e.g., 'US-3', 'EU-1', 'acme-dev')
+        -E env        # Cloud environment identifier (e.g., 'prod-us-3', 'prod-eu-1', 'acme-dev')
         -h|?          # usage
         -v            # verbose
 
 eg,
-     $0 -i 'auth0|68da0038bab277c02ed1d4c8' -E US-3
-     $0 -i 'google-oauth2|123456789012345678901' -E EU-1
+     $0 -t my-team -i 'auth0|68da0038bab277c02ed1d4c8' -E prod-us-3
+     $0 -e sus -t my-team -i 'google-oauth2|123456789012345678901' -E prod-eu-1
 END
     exit $1
 }
 
-declare team_member_id=''
+declare api_token=''
+declare TEAM_SLUG=''
+declare member_id=''
 declare environment=''
+declare ENV='prod'
 declare -i opt_verbose=0
 
-while getopts "e:a:i:E:hv?" opt; do
+[[ -f "${DIR}/.env" ]] && . "${DIR}/.env"
+
+while getopts "e:a:t:i:E:hv?" opt; do
     case ${opt} in
-    e) source "${OPTARG}" ;;
-    a) access_token=${OPTARG} ;;
-    i) team_member_id=${OPTARG} ;;
+    e) ENV=${OPTARG} ;;
+    a) api_token=${OPTARG} ;;
+    t) TEAM_SLUG=${OPTARG} ;;
+    i) member_id=${OPTARG} ;;
     E) environment=${OPTARG} ;;
     v) opt_verbose=1 ;;
     h | ?) usage 0 ;;
@@ -46,17 +53,20 @@ while getopts "e:a:i:E:hv?" opt; do
     esac
 done
 
-[[ -z "${access_token}" ]] && { echo >&2 "ERROR: access_token undefined. export access_token='PASTE' "; usage 1; }
-[[ -z "${team_member_id}" ]] && { echo >&2 "ERROR: team_member_id undefined. Use -i"; usage 1; }
-[[ -z "${environment}" ]] && { echo >&2 "ERROR: environment undefined. Use -E (e.g., US-3, EU-1, acme-dev)"; usage 1; }
+# Basic validation (no JWT decoding for opaque tokens)
+[[ -z "${api_token}" ]] && { echo >&2 "ERROR: api_token undefined. Use -a or set api_token in .env"; usage 1; }
+[[ -z "${TEAM_SLUG}" ]] && { echo >&2 "ERROR: TEAM_SLUG undefined. Use -t or set TEAM_SLUG in .env"; usage 1; }
+[[ -z "${member_id}" ]] && { echo >&2 "ERROR: member_id undefined. Use -i"; usage 1; }
+[[ -z "${environment}" ]] && { echo >&2 "ERROR: environment undefined. Use -E (e.g., prod-us-3, prod-eu-1, acme-dev)"; usage 1; }
 
-declare -r AVAILABLE_SCOPES=$(jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | gsub("%3D";"=") | @base64d | fromjson | .scope' <<< "${access_token}")
-declare -r EXPECTED_SCOPE="read:members"
-[[ " $AVAILABLE_SCOPES " == *" $EXPECTED_SCOPE "* ]] || { echo >&2 "ERROR: Insufficient scope in Access Token. Expected: '$EXPECTED_SCOPE', Available: '$AVAILABLE_SCOPES'"; exit 1; }
+# Construct Teams API base URL
+if [[ "${ENV}" == "prod" ]]; then
+    declare -r TEAMS_API_URL="https://${TEAM_SLUG}.teams.auth0.com"
+else
+    declare -r TEAMS_API_URL="https://${TEAM_SLUG}.teams.${ENV}.auth0.com"
+fi
 
-declare -r TEAMS_API_URL=$(jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | gsub("%3D";"=") | @base64d | fromjson | .aud | if type == "array" then .[0] else . end | rtrimstr("/api/")' <<< "${access_token}")
+[[ ${opt_verbose} -eq 1 ]] && echo "GET ${TEAMS_API_URL}/api/v1/members/${member_id}/tenants/${environment}" >&2
 
-[[ ${opt_verbose} -eq 1 ]] && echo "GET ${TEAMS_API_URL}/api/members/${team_member_id}/tenants/${environment}" >&2
-
-curl -s -H "Authorization: Bearer ${access_token}" \
-    --url "${TEAMS_API_URL}/api/members/${team_member_id}/tenants/${environment}" | jq '.'
+curl -s -H "Authorization: Bearer ${api_token}" \
+    --url "${TEAMS_API_URL}/api/v1/members/${member_id}/tenants/${environment}" | jq '.'

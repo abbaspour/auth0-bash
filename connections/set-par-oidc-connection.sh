@@ -63,6 +63,7 @@ readonly BODY=$(curl --silent --request GET \
     --header 'content-type: application/json' | \
     jq --argjson flag "${flag}" --arg endpoint "${par_endpoint}" \
         'del(.realms, .id, .strategy, .name, .provisioning_ticket_url) |
+         del(.options.pushed_authorization_request_endpoint) |
          .options += {"enable_pushed_authorization_requests": $flag} +
              (if $endpoint != "" then {"pushed_authorization_request_endpoint": $endpoint} else {} end)' )
 
