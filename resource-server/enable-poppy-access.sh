@@ -20,7 +20,7 @@ USAGE: $0 [-e env] [-a access_token] [-i id] [-d] [-v|-h]
         -e file         # .env file location (default cwd)
         -a token        # access_token. default from environment variable
         -i id           # resource_server id
-        -d              # disable (sets use_for_personal_agent_protocol to false)
+        -d              # disable (sets use_for_personal_agent_protocol to false and agent_subject_claims to null)
         -h|?            # usage
         -v              # verbose
 
@@ -56,7 +56,16 @@ declare -r EXPECTED_SCOPE="update:resource_servers"
 
 declare -r AUTH0_DOMAIN_URL=$(jq -Rr 'split(".")[1] | gsub("-";"+") | gsub("_";"/") | gsub("%3D";"=") | @base64d | fromjson | .iss' <<<"${access_token}")
 
-declare -r BODY="{ \"use_for_personal_agent_protocol\": ${enabled} }"
+declare agent_subject_claims='null'
+[[ "${enabled}" == true ]] && agent_subject_claims='"auth0-v1"'
+
+declare -r BODY=$(cat <<EOL
+{
+  "use_for_personal_agent_protocol": ${enabled},
+  "agent_subject_claims": ${agent_subject_claims}
+}
+EOL
+)
 
 [[ -n "${opt_verbose}" ]] && echo >&2 "${BODY}"
 
